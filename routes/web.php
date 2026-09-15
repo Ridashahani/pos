@@ -17,6 +17,7 @@ use App\Http\Controllers\Dashboard\OrderController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\UserController;
+use App\Http\Controllers\Dashboard\VariationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,6 +89,7 @@ Route::middleware(['permission:salary.menu'])->group(function () {
 
 // ====== PRODUCTS ======
 Route::middleware(['permission:product.menu'])->group(function () {
+    Route::resource('/variations', VariationController::class)->except(['show']);
     Route::get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
     Route::post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
     Route::get('/products/export', [ProductController::class, 'exportData'])->name('products.exportData');

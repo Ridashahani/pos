@@ -70,6 +70,9 @@
                                     <a href="{{ route('products.index') }}">
                                         <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
                                         </a>
+                                        <a href="{{ route('variations.index') }}">
+                                            <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
+                                        </a>
                                         </li>
                                         <li class="{{ Request::is(['products/create']) ? 'active' : '' }}">
                                             <a href="{{ route('products.create') }}">

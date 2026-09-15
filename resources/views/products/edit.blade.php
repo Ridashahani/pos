@@ -7,7 +7,8 @@
 @endsection
 
 @section('container')
-    <div class="container-fluid">
+    @include('products._form', ['formAction' => route('products.update', $product), 'formMethod' => 'PUT', 'submitLabel' => 'Update'])
+    {{--
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -250,7 +251,7 @@
                 });
             }
         })();
-    </script>
+    </script> --}}
 
     @include('components.preview-img-form')
 @endsection
