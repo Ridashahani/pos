@@ -33,19 +33,19 @@
                     <li>
                         <a href="#orders" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <x-heroicon-o-shopping-bag class="w-6 h-6" />
-                            <span class="ml-3">Orders</span>
+                            <span class="ml-3">Sales</span>
                             <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
                             </a>
                             <ul id="orders" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
 
                             <li class="{{ Request::is('orders/pending*') ? 'active' : '' }}">
                                 <a href="{{ route('order.pendingOrders') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Orders</span>
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
                                     </a>
                                     </li>
                                     <li class="{{ Request::is('orders/complete*') ? 'active' : '' }}">
                                         <a href="{{ route('order.completeOrders') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Orders</span>
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
                                     </a>
                                     </li>
                                     <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
@@ -88,12 +88,12 @@
                 <hr>
 
                 @if (auth()->user()->can('employee.menu'))
-                    <li class="{{ Request::is('employees*') ? 'active' : '' }}">
+                    {{-- <li class="{{ Request::is('employees*') ? 'active' : '' }}">
                         <a href="{{ route('employees.index') }}" class="svg-icon">
                             <x-heroicon-o-user-group class="w-6 h-6" />
                             <span class="ml-3">Employees</span>
                             </a>
-                            </li>
+                            </li> --}}
                 @endif
 
                 @if (auth()->user()->can('customer.menu'))
@@ -115,7 +115,7 @@
                 @endif
 
                 @if (auth()->user()->can('salary.menu'))
-                    <li>
+                    {{-- <li>
                         <a href="#advance-salary" class="collapsed" data-toggle="collapse" aria-expanded="false">
                         <x-heroicon-o-banknotes class="w-6 h-6" />
                         <span class="ml-3">Salary</span>
@@ -144,11 +144,11 @@
                                     </a>
                                     </li>
                                     </ul>
-                                    </li>
+                                    </li> --}}
                 @endif
 
                 @if (auth()->user()->can('attendance.menu'))
-                    <li>
+                    {{-- <li>
                         <a href="#attendance" class="collapsed" data-toggle="collapse" aria-expanded="false">
                             <x-heroicon-o-calendar-days class="w-6 h-6" />
                             <span class="ml-3">Attendance</span>
@@ -167,7 +167,7 @@
                                         </a>
                                         </li>
                                         </ul>
-                                        </li>
+                                        </li> --}}
                 @endif
 
                 <hr>
@@ -210,20 +210,20 @@
                 @endif
 
                 @if (auth()->user()->can('database.menu'))
-                    <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
+                    {{-- <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
                         <a href="{{ route('backup.index') }}" class="svg-icon">
                             <x-heroicon-o-circle-stack class="w-6 h-6" />
                             <span class="ml-3">Backup Database</span>
                             </a>
-                            </li>
+                            </li> --}}
                 @endif
 
-                <li class="{{ Request::is('help*') ? 'active' : '' }}">
+                {{-- <li class="{{ Request::is('help*') ? 'active' : '' }}">
                     <a href="{{ route('help.index') }}" class="svg-icon">
                         <x-heroicon-o-question-mark-circle class="w-6 h-6" />
                         <span class="ml-3">Help</span>
                     </a>
-                </li>
+                </li> --}}
             </ul>
         </nav>
         <div class="p-3"></div>
