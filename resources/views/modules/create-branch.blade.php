@@ -14,6 +14,12 @@
         border-color: #d90000 !important;
         color: #fff !important;
     }
+
+    .compact-form .form-control {
+        height: 38px;
+        padding-bottom: 6px;
+        padding-top: 6px;
+    }
 </style>
 
 <div class="container-fluid">
@@ -27,7 +33,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <form onsubmit="return false;">
+                    <form class="compact-form" onsubmit="return false;">
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label for="name">Branch Name <span class="text-danger">*</span></label>
