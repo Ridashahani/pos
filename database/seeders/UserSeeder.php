@@ -13,22 +13,21 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::factory()->create([
+        $admin = User::updateOrCreate(['email' => 'admin@gmail.com'], [
             'name' => 'Admin',
             'username' => 'admin',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('password'),
         ]);
 
-        $user = User::factory()->create([
+        $user = User::updateOrCreate(['email' => 'user@gmail.com'], [
             'name' => 'User',
             'username' => 'user',
             'email' => 'user@gmail.com',
             'password' => Hash::make('password'),
         ]);
 
-        // Assign Roles
-        $admin->assignRole('SuperAdmin');
-        $user->assignRole('Account');
+        $admin->syncRoles('Admin');
+        $user->syncRoles('Staff');
     }
 }

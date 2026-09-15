@@ -13,25 +13,43 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Permissions
-        Permission::create(['name' => 'pos.menu', 'group_name' => 'pos']);
-        Permission::create(['name' => 'employee.menu', 'group_name' => 'employee']);
-        Permission::create(['name' => 'customer.menu', 'group_name' => 'customer']);
-        Permission::create(['name' => 'supplier.menu', 'group_name' => 'supplier']);
-        Permission::create(['name' => 'salary.menu', 'group_name' => 'salary']);
-        Permission::create(['name' => 'attendance.menu', 'group_name' => 'attendance']);
-        Permission::create(['name' => 'category.menu', 'group_name' => 'category']);
-        Permission::create(['name' => 'product.menu', 'group_name' => 'product']);
-        Permission::create(['name' => 'orders.menu', 'group_name' => 'orders']);
-        Permission::create(['name' => 'stock.menu', 'group_name' => 'stock']);
-        Permission::create(['name' => 'roles.menu', 'group_name' => 'roles']);
-        Permission::create(['name' => 'user.menu', 'group_name' => 'user']);
-        Permission::create(['name' => 'database.menu', 'group_name' => 'database']);
+        $permissions = [
+            'pos.menu' => 'pos',
+            'customer.menu' => 'customer',
+            'supplier.menu' => 'supplier',
+            'category.menu' => 'category',
+            'product.menu' => 'product',
+            'sale.menu' => 'sale',
+            'stock.menu' => 'stock',
+            'roles.menu' => 'roles',
+            'user.menu' => 'user',
+        ];
 
-        // Create Roles and Assign Permissions
-        Role::create(['name' => 'SuperAdmin'])->givePermissionTo(Permission::all());
-        Role::create(['name' => 'Admin'])->givePermissionTo(['customer.menu', 'user.menu', 'supplier.menu', 'attendance.menu']);
-        Role::create(['name' => 'Account'])->givePermissionTo(['customer.menu', 'user.menu', 'supplier.menu']);
-        Role::create(['name' => 'Manager'])->givePermissionTo(['stock.menu', 'orders.menu', 'product.menu', 'salary.menu', 'employee.menu', 'attendance.menu']);
+        Permission::whereIn('name', [
+            'employee.menu',
+            'salary.menu',
+            'attendance.menu',
+            'orders.menu',
+            'database.menu',
+        ])->delete();
+
+        foreach ($permissions as $name => $group) {
+            Permission::firstOrCreate(['name' => $name], ['group_name' => $group]);
+        }
+
+        Role::whereNotIn('name', ['Admin', 'Staff'])->get()->each->delete();
+
+        $admin = Role::firstOrCreate(['name' => 'Admin']);
+        $staff = Role::firstOrCreate(['name' => 'Staff']);
+
+        $admin->syncPermissions(Permission::all());
+        $staff->syncPermissions([
+            'pos.menu',
+            'customer.menu',
+            'supplier.menu',
+            'category.menu',
+            'product.menu',
+            'sale.menu',
+        ]);
     }
 }
