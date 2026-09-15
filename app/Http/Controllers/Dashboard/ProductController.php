@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Dashboard;
 use Exception;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Supplier;
+use App\Models\Variation;
 use Spatie\QueryBuilder\QueryBuilder;
 use Spatie\QueryBuilder\AllowedSort;
 use Illuminate\Http\Request;
@@ -61,6 +63,8 @@ class ProductController extends Controller
     {
         return view('products.create', [
             'categories' => Category::all(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'variations' => Variation::orderBy('name')->get(),
         ]);
     }
 
@@ -70,6 +74,18 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $validatedData = $request->validated();
+
+        if (!empty($validatedData['variation_ids'])) {
+            $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
+            $validatedData['variation_id'] = $validatedData['variation_ids'][0];
+            $validatedData['variation'] = $variations->pluck('name')->implode(', ');
+            $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
+        }
+
+        $validatedData['buying_price'] = $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? $validatedData['buying_price'];
+        $validatedData['selling_price'] = $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? $validatedData['selling_price'];
+        $validatedData['stock'] = $validatedData['add_product_quantity'] ?? $validatedData['stock'];
+        unset($validatedData['product_cost'], $validatedData['product_price'], $validatedData['single_product_cost'], $validatedData['single_product_price'], $validatedData['add_product_quantity']);
 
         // Generate code only if not provided
         if (!isset($validatedData['code']) || empty($validatedData['code'])) {
@@ -92,6 +108,14 @@ class ProductController extends Controller
 
             $file->storeAs($path, $fileName);
             $validatedData['image'] = $fileName;
+        }
+
+        if ($files = $request->file('images')) {
+            $validatedData['images'] = collect($files)->map(function ($file) {
+                $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+                $file->storeAs('public/products', $fileName);
+                return $fileName;
+            })->values()->all();
         }
 
         Product::create($validatedData);
@@ -122,6 +146,8 @@ class ProductController extends Controller
     {
         return view('products.edit', [
             'categories' => Category::all(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'variations' => Variation::orderBy('name')->get(),
             'product' => $product
         ]);
     }
@@ -132,6 +158,16 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         $validatedData = $request->validated();
+        if (!empty($validatedData['variation_ids'])) {
+            $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
+            $validatedData['variation_id'] = $validatedData['variation_ids'][0];
+            $validatedData['variation'] = $variations->pluck('name')->implode(', ');
+            $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
+        }
+        $validatedData['buying_price'] = $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? $validatedData['buying_price'];
+        $validatedData['selling_price'] = $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? $validatedData['selling_price'];
+        $validatedData['stock'] = $validatedData['add_product_quantity'] ?? $validatedData['stock'];
+        unset($validatedData['product_cost'], $validatedData['product_price'], $validatedData['single_product_cost'], $validatedData['single_product_price'], $validatedData['add_product_quantity']);
         $validatedData['slug'] = Str::slug($validatedData['name']);
 
         /**
@@ -150,6 +186,14 @@ class ProductController extends Controller
 
             $file->storeAs($path, $fileName);
             $validatedData['image'] = $fileName;
+        }
+
+        if ($files = $request->file('images')) {
+            $validatedData['images'] = collect($files)->map(function ($file) {
+                $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+                $file->storeAs('public/products', $fileName);
+                return $fileName;
+            })->values()->all();
         }
 
         Product::where('id', $product->id)->update($validatedData);

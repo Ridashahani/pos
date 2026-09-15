@@ -7,7 +7,8 @@
 @endsection
 
 @section('container')
-    <div class="container-fluid">
+    @include('products._form', ['formAction' => route('products.update', $product), 'formMethod' => 'PUT', 'submitLabel' => 'Update'])
+    {{--
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -62,6 +63,27 @@
                                         </div>
                                     @enderror
                                     </div>
+
+                                <div class="form-group col-md-4">
+                                    <label for="brand">Brand</label>
+                                    <input type="text" class="form-control @error('brand') is-invalid @enderror" id="brand" name="brand"
+                                        value="{{ old('brand', $product->brand) }}">
+                                    @error('brand') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label for="model">Model</label>
+                                    <input type="text" class="form-control @error('model') is-invalid @enderror" id="model" name="model"
+                                        value="{{ old('model', $product->model) }}">
+                                    @error('model') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+
+                                <div class="form-group col-md-4">
+                                    <label for="imei">IMEI / Serial</label>
+                                    <input type="text" class="form-control @error('imei') is-invalid @enderror" id="imei" name="imei"
+                                        value="{{ old('imei', $product->imei) }}">
+                                    @error('imei') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
 
                                 <div class="form-group col-md-6">
                                     <label for="code">Product Code</label>
@@ -250,7 +272,7 @@
                 });
             }
         })();
-    </script>
+    </script> --}}
 
     @include('components.preview-img-form')
 @endsection
