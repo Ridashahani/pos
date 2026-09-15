@@ -30,16 +30,10 @@
                     </div>
                 @endif
 
-                <!-- Header: Page Title and Clear Search -->
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
                         <h4 class="mb-3">Complete Order List</h4>
                         <p class="mb-0">List of all completed orders. You can view details or reprint invoices.</p>
-                    </div>
-                    <div>
-                        <a href="{{ route('order.completeOrders') }}" class="btn btn-danger add-list d-flex align-items-center">
-                            <x-heroicon-o-trash class="w-5 h-5 mr-1" /> Clear Search
-                        </a>
                     </div>
                 </div>
             </div>
