@@ -59,14 +59,6 @@
                                             <x-heroicon-o-magnifying-glass class="w-5 h-5" />
                                         </button>
                                     </div>
-                                    @if (request('search'))
-                                        <div class="input-group-append">
-                                            <a href="{{ route('employees.index') }}" class="input-group-text bg-danger"
-                                                title="Clear Search">
-                                                <x-heroicon-o-x-mark class="w-5 h-5" />
-                                            </a>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>

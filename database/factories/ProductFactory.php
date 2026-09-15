@@ -22,10 +22,10 @@ class ProductFactory extends Factory
             'name' => $name,
             'slug' => \Illuminate\Support\Str::slug($name),
             'code' => fake()->ean8(),
-            'category_id' => fake()->randomElement([1, 2, 3, 4, 5]),
+            'category_id' => fake()->numberBetween(1, 8),
             'stock' => fake()->randomNumber(3),
-            'buying_price' => fake()->numberBetween(100, 1000),
-            'selling_price' => fake()->numberBetween(1000, 2000),
+            'buying_price' => fake()->numberBetween(300, 200000),
+            'selling_price' => fake()->numberBetween(500, 250000),
             'buying_date' => Carbon::now(),
             'expire_date' => Carbon::now()->addYears(2),
         ];

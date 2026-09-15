@@ -25,9 +25,6 @@
                     <a href="{{ route('suppliers.create') }}" class="btn btn-primary add-list">
                         <x-heroicon-o-plus class="w-5 h-5 mr-3" />Add Supplier
                     </a>
-                    <a href="{{ route('suppliers.index') }}" class="btn btn-danger add-list">
-                        <x-heroicon-o-x-mark class="w-5 h-5 mr-3" />Clear Search
-                    </a>
                 </div>
             </div>
         </div>
