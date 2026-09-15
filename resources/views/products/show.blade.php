@@ -53,6 +53,18 @@
                                 <label>Product Name</label>
                                 <input type="text" class="form-control bg-white" value="{{  $product->name }}" readonly>
                             </div>
+                            <div class="form-group col-md-4">
+                                <label>Brand</label>
+                                <input type="text" class="form-control bg-white" value="{{ $product->brand ?: 'Not provided' }}" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Model</label>
+                                <input type="text" class="form-control bg-white" value="{{ $product->model ?: 'Not provided' }}" readonly>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>IMEI / Serial</label>
+                                <input type="text" class="form-control bg-white" value="{{ $product->imei ?: 'Not provided' }}" readonly>
+                            </div>
                             <div class="form-group col-md-6">
                                 <label>Category</label>
                                 <input type="text" class="form-control bg-white" value="{{  $product->category->name }}"

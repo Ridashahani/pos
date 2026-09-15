@@ -16,6 +16,7 @@ use App\Http\Controllers\Dashboard\HelpController;
 use App\Http\Controllers\Dashboard\OrderController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\StockController;
 use App\Http\Controllers\Dashboard\UserController;
 
 /*
@@ -30,13 +31,20 @@ use App\Http\Controllers\Dashboard\UserController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('dashboard');
 });
 
 
 // DEFAULT DASHBOARD & PROFILE
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+
+    Route::prefix('stock')->name('stock.')->group(function () {
+        Route::get('/in', [StockController::class, 'in'])->name('in');
+        Route::get('/in/details', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/out', [StockController::class, 'out'])->name('out');
+        Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
+    });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
