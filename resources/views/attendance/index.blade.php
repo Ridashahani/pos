@@ -49,7 +49,7 @@
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center justify-content-center list-action">
-                                            <a class="btn btn-warning mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
+                                            <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
                                                 href="{{ route('attendance.edit', $attendance->date) }}">
                                                 <x-heroicon-o-pencil class="w-4 h-4 mr-0" />
                                             </a>

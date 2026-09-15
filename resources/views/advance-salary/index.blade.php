@@ -84,14 +84,14 @@
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center list-action">
-                                            <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
+                                            <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
                                                 href="{{ route('advance-salary.edit', $advance->id) }}">
                                                 <x-heroicon-o-pencil class="w-5 h-5" />
                                             </a>
                                             <form action="{{ route('advance-salary.destroy', $advance->id) }}" method="POST" style="display:inline;">
                                                 @method('delete')
                                                 @csrf
-                                                <button type="submit" class="btn btn-warning border-none"
+                                                <button type="submit" class="btn btn-danger border-none"
                                                     onclick="return confirm('Are you sure you want to delete this record?')" data-toggle="tooltip"
                                                     data-placement="top" title="Delete">
                                                     <x-heroicon-o-trash class="w-5 h-5" />

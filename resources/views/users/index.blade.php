@@ -87,12 +87,12 @@
                                     {{-- <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="View"
                                         href="{{ route('users.show', $item->username) }}"><x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                     </a> --}}
-                                    <a class="btn btn-success mr-2" data-toggle="tooltip" data-placement="top" title="Edit" href="{{ route('users.edit', $item->username) }}"><x-heroicon-o-pencil class="w-5 h-5 mr-0" />
+                                    <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit" href="{{ route('users.edit', $item->username) }}"><x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                     </a>
                                     <form action="{{ route('users.destroy', $item->username) }}" method="POST" style="display:inline;">
                                         @method('delete')
                                         @csrf
-                                        <button type="submit" class="btn btn-warning border-0" onclick="return confirm('Are you sure you want to delete this record?')" data-toggle="tooltip" data-placement="top" title="Delete"><x-heroicon-o-trash class="w-5 h-5 mr-0" /></button>
+                                        <button type="submit" class="btn btn-danger border-0" onclick="return confirm('Are you sure you want to delete this record?')" data-toggle="tooltip" data-placement="top" title="Delete"><x-heroicon-o-trash class="w-5 h-5 mr-0" /></button>
                                     </form>
                                 </div>
                             </td>

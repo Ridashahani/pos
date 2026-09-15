@@ -50,7 +50,7 @@
                                                         </td>
                                                         <td>
                                                             <div class="d-flex align-items-center list-action">
-                                                                <a class="btn btn-success mr-2" data-toggle="tooltip" data-placement="top"
+                                                                <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top"
                                                                     title="Edit" href="{{ route('rolePermission.edit', $role->id) }}">
                                                                     <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                                                 </a>
@@ -58,7 +58,7 @@
                                                                     style="display:inline;">
                                                                     @method('delete')
                                                                     @csrf
-                                                                    <button type="submit" class="btn btn-warning border-0"
+                                                                    <button type="submit" class="btn btn-danger border-0"
                                                                         onclick="return confirm('Are you sure you want to delete this role permission assignment?')"
                                                                         data-toggle="tooltip" data-placement="top" title="Delete">
                                                                         <x-heroicon-o-trash class="w-5 h-5 mr-0" />

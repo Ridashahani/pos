@@ -113,7 +113,7 @@
                                     <td>
                                         <div class="d-flex align-items-center list-action">
                                             <!-- Edit Button -->
-                                            <a class="btn btn-warning mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
+                                            <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
                                                 href="{{ route('categories.edit', $category->slug) }}">
                                                 <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                             </a>
