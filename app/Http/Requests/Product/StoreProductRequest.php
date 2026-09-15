@@ -24,6 +24,9 @@ class StoreProductRequest extends FormRequest
         return [
             'image' => 'image|file|max:1024|nullable',
             'name' => 'required|string|unique:products,name',
+            'brand' => 'nullable|string|max:100',
+            'model' => 'nullable|string|max:100',
+            'imei' => 'nullable|string|max:100',
             'code' => 'nullable|string|unique:products,code|max:50',
             'category_id' => 'required|integer|exists:categories,id',
             'stock' => 'required|integer',
