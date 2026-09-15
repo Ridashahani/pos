@@ -82,7 +82,7 @@ Route::middleware(['permission:category.menu'])->group(function () {
 
 // ====== POS ======
 Route::middleware(['permission:pos.menu'])->group(function () {
-    Route::get('/pos', [PosController::class,'index'])->name('pos.index');
+    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/add', [PosController::class, 'addCart'])->name('pos.addCart');
     Route::post('/pos/update/{rowId}', [PosController::class, 'updateCart'])->name('pos.updateCart');
     Route::get('/pos/delete/{rowId}', [PosController::class, 'deleteCart'])->name('pos.deleteCart');
@@ -118,6 +118,65 @@ Route::middleware(['permission:sale.menu'])->group(function () {
 
 });
 
+// ====== STOCK MANAGEMENT ======
+Route::middleware(['permission:stock.menu'])->group(function () {
+    Route::view('/branches', 'modules.index', [
+        'title' => 'Branches',
+        'description' => 'Store branches and locations.',
+        'module' => 'branches',
+        'records' => [
+            [
+                'name' => 'Saddar Main Branch',
+                'code' => 'BR-001',
+                'address' => 'Saddar, Rawalpindi',
+                'phone' => '+92 300 1234567',
+                'status' => 'Active',
+            ],
+            [
+                'name' => 'Commercial Market Branch',
+                'code' => 'BR-002',
+                'address' => 'Commercial Market, Rawalpindi',
+                'phone' => '+92 301 7654321',
+                'status' => 'Active',
+            ],
+        ],
+    ])->name('branches.index');
+    Route::view('/branches/create', 'modules.create-branch')->name('branches.create');
+
+    Route::view('/expenses', 'modules.index', [
+        'title' => 'Expenses',
+        'description' => 'Operating expenses recorded per branch.',
+        'module' => 'expenses',
+        'records' => [
+            [
+                'date' => '2026-09-01',
+                'branch' => 'Saddar Main Branch',
+                'category' => 'Rent',
+                'amount' => 'Rs 45,000',
+                'note' => 'September shop rent',
+            ],
+            [
+                'date' => '2026-08-30',
+                'branch' => 'Saddar Main Branch',
+                'category' => 'Utilities',
+                'amount' => 'Rs 8,500',
+                'note' => 'Electricity bill',
+            ],
+            [
+                'date' => '2026-08-22',
+                'branch' => 'Commercial Market Branch',
+                'category' => 'Marketing',
+                'amount' => 'Rs 5,000',
+                'note' => 'Local flyers/banner',
+            ],
+        ],
+    ])->name('expenses.index');
+
+
+
+    Route::view('/expenses/create', 'modules.create-expense')->name('expenses.create');
+});
+
 // ====== HELP ======
 Route::middleware('auth')->group(function () {
     Route::get('/help', [HelpController::class, 'index'])->name('help.index');
@@ -150,4 +209,4 @@ Route::middleware(['permission:roles.menu'])->group(function () {
     Route::delete('/role/permission/{id}', [RoleController::class, 'rolePermissionDestroy'])->name('rolePermission.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
