@@ -44,12 +44,12 @@
                 </div>
                 <!-- begin: Action Buttons -->
                 <div class="d-flex align-items-center">
-                    <a href="{{ route('products.importView') }}" class="btn btn-success add-list mr-2 d-flex align-items-center">
+                    {{-- <a href="{{ route('products.importView') }}" class="btn btn-success add-list mr-2 d-flex align-items-center">
                         <x-heroicon-o-arrow-up-tray class="w-5 h-5 mr-1" /> Import
-                    </a>
-                    <a href="{{ route('products.exportData') }}" class="btn btn-warning add-list mr-2 d-flex align-items-center">
+                    </a> --}}
+                    {{-- <a href="{{ route('products.exportData') }}" class="btn btn-warning add-list mr-2 d-flex align-items-center">
                         <x-heroicon-o-arrow-down-tray class="w-5 h-5 mr-1" /> Export
-                    </a>
+                    </a> --}}
                     <a href="{{ route('products.create') }}" class="btn btn-primary add-list d-flex align-items-center">
                         <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Product
                     </a>

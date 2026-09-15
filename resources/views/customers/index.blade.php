@@ -25,9 +25,6 @@
                         <a href="{{ route('customers.create') }}" class="btn btn-primary add-list">
                             <x-heroicon-o-plus class="w-5 h-5 mr-3" />Add Customer
                         </a>
-                        <a href="{{ route('customers.index') }}" class="btn btn-danger add-list">
-                            <x-heroicon-o-x-mark class="w-5 h-5 mr-3" />Clear Search
-                        </a>
                     </div>
                 </div>
             </div>

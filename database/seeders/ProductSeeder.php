@@ -15,74 +15,97 @@ class ProductSeeder extends Seeder
     public function run(): void
     {
         $products = [
-            // Computers & Laptops (Category 1)
+            // Smartphones (Category 1)
             [
-                'name' => 'MacBook Air M2',
+                'name' => 'Apple iPhone 15',
                 'category_id' => 1,
                 'stock' => 10,
-                'buying_price' => 900,
-                'selling_price' => 1100,
+                'buying_price' => 215000,
+                'selling_price' => 239999,
             ],
             [
-                'name' => 'ASUS ROG Zephyrus G14',
+                'name' => 'Samsung Galaxy S24',
                 'category_id' => 1,
-                'stock' => 5,
-                'buying_price' => 1400,
-                'selling_price' => 1700,
+                'stock' => 12,
+                'buying_price' => 185000,
+                'selling_price' => 209999,
             ],
-            // Smartphones & Tablets (Category 2)
+            // Mobile Accessories (Category 2)
             [
-                'name' => 'iPhone 14 Pro Max',
+                'name' => 'Universal Mobile Holder',
                 'category_id' => 2,
-                'stock' => 15,
-                'buying_price' => 1000,
-                'selling_price' => 1200,
+                'stock' => 45,
+                'buying_price' => 850,
+                'selling_price' => 1299,
             ],
             [
-                'name' => 'Samsung Galaxy Tab S9 Ultra',
+                'name' => 'Mobile Camera Lens Kit',
                 'category_id' => 2,
-                'stock' => 8,
-                'buying_price' => 1100,
-                'selling_price' => 1300,
+                'stock' => 25,
+                'buying_price' => 1800,
+                'selling_price' => 2499,
             ],
-            // Computer Accessories (Category 3)
+            // Chargers & Cables (Category 3)
             [
-                'name' => 'Logitech MX Master 3S',
+                'name' => 'Anker 20W Fast Charger',
                 'category_id' => 3,
                 'stock' => 50,
-                'buying_price' => 80,
-                'selling_price' => 100,
-            ],
-            [
-                'name' => 'Keychron K2 Pro Mechanical Keyboard',
-                'category_id' => 3,
-                'stock' => 20,
-                'buying_price' => 90,
-                'selling_price' => 120,
-            ],
-            // Smartwatches (Category 4)
-            [
-                'name' => 'Apple Watch Series 9',
-                'category_id' => 4,
-                'stock' => 12,
-                'buying_price' => 350,
-                'selling_price' => 450,
-            ],
-            // Cameras & Audio (Category 5)
-            [
-                'name' => 'Sony Alpha a7 IV Body Only',
-                'category_id' => 5,
-                'stock' => 3,
                 'buying_price' => 2200,
-                'selling_price' => 2500,
+                'selling_price' => 2999,
             ],
-            // Gaming Gear (Category 7)
             [
-                'name' => 'SteelSeries Arctis Nova Pro',
+                'name' => 'Type-C Fast Charging Cable',
+                'category_id' => 3,
+                'stock' => 100,
+                'buying_price' => 450,
+                'selling_price' => 799,
+            ],
+            // Mobile Covers & Cases (Category 4)
+            [
+                'name' => 'iPhone 15 Silicone Case',
+                'category_id' => 4,
+                'stock' => 60,
+                'buying_price' => 650,
+                'selling_price' => 1199,
+            ],
+            [
+                'name' => 'Samsung Galaxy S24 Armor Case',
+                'category_id' => 4,
+                'stock' => 45,
+                'buying_price' => 800,
+                'selling_price' => 1499,
+            ],
+            // Screen Protectors (Category 5)
+            [
+                'name' => '9D Tempered Glass Protector',
+                'category_id' => 5,
+                'stock' => 120,
+                'buying_price' => 180,
+                'selling_price' => 399,
+            ],
+            // Power Banks (Category 6)
+            [
+                'name' => 'Anker 10000mAh Power Bank',
+                'category_id' => 6,
+                'stock' => 30,
+                'buying_price' => 4500,
+                'selling_price' => 5999,
+            ],
+            // Earbuds & Headphones (Category 7)
+            [
+                'name' => 'AirPods Pro 2',
                 'category_id' => 7,
-                'stock' => 10,
-                'buying_price' => 300,
-                'selling_price' => 350,
+                'stock' => 18,
+                'buying_price' => 52000,
+                'selling_price' => 64999,
+            ],
+            // Smartwatches (Category 8)
+            [
+                'name' => 'Samsung Galaxy Watch 6',
+                'category_id' => 8,
+                'stock' => 14,
+                'buying_price' => 42000,
+                'selling_price' => 52999,
             ],
             [
                 'name' => 'Google Pixel 9 Pro',

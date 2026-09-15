@@ -18,7 +18,6 @@
                 </div>
                 <div>
                 <a href="{{ route('users.create') }}" class="btn btn-primary add-list"><x-heroicon-o-plus class="w-5 h-5 mr-3" />Create User</a>
-                <a href="{{ route('users.index') }}" class="btn btn-danger add-list"><x-heroicon-o-x-mark class="w-5 h-5 mr-3" />Clear Search</a>
                 </div>
             </div>
         </div>
