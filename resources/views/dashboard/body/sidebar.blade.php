@@ -27,6 +27,31 @@
                 </li>
                 @endif
 
+                <li>
+                    <a href="#stock" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('stock*') ? 'true' : 'false' }}">
+                        <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
+                        <span class="ml-3">Stock</span>
+                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                    </a>
+                    <ul id="stock" class="iq-submenu collapse {{ Request::is('stock*') ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
+                        <li class="{{ Request::is('stock/in') ? 'active' : '' }}">
+                            <a href="{{ route('stock.in') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-In</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('stock/out') ? 'active' : '' }}">
+                            <a href="{{ route('stock.out') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-out</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('stock/transfer') ? 'active' : '' }}">
+                            <a href="{{ route('stock.transfer') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-Transfer</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
                 <hr>
 
                 @if (auth()->user()->can('orders.menu'))
@@ -54,8 +79,49 @@
                             </a>
                         </li>
 
-                    </ul>
-                </li>
+                            <li class="{{ Request::is('orders/pending*') ? 'active' : '' }}">
+                                <a href="{{ route('order.pendingOrders') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
+                                    </a>
+                                    </li>
+                                    <li class="{{ Request::is('orders/complete*') ? 'active' : '' }}">
+                                        <a href="{{ route('order.completeOrders') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
+                                    </a>
+                                    </li>
+                                    <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
+                                        <a href="{{ route('order.pendingDue') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
+                                    </a>
+                                    </li>
+
+                                    </ul>
+                                    </li>
+
+                    <li>
+                        <a href="#purchases" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('purchases*') ? 'true' : 'false' }}">
+                            <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
+                            <span class="ml-3">Purchases</span>
+                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                        </a>
+                        <ul id="purchases" class="iq-submenu collapse {{ Request::is('purchases*') ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
+                            <li class="{{ Request::is('purchases') ? 'active' : '' }}">
+                                <a href="{{ route('purchases.index') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>All Purchases</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('purchases/create') ? 'active' : '' }}">
+                                <a href="{{ route('purchases.create') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Purchase</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('purchases/returns') ? 'active' : '' }}">
+                                <a href="{{ route('purchases.returns') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Purchase Returns</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 @endif
 
                 @if (auth()->user()->can('product.menu'))

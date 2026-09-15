@@ -1,0 +1,150 @@
+@extends('dashboard.body.main')
+
+@section('container')
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="mb-2">{{ $title }}</h4>
+                        {{-- <p class="mb-0 text-muted">Review dummy stock activity for this inventory workflow.</p> --}}
+                    </div>
+                    {{-- <div class="d-flex align-items-center mt-3 mt-md-0">
+                        <span class="badge bg-light text-primary px-3 py-2">Dummy data</span>
+                    </div> --}}
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="icon iq-icon-box-2 bg-primary-light mr-3">
+                            <x-heroicon-o-cube class="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <p class="mb-1 text-muted">Total Products</p>
+                            <h4 class="mb-0">{{ $total_products }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="icon iq-icon-box-2 bg-success-light mr-3">
+                            <x-heroicon-o-chart-bar class="w-6 h-6 text-success" />
+                        </div>
+                        <div>
+                            <p class="mb-1 text-muted">Total Units</p>
+                            <h4 class="mb-0">{{ number_format($total_units) }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="icon iq-icon-box-2 bg-warning-light mr-3">
+                            <x-heroicon-o-calendar-days class="w-6 h-6 text-warning" />
+                        </div>
+                        <div>
+                            <p class="mb-1 text-muted">This Month</p>
+                            <h4 class="mb-0">{{ $this_month }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="icon iq-icon-box-2 bg-info-light mr-3">
+                            <x-heroicon-o-clock class="w-6 h-6 text-info" />
+                        </div>
+                        <div>
+                            <p class="mb-1 text-muted">{{ $type === 'stock-transfer' ? 'Pending Transfers' : 'Pending Items' }}</p>
+                            <h4 class="mb-0">{{ $pending }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-12">
+                <div class="card card-block card-stretch">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="card-title mb-0">{{ $title }} Records</h4>
+                        <span class="text-muted small">{{ count($rows) }} records</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead class="bg-white text-uppercase">
+                                    <tr class="ligth ligth-data">
+                                        <th>Date</th>
+                                        <th>Reference</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        @if ($type === 'stock-in')
+                                            <th>Unit Cost</th>
+                                            <th>Category</th>
+                                        @elseif ($type === 'stock-out')
+                                            <th>Unit Price</th>
+                                            <th>Destination</th>
+                                        @else
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Status</th>
+                                        @endif
+                                        @if ($type === 'stock-in')
+                                            <th>Action</th>
+                                        @endif
+                                    </tr>
+                                </thead>
+                                <tbody class="ligth-body">
+                                    @forelse ($rows as $row)
+                                        <tr>
+                                            <td>{{ $row['date'] }}</td>
+                                            <td><span class="font-weight-bold">{{ $row['reference'] }}</span></td>
+                                            <td>{{ $row['product'] }}</td>
+                                            <td>{{ number_format($row['quantity']) }}</td>
+                                            @if ($type === 'stock-in')
+                                                <td>${{ number_format($row['unit_cost'], 2) }}</td>
+                                                <td>{{ $row['category'] }}</td>
+                                            @elseif ($type === 'stock-out')
+                                                <td>${{ number_format($row['unit_price'], 2) }}</td>
+                                                <td>{{ $row['destination'] }}</td>
+                                            @else
+                                                <td>{{ $row['from'] }}</td>
+                                                <td>{{ $row['to'] }}</td>
+                                                <td>
+                                                    <span class="badge {{ $row['status'] === 'Completed' ? 'bg-success' : ($row['status'] === 'In Transit' ? 'bg-info' : 'bg-warning') }}">
+                                                        {{ $row['status'] }}
+                                                    </span>
+                                                </td>
+                                            @endif
+                                            @if ($type === 'stock-in')
+                                                <td>
+                                                    <a href="{{ route('stock.in.details') }}"
+                                                        class="btn btn-info" data-toggle="tooltip" data-placement="top"
+                                                        title="View details" aria-label="View details">
+                                                        <x-heroicon-o-eye class="w-5 h-5" />
+                                                    </a>
+                                                </td>
+                                            @endif
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
