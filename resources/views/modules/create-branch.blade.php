@@ -33,7 +33,8 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <form class="compact-form" onsubmit="return false;">
+                    <form class="compact-form" method="POST" action="{{ route('branches.store') }}">
+                        @csrf
                         <div class="row">
                             <div class="form-group col-md-6">
                                 <label for="name">Branch Name <span class="text-danger">*</span></label>
@@ -49,6 +50,12 @@
                                 @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="form-group col-md-6">
+                                <label for="code">Branch Code <span class="text-danger">*</span></label>
+                                <input type="text" id="code" name="code" value="{{ old('code') }}"
+                                    class="form-control @error('code') is-invalid @enderror" required>
+                                @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="form-group col-md-6">
                                 <label for="phone">Phone</label>
                                 <input type="text" id="phone" name="phone" value="{{ old('phone') }}"
                                     class="form-control @error('phone') is-invalid @enderror">
@@ -62,10 +69,10 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-save mr-2">
+                        <button type="submit" class="btn btn-save mr-2">
                             <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save Branch
                         </button>
-                        <a href="{{ route('branches.index') }}" class="btn btn-cancel">
+                        <a href="{{ route('branches.index') }}" class="btn btn-cancel" role="button">
                             <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
                         </a>
                     </form>

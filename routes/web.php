@@ -18,6 +18,7 @@ use App\Http\Controllers\Dashboard\PurchaseController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\StockController;
+use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 
@@ -43,9 +44,11 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
-        Route::get('/in/details', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/in/details/{product}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
+        Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
+        Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -150,28 +153,9 @@ Route::middleware(['permission:orders.menu'])->group(function () {
 
 // ====== STOCK MANAGEMENT ======
 Route::middleware(['permission:stock.menu'])->group(function () {
-    Route::view('/branches', 'modules.index', [
-        'title' => 'Branches',
-        'description' => 'Store branches and locations.',
-        'module' => 'branches',
-        'records' => [
-            [
-                'name' => 'Saddar Main Branch',
-                'code' => 'BR-001',
-                'address' => 'Saddar, Rawalpindi',
-                'phone' => '+92 300 1234567',
-                'status' => 'Active',
-            ],
-            [
-                'name' => 'Commercial Market Branch',
-                'code' => 'BR-002',
-                'address' => 'Commercial Market, Rawalpindi',
-                'phone' => '+92 301 7654321',
-                'status' => 'Active',
-            ],
-        ],
-    ])->name('branches.index');
-    Route::view('/branches/create', 'modules.create-branch')->name('branches.create');
+    Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
 
     Route::view('/expenses', 'modules.index', [
         'title' => 'Expenses',
