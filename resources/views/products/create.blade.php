@@ -7,13 +7,15 @@
 @endsection
 
 @section('container')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between">
-                    <div class="header-title">
-                        <h4 class="card-title">Add Product</h4>
+    @include('products._form', ['product' => null, 'formAction' => route('products.store'), 'formMethod' => 'POST', 'submitLabel' => 'Save'])
+    {{--
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between">
+                        <div class="header-title">
+                            <h4 class="card-title">Add Product</h4>
+                        </div>
                     </div>
                 </div>
 
@@ -250,8 +252,25 @@
                             }, 100);
                         }
                     }
-                }
-            });
+                });
+                
+                // Handle paste events (some scanners use paste)
+                barcodeScanner.addEventListener('paste', function(e) {
+                    setTimeout(function() {
+                        const pastedValue = barcodeScanner.value.trim();
+                        if (pastedValue) {
+                            codeField.value = pastedValue;
+                            codeField.classList.add('border-success');
+                            setTimeout(function() {
+                                codeField.classList.remove('border-success');
+                            }, 1000);
+                            barcodeScanner.value = '';
+                        }
+                    }, 10);
+                });
+            }
+        })();
+    </script> --}}
 
             // Handle paste events (some scanners use paste)
             barcodeScanner.addEventListener('paste', function(e) {

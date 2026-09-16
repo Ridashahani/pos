@@ -62,33 +62,23 @@
                         <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
                     </a>
                     <ul id="orders" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-
-                        <li class="{{ Request::is('orders/pending*') ? 'active' : '' }}">
-                            <a href="{{ route('order.pendingOrders') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
-                            </a>
-                        </li>
                         <li class="{{ Request::is('orders/complete*') ? 'active' : '' }}">
                             <a href="{{ route('order.completeOrders') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
+                        <!-- <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
                             <a href="{{ route('order.pendingDue') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
                             </a>
-                        </li>
+                        </li> -->
 
                             <li class="{{ Request::is('orders/pending*') ? 'active' : '' }}">
                                 <a href="{{ route('order.pendingOrders') }}">
                                     <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
                                     </a>
                                     </li>
-                                    <li class="{{ Request::is('orders/complete*') ? 'active' : '' }}">
-                                        <a href="{{ route('order.completeOrders') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
-                                    </a>
-                                    </li>
+                                   
                                     <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
                                         <a href="{{ route('order.pendingDue') }}">
                                     <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
@@ -125,30 +115,36 @@
                 @endif
 
                 @if (auth()->user()->can('product.menu'))
-                <li>
-                    <a href="#products" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                        <x-heroicon-o-archive-box class="w-6 h-6" />
-                        <span class="ml-3">Products</span>
-                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                    </a>
-                    <ul id="products" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                        <li class="{{ Request::is(['products']) ? 'active' : '' }}">
-                            <a href="{{ route('products.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
+                    @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*'))
+                    <li class="{{ $productsMenuActive ? 'active' : '' }}">
+                        <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse" aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
+                            <x-heroicon-o-archive-box class="w-6 h-6" />
+                            <span class="ml-3">Products</span>
+                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
                             </a>
-                        </li>
-                        <li class="{{ Request::is(['products/create']) ? 'active' : '' }}">
-                            <a href="{{ route('products.create') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is(['categories*']) ? 'active' : '' }}">
-                            <a href="{{ route('categories.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                            <ul id="products" class="iq-submenu collapse {{ $productsMenuActive ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
+                                <li class="{{ Request::is('products') || Request::is('products/*') && !Request::is('products/create') ? 'active' : '' }}">
+                                    <a href="{{ route('products.index') }}">
+                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
+                                        </a>
+                                </li>
+                                <li class="{{ Request::is('variations*') ? 'active' : '' }}">
+                                    <a href="{{ route('variations.index') }}">
+                                            <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
+                                        </a>
+                                </li>
+                                <li class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
+                                            <a href="{{ route('products.create') }}">
+                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
+                                        </a>
+                                </li>
+                                <li class="{{ Request::is('categories*') ? 'active' : '' }}">
+                                            <a href="{{ route('categories.index') }}">
+                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
+                                        </a>
+                                </li>
+                            </ul>
+                    </li>
                 @endif
 
                 <hr>
