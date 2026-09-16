@@ -30,6 +30,7 @@ class PosController extends Controller
             'categories' => Category::orderBy('name')->get(),
             'productItem' => Cart::content(),
             'products' => QueryBuilder::for(Product::class)
+                ->where('stock', '>', 0)
                 ->where('expire_date', '>', $todayDate)
                 ->allowedSorts(['name', 'selling_price'])
                 ->allowedFilters(['name', 'category_id'])
@@ -76,6 +77,7 @@ class PosController extends Controller
             'name' => 'required|string',
             'price' => 'required|numeric',
         ]);
+        $product = Product::findOrFail($validatedData['id']);
 
         Cart::add([
             'id' => $validatedData['id'],
@@ -89,6 +91,7 @@ class PosController extends Controller
                 'tax' => $request->input('tax', 0),
                 'discount' => $request->input('discount', 0),
                 'original_price' => $validatedData['price'],
+                'currency' => $product->currency ?: 'PKR',
             ]
         ]);
     }

@@ -18,7 +18,7 @@
                     </a>
                 </li>
 
-                @if (auth()->user()->can('access.pos'))
+                @if (auth()->user()->can('pos.menu'))
                 <li class="{{ Request::is('pos*') ? 'active' : '' }}">
                     <a href="{{ route('pos.index') }}" class="svg-icon">
                         <x-heroicon-o-shopping-cart class="w-6 h-6" />
@@ -32,7 +32,7 @@
               
                 <hr>
 
-                @if (auth()->user()->can('access.products'))
+                @if (auth()->user()->can('product.menu'))
                     @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*'))
                     <li class="{{ $productsMenuActive ? 'active' : '' }}">
                         <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse" aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
@@ -64,7 +64,7 @@
                     </ul>
                 </li>
                 @endif
-                @if (auth()->user()->can('access.sales'))
+                @if (auth()->user()->can('orders.menu'))
                     <li>
                         <a href="#orders" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('orders*') || Request::is('pending/due*') ? 'true' : 'false' }}">
                             <x-heroicon-o-shopping-bag class="w-6 h-6" />
@@ -145,7 +145,7 @@
 
                 <hr>
 
-                @if (auth()->user()->can('access.customers'))
+                @if (auth()->user()->can('customer.menu'))
                 <li class="{{ Request::is('customers*') ? 'active' : '' }}">
                     <a href="{{ route('customers.index') }}" class="svg-icon">
                         <x-heroicon-o-user-group class="w-6 h-6" />
@@ -154,7 +154,7 @@
                 </li>
                 @endif
 
-                @if (auth()->user()->can('access.suppliers'))
+                @if (auth()->user()->can('supplier.menu'))
                 <li class="{{ Request::is('suppliers*') ? 'active' : '' }}">
                     <a href="{{ route('suppliers.index') }}" class="svg-icon">
                         <x-heroicon-o-user-group class="w-6 h-6" />
@@ -166,7 +166,7 @@
                 <hr>
 
 
-            @if (auth()->user()->can('access.roles'))
+            @if (auth()->user()->can('roles.menu'))
             <li>
                 <a href="#permission" class="collapsed" data-toggle="collapse" aria-expanded="false">
                     <x-heroicon-o-key class="w-6 h-6" />
@@ -193,7 +193,7 @@
             </li>
             @endif
 
-            @if (auth()->user()->can('access.users'))
+            @if (auth()->user()->can('user.menu'))
             <li class="{{ Request::is('users*') ? 'active' : '' }}">
                 <a href="{{ route('users.index') }}" class="svg-icon">
                     <x-heroicon-o-users class="w-6 h-6" />
@@ -201,7 +201,7 @@
                 </a>
             </li>
             @endif
-            @if (auth()->user()->can('access.stock'))
+            @if (auth()->user()->can('stock.menu'))
             <li class="{{ Request::is('expenses*') ? 'active' : '' }}">
                 <a href="{{ route('expenses.index') }}" class="svg-icon">
                     <x-heroicon-o-receipt-percent class="w-6 h-6" />

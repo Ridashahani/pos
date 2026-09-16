@@ -8,6 +8,7 @@ use App\Models\OrderDetails;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\Controller;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -121,6 +122,7 @@ class OrderController extends Controller
                     'product_id' => $content->id,
                     'quantity' => $content->qty,
                     'unit_price' => $content->price,
+                    'currency' => $content->options->currency ?? 'PKR',
                     'discount' => (float) ($content->options->discount ?? 0) * $content->qty,
                     'total' => $content->total,
                 ]);
@@ -169,14 +171,25 @@ class OrderController extends Controller
         $order_id = $request->id;
 
         DB::transaction(function () use ($order_id) {
-            $products = OrderDetails::where('order_id', $order_id)->get();
+            $order = Order::whereKey($order_id)->lockForUpdate()->firstOrFail();
 
-            foreach ($products as $detail) {
-                Product::where('id', $detail->product_id)
-                    ->decrement('stock', $detail->quantity);
+            if ($order->order_status !== 'complete') {
+                $products = OrderDetails::where('order_id', $order_id)->get();
+
+                foreach ($products as $detail) {
+                    $product = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
+
+                    if ($product->stock < $detail->quantity) {
+                        throw ValidationException::withMessages([
+                            'stock' => "Insufficient stock for {$product->name}.",
+                        ]);
+                    }
+
+                    $product->decrement('stock', $detail->quantity);
+                }
+
+                $order->update(['order_status' => 'complete']);
             }
-
-            Order::findOrFail($order_id)->update(['order_status' => 'complete']);
         });
 
         return Redirect::route('order.pendingOrders')->with('success', 'Order has been completed!');

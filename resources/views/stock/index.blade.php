@@ -122,12 +122,12 @@
                                             <td>{{ $row['product'] }}</td>
                                             <td>{{ number_format($row['quantity']) }}</td>
                                             @if ($type === 'stock-in')
-                                                <td>${{ number_format($row['unit_cost'], 2) }}</td>
+                                                <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_cost'], 2) }}</td>
                                                 <td>{{ $row['category'] }}</td>
                                             @elseif ($type === 'stock-out')
-                                                <td>${{ number_format($row['unit_buying_price'], 2) }}</td>
-                                                <td>${{ number_format($row['unit_price'], 2) }}</td>
-                                                <td>${{ number_format($row['net_sold_price'], 2) }}</td>
+                                                <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_buying_price'], 2) }}</td>
+                                                <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_price'], 2) }}</td>
+                                                <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['net_sold_price'], 2) }}</td>
                                                 <td>{{ $row['destination'] }}</td>
                                             @else
                                                 <td>{{ $row['from'] }}</td>

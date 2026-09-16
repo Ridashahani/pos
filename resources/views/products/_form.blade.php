@@ -87,24 +87,30 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                     <div class="form-group col-md-3"><label>Product Price <span class="text-danger">*</span></label><input name="product_price" value="{{ $field('product_price', $field('selling_price')) }}" type="number" step="0.01" class="form-control variation-input"></div>
                 </div>
                 <div class="pricing-fields row">
+                    <div class="form-group col-md-3"><label>Currency <span class="text-danger">*</span></label>
+                        <select name="currency" class="form-control" required>
+                            <option value="PKR" @selected($field('currency', 'PKR') === 'PKR')>PKR</option>
+                            <option value="USD" @selected($field('currency') === 'USD')>USD</option>
+                        </select>
+                    </div>
                     <div class="single-pricing-field form-group col-md-3"><label>Product Cost <span class="text-danger">*</span></label>
                         <div class="input-group"><input name="single_product_cost" value="{{ $field('product_cost', $field('buying_price')) }}" type="number" step="0.01" class="form-control single-input">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div>
                     <div class="single-pricing-field form-group col-md-3"><label><span class="single-label">Product Retail Price</span><span class="variation-label">Product Price</span> <span class="text-danger">*</span></label>
                         <div class="input-group"><input name="single_product_price" value="{{ $field('product_price', $field('selling_price')) }}" type="number" step="0.01" class="form-control single-input">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div>
                     <div class="form-group col-md-3"><label>Product Wholesale Price</label>
                         <div class="input-group"><input name="wholesale_price" value="{{ $field('wholesale_price') }}" type="number" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div>
                     <div class="form-group col-md-3"><label>Product Special/Offer Price</label>
                         <div class="input-group"><input name="special_price" value="{{ $field('special_price') }}" type="number" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div>
                     <div class="form-group col-md-3"><label>Stock Alert</label><input name="stock_alert" value="{{ $field('stock_alert', 0) }}" type="number" min="0" class="form-control"></div>
@@ -403,6 +409,12 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         const selectedTypes = @json(is_array($variationTypes) ? $variationTypes : [$variationTypes]);
         const variationFields = page.querySelectorAll('.variation-only input:not(.picker-values), .variation-only select:not(.picker-values)');
         const singleFields = page.querySelectorAll('.single-input');
+        const currencySelect = page.querySelector('[name="currency"]');
+        const currencyLabels = page.querySelectorAll('.currency-label');
+
+        function syncCurrencyLabels() {
+            currencyLabels.forEach((label) => label.textContent = currencySelect.value);
+        }
 
         function setMode() {
             const isVariation = type.value === 'variation';
@@ -460,6 +472,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         }
 
         type.addEventListener('change', setMode);
+        currencySelect.addEventListener('change', syncCurrencyLabels);
         variationPicker.addEventListener('change', function() {
             syncVariationPicker();
             loadVariationTypes();
@@ -482,6 +495,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         syncVariationPicker();
         loadVariationTypes();
         setMode();
+        syncCurrencyLabels();
         form.addEventListener('submit', function() {
             const isVariation = type.value === 'variation';
             const cost = page.querySelector(isVariation ? '[name="product_cost"]' : '[name="single_product_cost"]');

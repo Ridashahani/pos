@@ -23,6 +23,7 @@
                             $tax = (float) ($options->tax ?? 0);
                             $discount = (float) ($options->discount ?? 0);
                             $originalPrice = (float) ($options->original_price ?? $item->price);
+                            $currency = $options->currency ?? 'PKR';
                             $image = $options->image ?? asset('assets/images/product/default.webp');
                         @endphp
                         <tr>
@@ -31,7 +32,7 @@
                             </td>
                             <td class="pos-cart-product-name">{{ $item->name }}</td>
                             <td>{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}</td>
-                            <td>PKR {{ number_format($originalPrice, 2) }}</td>
+                            <td>{{ $currency }} {{ number_format($originalPrice, 2) }}</td>
                             <td>{{ number_format($tax, 2) }}</td>
                             <td>
                                 <div class="pos-discount-control">
@@ -51,7 +52,7 @@
                                         onclick="updateCart('{{ $item->rowId }}', {{ $item->qty + 1 }})">+</button>
                                 </div>
                             </td>
-                            <td>PKR {{ number_format($item->subtotal, 2) }}</td>
+                            <td>{{ $currency }} {{ number_format($item->subtotal, 2) }}</td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     onclick="deleteCart('{{ $item->rowId }}')">
@@ -75,6 +76,7 @@
 </div>
 
 <div class="pos-cart-summary p-3 bg-white border-top">
+    @php($cartCurrency = $productItem->first()?->options?->currency ?? 'PKR')
     <div class="row">
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Item</label>
@@ -82,24 +84,24 @@
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
-            <input class="form-control form-control-sm" value="PKR {{ number_format((float) Cart::subtotal(), 2) }}"
+            <input class="form-control form-control-sm" value="{{ $cartCurrency }} {{ number_format((float) Cart::subtotal(), 2) }}"
                 readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>
-            <input class="form-control form-control-sm" value="PKR {{ number_format((float) Cart::tax(), 2) }}"
+            <input class="form-control form-control-sm" value="{{ $cartCurrency }} {{ number_format((float) Cart::tax(), 2) }}"
                 readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Discount</label>
             <input class="form-control form-control-sm"
-                value="PKR {{ number_format($productItem->sum(function ($item) {return (float) ($item->options->discount ?? 0) * $item->qty;}),2) }}"
+                value="{{ $cartCurrency }} {{ number_format($productItem->sum(function ($item) {return (float) ($item->options->discount ?? 0) * $item->qty;}),2) }}"
                 readonly>
         </div>
     </div>
     <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
         <span class="font-weight-bold">Grand Total</span>
-        <span class="font-weight-bold text-primary" id="cart-total">PKR
+        <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
             {{ number_format((float) Cart::total(), 2) }}</span>
     </div>
 </div>
@@ -122,7 +124,7 @@
         </div>
         {{-- <div class="d-flex justify-content-between align-items-center my-3 px-2 py-2 bg-light rounded">
             <span class="small font-weight-bold text-muted">Change</span>
-            <span class="font-weight-bold text-success" id="change_amount">PKR 0.00</span>
+            <span class="font-weight-bold text-success" id="change_amount">{{ $cartCurrency }} 0.00</span>
         </div> --}}
         <button type="button"
             class="btn btn-primary btn-lg btn-block rounded-pill shadow-lg d-flex align-items-center justify-content-center  my-3 px-2 py-2"
