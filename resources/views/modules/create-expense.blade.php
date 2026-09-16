@@ -69,8 +69,12 @@
                                 <textarea id="note" class="form-control" rows="4" placeholder="Add expense details"></textarea>
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary mr-2">Save Expense</button>
-                        <a href="{{ route('expenses.index') }}" class="btn btn-pure-red">Cancel</a>
+                        <button type="button" class="btn btn-save mr-2">
+                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save Expense
+                        </button>
+                        <a href="{{ route('expenses.index') }}" class="btn btn-cancel">
+                            <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
+                        </a>
                     </form>
                 </div>
             </div>
