@@ -72,6 +72,7 @@ class UpdateProductRequest extends FormRequest
             'stock' => 'required|integer|min:0',
             'buying_price' => 'required|numeric|min:0',
             'selling_price' => 'required|numeric|min:0',
+            'currency' => 'required|string|in:PKR,USD',
             'buying_date' => 'date_format:Y-m-d|nullable',
             'expire_date' => 'date_format:Y-m-d|nullable',
         ];

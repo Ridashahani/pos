@@ -47,8 +47,8 @@
                                 <td>{{ $product->imei ?: 'Not provided' }}</td>
                                 <td>{{ $product->category->name }}</td>
                                 <td>{{ number_format($product->stock) }}</td>
-                                <td>${{ number_format($product->buying_price, 2) }}</td>
-                                <td>${{ number_format($product->selling_price, 2) }}</td>
+                                    <td>{{ $product->currency ?: 'PKR' }} {{ number_format($product->buying_price, 2) }}</td>
+                                    <td>{{ $product->currency ?: 'PKR' }} {{ number_format($product->selling_price, 2) }}</td>
                                 <td>{{ $product->buying_date ?: $product->created_at->format('d M Y') }}</td>
                                 <td>{{ $product->expire_date ?: 'Not provided' }}</td>
                             </tr>
