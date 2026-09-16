@@ -6,8 +6,8 @@
 </div>
 <div class="card-body">
     <form action="{{ route('password.update') }}" method="POST">
-    @csrf
-    @method('put')
+        @csrf
+        @method('put')
         <!-- begin: Input Data -->
         <div class=" row align-items-center">
             <div class="form-group col-md-12">
@@ -40,8 +40,12 @@
         </div>
         <!-- end: Input Data -->
         <div class="mt-2">
-            <button type="submit" class="btn btn-primary mr-2">Update</button>
-            <a class="btn bg-danger" href="{{ route('profile') }}">Cancel</a>
+            <button type="submit" class="btn btn-save mr-2">
+                <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Update
+            </button>
+            <a class="btn btn-cancel" href="{{ route('profile') }}">
+                <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
+            </a>
         </div>
     </form>
 </div>
