@@ -27,33 +27,43 @@
                 </li>
                 @endif
 
-                <li>
-                    <a href="#stock" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('stock*') ? 'true' : 'false' }}">
-                        <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
-                        <span class="ml-3">Stock</span>
-                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+
+
+              
+                <hr>
+
+                @if (auth()->user()->can('access.products'))
+                    @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*'))
+                    <li class="{{ $productsMenuActive ? 'active' : '' }}">
+                        <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse" aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
+                            <x-heroicon-o-archive-box class="w-6 h-6" />
+                            <span class="ml-3">Products</span>
+                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
                     </a>
-                    <ul id="stock" class="iq-submenu collapse {{ Request::is('stock*') ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
-                        <li class="{{ Request::is('stock/in') ? 'active' : '' }}">
-                            <a href="{{ route('stock.in') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-In</span>
+                    <ul id="products" class="iq-submenu collapse {{ $productsMenuActive ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
+                        <li class="{{ Request::is('products') || Request::is('products/*') && !Request::is('products/create') ? 'active' : '' }}">
+                            <a href="{{ route('products.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('stock/out') ? 'active' : '' }}">
-                            <a href="{{ route('stock.out') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-out</span>
+                        <li class="{{ Request::is('variations*') ? 'active' : '' }}">
+                            <a href="{{ route('variations.index') }}">
+                                <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('stock/transfer') ? 'active' : '' }}">
-                            <a href="{{ route('stock.transfer') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-Transfer</span>
+                        <li class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
+                            <a href="{{ route('products.create') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('categories*') ? 'active' : '' }}">
+                            <a href="{{ route('categories.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
                             </a>
                         </li>
                     </ul>
                 </li>
-
-                <hr>
-
+                @endif
                 @if (auth()->user()->can('access.sales'))
                     <li>
                         <a href="#orders" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('orders*') || Request::is('pending/due*') ? 'true' : 'false' }}">
@@ -106,38 +116,32 @@
                     </li>
                 @endif
 
-                @if (auth()->user()->can('access.products'))
-                    @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*'))
-                    <li class="{{ $productsMenuActive ? 'active' : '' }}">
-                        <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse" aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
-                            <x-heroicon-o-archive-box class="w-6 h-6" />
-                            <span class="ml-3">Products</span>
-                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+               
+  
+                <li>
+                    <a href="#stock" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('stock*') ? 'true' : 'false' }}">
+                        <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
+                        <span class="ml-3">Stock</span>
+                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                    </a>
+                    <ul id="stock" class="iq-submenu collapse {{ Request::is('stock*') ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
+                        <li class="{{ Request::is('stock/in') ? 'active' : '' }}">
+                            <a href="{{ route('stock.in') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-In</span>
                             </a>
-                            <ul id="products" class="iq-submenu collapse {{ $productsMenuActive ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
-                                <li class="{{ Request::is('products') || Request::is('products/*') && !Request::is('products/create') ? 'active' : '' }}">
-                                    <a href="{{ route('products.index') }}">
-                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
-                                        </a>
-                                </li>
-                                <li class="{{ Request::is('variations*') ? 'active' : '' }}">
-                                    <a href="{{ route('variations.index') }}">
-                                            <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
-                                        </a>
-                                </li>
-                                <li class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
-                                            <a href="{{ route('products.create') }}">
-                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
-                                        </a>
-                                </li>
-                                <li class="{{ Request::is('categories*') ? 'active' : '' }}">
-                                            <a href="{{ route('categories.index') }}">
-                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
-                                        </a>
-                                </li>
-                            </ul>
-                    </li>
-                @endif
+                        </li>
+                        <li class="{{ Request::is('stock/out') ? 'active' : '' }}">
+                            <a href="{{ route('stock.out') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-out</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('stock/transfer') ? : '' }}">
+                            <a href="{{ route('stock.transfer') }}">
+                                <x-heroicon-o-arrows-right-left class="w-4 h-4" /><span>Stock-Transfer</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
 
                 <hr>
 

@@ -18,8 +18,8 @@
                                 <!-- Section: Personal Information -->
                                 <div class="form-group col-md-6">
                                     <label for="name">Customer Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                                        name="name" value="{{ old('name') }}" required>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                        id="name" name="name" value="{{ old('name') }}" required>
                                     @error('name')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -29,8 +29,8 @@
 
                                 <div class="form-group col-md-6">
                                     <label for="email">Customer Email <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('email') is-invalid @enderror" id="email"
-                                        name="email" value="{{ old('email') }}" required>
+                                    <input type="text" class="form-control @error('email') is-invalid @enderror"
+                                        id="email" name="email" value="{{ old('email') }}" required>
                                     @error('email')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -40,8 +40,8 @@
 
                                 <div class="form-group col-md-6">
                                     <label for="phone">Customer Phone <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('phone') is-invalid @enderror" id="phone"
-                                        name="phone" value="{{ old('phone') }}" required>
+                                    <input type="text" class="form-control @error('phone') is-invalid @enderror"
+                                        id="phone" name="phone" value="{{ old('phone') }}" required>
                                     @error('phone')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -51,8 +51,8 @@
 
                                 <div class="form-group col-md-6">
                                     <label for="city">Customer City <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('city') is-invalid @enderror" id="city"
-                                        name="city" value="{{ old('city') }}" required>
+                                    <input type="text" class="form-control @error('city') is-invalid @enderror"
+                                        id="city" name="city" value="{{ old('city') }}" required>
                                     @error('city')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -62,8 +62,7 @@
 
                                 <div class="form-group col-md-12">
                                     <label for="address">Customer Address <span class="text-danger">*</span></label>
-                                    <textarea class="form-control @error('address') is-invalid @enderror" name="address"
-                                        required>{{ old('address') }}</textarea>
+                                    <textarea class="form-control @error('address') is-invalid @enderror" name="address" required>{{ old('address') }}</textarea>
                                     @error('address')
                                         <div class="invalid-feedback">
                                             {{ $message }}
@@ -74,8 +73,12 @@
 
                             <!-- Section: Form Actions -->
                             <div class="mt-2">
-                                <button type="submit" class="btn btn-primary mr-2">Save</button>
-                                <a class="btn btn-secondary" href="{{ route('customers.index') }}">Cancel</a>
+                                <button type="submit" class="btn btn-save mr-2">
+                                    <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
+                                </button>
+                                <a class="btn btn-cancel" href="{{ route('customers.index') }}">
+                                    <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
+                                </a>
                             </div>
                         </form>
                     </div>

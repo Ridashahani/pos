@@ -17,8 +17,8 @@
 
                     <div class="card-body">
                         <form action="{{ route('rolePermission.update', $role->id) }}" method="POST">
-                        @csrf
-                        @method('put')
+                            @csrf
+                            @method('put')
                             <!-- begin: Input Data -->
                             <div class=" row align-items-center mb-2">
                                 <div class="form-group col-md-6">
@@ -47,59 +47,50 @@
                             <hr>
 
                             @foreach ($permission_groups as $permission_group)
-                            @php
-        $permissions = App\Models\User::getPermissionByGroupName($permission_group->group_name);
-                            @endphp
+                                @php
+                                    $permissions = App\Models\User::getPermissionByGroupName(
+                                        $permission_group->group_name,
+                                    );
+                                @endphp
 
-                            <div class="row">
-                                <div class="form-group col-md-3">
-                                    <div class="custom-control custom-checkbox custom-control-inline">
-                                        <input
-                                            type="checkbox"
-                                            class="custom-control-input"
-                                            id="permission_group_id[{{ $loop->iteration }}]"
-                                            name="permission_group_id[]"
-                                            {{ App\Models\User::roleHasPermission($role, $permissions) ? 'checked' : '' }}
-                                        >
-                                        <label
-                                            for="permission_group_id[{{ $loop->iteration }}]"
-                                            class="custom-control-label"
-                                        >
-                                            {{ $permission_group->group_name }}
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="form-group col-md-6">
-                                    @foreach ($permissions as $permission)
-                                        <div class="custom-control custom-checkbox custom-control-inline my-2">
-                                            <input
-                                                type="checkbox"
-                                                class="custom-control-input"
-                                                id="permission_id[{{ $permission->id }}]"
-                                                name="permission_id[]"
-                                                value="{{ $permission->id }}"
-                                                {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}
-                                            >
-                                            <label
-                                                for="permission_id[{{ $permission->id }}]"
-                                                class="custom-control-label"
-                                            >
-                                                {{ $permission->name }}
+                                <div class="row">
+                                    <div class="form-group col-md-3">
+                                        <div class="custom-control custom-checkbox custom-control-inline">
+                                            <input type="checkbox" class="custom-control-input"
+                                                id="permission_group_id[{{ $loop->iteration }}]"
+                                                name="permission_group_id[]"
+                                                {{ App\Models\User::roleHasPermission($role, $permissions) ? 'checked' : '' }}>
+                                            <label for="permission_group_id[{{ $loop->iteration }}]"
+                                                class="custom-control-label">
+                                                {{ $permission_group->group_name }}
                                             </label>
                                         </div>
-                                    @endforeach
+                                    </div>
+
+                                    <div class="form-group col-md-6">
+                                        @foreach ($permissions as $permission)
+                                            <div class="custom-control custom-checkbox custom-control-inline my-2">
+                                                <input type="checkbox" class="custom-control-input"
+                                                    id="permission_id[{{ $permission->id }}]" name="permission_id[]"
+                                                    value="{{ $permission->id }}"
+                                                    {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
+                                                <label for="permission_id[{{ $permission->id }}]"
+                                                    class="custom-control-label">
+                                                    {{ $permission->name }}
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
-                            </div>
-                            <hr>
+                                <hr>
                             @endforeach
 
                             <!-- end: Input Data -->
                             <div class="mt-2">
-                                <button type="submit" class="btn btn-primary mr-2">
+                                <button type="submit" class="btn btn-save mr-2">
                                     <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
                                 </button>
-                                <a class="btn bg-danger" href="{{ route('rolePermission.index') }}">
+                                <a class="btn btn-cancel" href="{{ route('rolePermission.index') }}">
                                     <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
                                 </a>
                             </div>
@@ -113,13 +104,11 @@
 
     <script>
         $('#check-all').click(function() {
-            if($(this).is(':checked')) {
+            if ($(this).is(':checked')) {
                 $('input[type = checkbox]').prop('checked', true);
             } else {
                 $('input[type = checkbox]').prop('checked', false);
             }
         });
     </script>
-
-
 @endsection

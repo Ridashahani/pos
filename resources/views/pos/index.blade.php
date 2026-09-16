@@ -16,32 +16,40 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row pos-shell">
             <!-- LEFT COLUMN: Product Catalog -->
-            <div class="col-md-12 col-lg-8">
+            <div class="col-md-12 col-lg-8 pos-catalog">
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card card-block card-stretch card-height">
                             <div class="card-body">
+                                <div class="pos-category-tabs mb-3">
+                                    <button type="button" class="pos-tab active">All Product</button>
+                                    <button type="button" class="pos-tab">Category</button>
+                                    <button type="button" class="pos-tab">Brand</button>
+                                    <button type="button" class="pos-tab">Featured</button>
+                                </div>
                                 <!-- Filter & Search Form -->
                                 <form action="{{ route('pos.index') }}" method="get">
                                     <div class="d-flex flex-wrap align-items-center justify-content-between">
                                         <!-- Search Input -->
                                         <div class="form-group row mb-0 col-md-5">
-                                            <div class="input-group">
+                                            <div class="input-group pos-search-box">
                                                 <input type="text" class="form-control" name="search" id="pos_search"
-                                                    placeholder="Search by name or barcode..." value="{{ request('search') }}" autocomplete="off">
+                                                    placeholder="Search by name or barcode..."
+                                                    value="{{ request('search') }}" autocomplete="off">
                                                 <div class="input-group-append">
                                                     <button type="submit" class="input-group-text bg-primary text-white">
                                                         <x-heroicon-o-magnifying-glass class="w-5 h-5" />
                                                     </button>
                                                     @if (request('search') || request('category_id'))
-                                                        <a href="{{ route('pos.index') }}" class="input-group-text bg-danger text-white">
-                                                                <x-heroicon-o-x-mark class="w-5 h-5" />
-                                                            </a>
+                                                        <a href="{{ route('pos.index') }}"
+                                                            class="input-group-text bg-danger text-white">
+                                                            <x-heroicon-o-x-mark class="w-5 h-5" />
+                                                        </a>
                                                     @endif
                                                 </div>
-                                                </div>
+                                            </div>
                                         </div>
 
                                         <!-- Category Filter -->
@@ -49,9 +57,10 @@
                                             <select class="form-control" name="category_id" onchange="this.form.submit()">
                                                 <option value="">All Categories</option>
                                                 @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                                            {{ $category->name }}
-                                                        </option>
+                                                    <option value="{{ $category->id }}"
+                                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                                        {{ $category->name }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -75,9 +84,9 @@
 
                     <!-- Product Grid -->
                     <div class="col-lg-12">
-                        <div class="row">
+                        <div class="row product-grid">
                             @forelse($products as $product)
-                                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                                <div class="col-lg-6 col-md-4 col-sm-6 mb-3">
                                     <div class="product-card h-100 d-flex flex-column">
                                         <!-- Product Image -->
                                         <div class="image-container">
@@ -107,7 +116,11 @@
                                                 <form class="add-to-cart-form" onsubmit="addToCart(event)">
                                                     <input type="hidden" name="id" value="{{ $product->id }}">
                                                     <input type="hidden" name="name" value="{{ $product->name }}">
-                                                    <input type="hidden" name="price" value="{{ $product->selling_price }}">
+                                                    <input type="hidden" name="price"
+                                                        value="{{ $product->selling_price }}">
+                                                    <input type="hidden" name="code" value="{{ $product->code }}">
+                                                    <input type="hidden" name="image"
+                                                        value="{{ $product->image ? asset('storage/products/' . $product->image) : asset('assets/images/product/default.webp') }}">
                                                     <button type="submit"
                                                         class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center">
                                                         <x-heroicon-o-plus class="w-4 h-4 mr-1" /> Add
@@ -138,7 +151,7 @@
             </div>
 
             <!-- RIGHT COLUMN: Cart System -->
-            <div class="col-md-12 col-lg-4">
+            <div class="col-md-12 col-lg-4 pos-cart">
                 <div class="card border-0 shadow-lg sticky-top" style="top: 20px; z-index: 100;">
                     <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between p-3">
                         <h5 class="mb-0 text-white">
@@ -150,20 +163,43 @@
                     </div>
 
                     <div class="card-body p-0">
-                        <!-- Customer Selection -->
-                        <div class="p-3 border-bottom bg-light">
-                            <div class="form-group mb-0">
-                                <label class="font-weight-bold mb-1">Customer</label>
-                                <div class="input-group">
-                                    <select class="form-control select2" id="customer_id" name="customer_id" style="width: 85%;">
-                                        <option value="" selected disabled>-- Search Customer --</option>
-                                    </select>
-                                    <div class="input-group-append" style="width: 15%;">
-                                        <button type="button" class="btn btn-outline-primary btn-block" title="Add New Customer" data-toggle="modal"
-                                            data-target="#addCustomerModal">
-                                            <x-heroicon-o-plus class="w-5 h-5 mx-auto" />
-                                        </button>
+                        <div class="pos-order-fields p-3 border-bottom">
+                            <div class="row">
+                                <div class="col-md-6 form-group mb-2">
+                                    <label class="pos-field-label">Customer</label>
+                                    <div class="input-group">
+                                        <select class="form-control select2" id="customer_id" name="customer_id"
+                                            style="width: 82%;">
+                                            <option value="" selected disabled>Select Customer</option>
+                                        </select>
+                                        <div class="input-group-append" style="width: 18%;">
+
+                                            <a href="{{ route('customers.create') }}">
+                                                <button type="button" class="btn btn-primary btn-block ml-2"
+                                                    title="Add New Customer">
+                                                    <x-heroicon-o-plus class="w-3 h-5" />
+                                                </button>
+                                            </a>
+                                        </div>
                                     </div>
+                                </div>
+                                <div class="col-md-6 form-group mb-2">
+                                    <label class="pos-field-label">Biller</label>
+                                    <select class="form-control">
+                                        <option>Admin</option>
+                                        <option>Staff</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group mb-2">
+                                    <label class="pos-field-label">Warehouse</label>
+                                    <select class="form-control">
+                                        <option>Main Warehouse</option>
+                                        <option>Mobile Store</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group mb-2">
+                                    <label class="pos-field-label">Reference No</label>
+                                    <input class="form-control" type="text" placeholder="Reference No">
                                 </div>
                             </div>
                         </div>
@@ -173,8 +209,8 @@
                             @include('pos.cart-sidebar')
                         </div>
                     </div>
-                    </div>
-                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -185,6 +221,7 @@
                 <div class="modal-header bg-primary text-white"
                     style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
                     <h5 class="modal-title font-weight-bold mx-auto">Complete Payment</h5>
+
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -211,24 +248,26 @@
                                     <td class="text-right font-weight-bold h5 text-success" id="modal_pay_amount">0.00
                                     </td>
                                 </tr>
-                                <tr class="border-top">
-                                    <td class="text-muted font-weight-bold">Change:</td>
-                                    <td class="text-right font-weight-bold h5 text-danger" id="modal_change_amount">0.00
-                                    </td>
-                                </tr>
+                                {{-- <tr class="border-top">
+                                <td class="text-muted font-weight-bold">Change:</td>
+                                <td class="text-right font-weight-bold h5 text-danger" id="modal_change_amount">0.00
+                                </td>
+                            </tr> --}}
                             </table>
-                            </div>
-                            </div>
-                            <!-- Modal Actions -->
-                            <div class="modal-footer border-top-0 d-flex justify-content-between p-4 bg-light"
-                                style="border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
-                                <button type="button" class="btn btn-outline-secondary px-4" data-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary px-5 shadow-sm">Confirm Payment</button>
-                            </div>
-                            </form>
-                            </div>
-                            </div>
-                            </div>
+                        </div>
+                    </div>
+                    <!-- Modal Actions -->
+                    <div class="modal-footer border-top-0 d-flex justify-content-between p-4 bg-light"
+                        style="border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+                        <button type="button" class="btn btn-cancel px-4" data-dismiss="modal">
+                            <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm">Confirm Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Create Customer Modal -->
     <div class="modal fade" id="addCustomerModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -268,12 +307,14 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Customer</button>
+                        <button type="submit" class="btn btn-save">
+                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save Customer
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
-        </div>
+    </div>
 @endsection
 
 @section('specificpagescripts')
@@ -283,21 +324,21 @@
 
     <script>
         // Initialize Select2 on Load
-            window.addEventListener('load', function () {
+        window.addEventListener('load', function() {
             $('.select2').select2({
-                placeholder: "-- Search Customer --",
+                placeholder: " Select Customer",
                 allowClear: true,
                 width: 'resolve',
                 ajax: {
                     url: "{{ route('pos.customers.search') }}",
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) {
+                    data: function(params) {
                         return {
                             term: params.term
                         };
                     },
-                    processResults: function (data) {
+                    processResults: function(data) {
                         return {
                             results: data.results
                         };
@@ -341,6 +382,47 @@
                 console.error('Error adding to cart:', error);
             }
         }
+        async function addManualItem() {
+            const name = document.getElementById('manual_item_name').value.trim();
+            const price = parseFloat(document.getElementById('manual_item_price').value);
+            const tax = parseFloat(document.getElementById('manual_item_tax').value) || 0;
+            const discount = parseFloat(document.getElementById('manual_item_discount').value) || 0;
+
+            if (!name || isNaN(price) || price <= 0) {
+                alert('Please enter item name and valid price!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('price', price);
+            formData.append('tax', tax);
+            formData.append('discount', discount);
+            formData.append('is_manual', 1);
+
+            const customerId = getCustomerId();
+            if (customerId) formData.append('customer_id', customerId);
+
+            try {
+                const response = await fetch("{{ route('pos.addCart') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
+                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
+                } else {
+                    alert(data.message || 'Failed to add item');
+                }
+            } catch (error) {
+                console.error('Error adding manual item:', error);
+            }
+        }
 
         // Logic: Update Item Quantity (AJAX)
         async function updateCart(rowId, qty) {
@@ -368,11 +450,37 @@
             }
         }
 
+        async function applyDiscount(rowId, button) {
+            const input = button.closest('.pos-discount-control').querySelector('.pos-discount-input');
+            const discount = input.value;
+            try {
+                const response = await fetch("{{ url('pos/discount') }}/" + rowId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        discount: discount
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
+                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
+                }
+            } catch (error) {
+                console.error('Error updating discount:', error);
+            }
+        }
+
         // Logic: Remove Item from Cart (AJAX)
         async function deleteCart(rowId) {
             const customerId = getCustomerId();
             try {
-                const response = await fetch("{{ url('pos/delete') }}/" + rowId + "?customer_id=" + (customerId || ''), {
+                const response = await fetch("{{ url('pos/delete') }}/" + rowId + "?customer_id=" + (customerId ||
+                    ''), {
                     method: 'GET',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -482,9 +590,9 @@
             document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
                 ",");
 
-            const change = payAmount - totalAmount;
-            document.getElementById('modal_change_amount').innerText = change.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
-                ",");
+            // const change = payAmount - totalAmount;
+            // document.getElementById('modal_change_amount').innerText = change.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
+            //     ",");
 
             // 4. Show Modal
             $('#paymentModal').modal('show');
@@ -554,16 +662,16 @@
         (function() {
             const posSearchField = document.getElementById('pos_search');
             const searchForm = posSearchField ? posSearchField.closest('form') : null;
-            
+
             if (posSearchField && searchForm) {
                 let scannerTimeout;
-                
+
                 // Auto-focus search field on mobile devices
                 function isMobileDevice() {
                     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                           (window.innerWidth <= 768);
+                        (window.innerWidth <= 768);
                 }
-                
+
                 // Handle scanner input (scanners typically send Enter after barcode)
                 posSearchField.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.keyCode === 13) {
@@ -571,7 +679,7 @@
                         if (scannerTimeout) {
                             clearTimeout(scannerTimeout);
                         }
-                        
+
                         const searchValue = posSearchField.value.trim();
                         if (searchValue) {
                             // Check if this looks like a barcode scan (fast input + Enter)
@@ -583,7 +691,7 @@
                         }
                     }
                 });
-                
+
                 // Handle paste events (some scanners use paste)
                 posSearchField.addEventListener('paste', function(e) {
                     setTimeout(function() {
@@ -594,7 +702,7 @@
                         }
                     }, 50);
                 });
-                
+
                 // Auto-focus on mobile for better scanner experience
                 if (isMobileDevice()) {
                     setTimeout(function() {
@@ -607,6 +715,191 @@
 
     <!-- Page Specific Styles -->
     <style>
+        .pos-shell {
+            align-items: flex-start;
+            background: #f8fafc;
+            margin: -1.5rem;
+            min-height: calc(100vh - 80px);
+            padding: 1.5rem;
+        }
+
+        .pos-catalog {
+            order: 2;
+        }
+
+        .pos-cart {
+            order: 1;
+        }
+
+        .pos-catalog>.row>.col-lg-12:first-child .card,
+        .pos-cart .card {
+            border: 1px solid #e5eaf0;
+            border-radius: 4px;
+            box-shadow: none;
+        }
+
+        .pos-catalog>.row>.col-lg-12:first-child .card-body {
+            padding: .8rem;
+        }
+
+        .pos-category-tabs {
+            display: flex;
+            gap: .45rem;
+        }
+
+        .pos-tab {
+            background: #2f80ed;
+            border: 0;
+            border-radius: 3px;
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .5rem .75rem;
+        }
+
+        .pos-tab:nth-child(2) {
+            background: #2fc48e;
+        }
+
+        .pos-tab:nth-child(3) {
+            background: #f89a42;
+        }
+
+        .pos-tab:nth-child(4) {
+            background: #a40c72;
+        }
+
+        .pos-search-box .form-control,
+        .pos-catalog select {
+            border-radius: 3px;
+            font-size: .72rem;
+            height: 34px;
+        }
+
+        .pos-cart .card {
+            position: sticky;
+            top: 20px;
+        }
+
+        .pos-cart .card-header {
+            background: #fff !important;
+            border-bottom: 1px solid #e5eaf0;
+            color: #273142;
+            padding: .8rem 1rem !important;
+        }
+
+        .pos-cart .card-header h5 {
+            color: #273142 !important;
+            font-size: .95rem;
+        }
+
+        .pos-cart .card-header .badge {
+            background: #2f80ed;
+            color: #fff !important;
+        }
+
+        .pos-order-fields {
+            background: #fff;
+        }
+
+        .pos-field-label {
+            color: #536071;
+            display: block;
+            font-size: .7rem;
+            font-weight: 700;
+            margin-bottom: .25rem;
+        }
+
+        .pos-order-fields .form-control {
+            border-color: #dfe5ec;
+            border-radius: 3px;
+            font-size: .72rem;
+            height: 34px;
+        }
+
+        .pos-order-fields .select2-container--default .select2-selection--single {
+            border-radius: 3px;
+            height: 34px;
+        }
+
+        .pos-order-fields .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 34px;
+        }
+
+        .product-grid .product-card {
+            border: 1px solid #e5eaf0;
+            border-radius: 4px;
+            box-shadow: none;
+        }
+
+        .product-grid .product-card:hover {
+            transform: none;
+            box-shadow: 0 4px 12px rgba(37, 52, 72, .08);
+        }
+
+        .product-grid .product-image {
+            height: 105px;
+            object-fit: contain;
+            padding: .45rem;
+        }
+
+        .product-grid .product-card .p-3 {
+            padding: .65rem !important;
+        }
+
+        .product-grid .product-card h6 {
+            font-size: .72rem !important;
+            line-height: 1.25;
+        }
+
+        .product-grid .product-card h5 {
+            font-size: .75rem !important;
+        }
+
+        .product-grid .product-card .btn {
+            font-size: .68rem;
+            padding: .25rem .5rem;
+        }
+
+        .pos-cart .cart-items-wrapper {
+            height: 285px !important;
+        }
+
+        .pos-cart .btn-lg {
+            border-radius: 3px !important;
+            font-size: .78rem;
+        }
+
+        @media (min-width: 992px) {
+            .pos-catalog {
+                flex: 0 0 36%;
+                max-width: 36%;
+            }
+
+            .pos-cart {
+                flex: 0 0 64%;
+                max-width: 64%;
+            }
+
+            .pos-catalog .col-lg-3,
+            .pos-catalog .col-md-4 {
+                flex: 0 0 50%;
+                max-width: 50%;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+
+            .pos-catalog,
+            .pos-cart {
+                max-width: 100%;
+            }
+
+            .pos-cart {
+                margin-bottom: 1rem;
+            }
+        }
+
         /* Modern Scrollbar for Cart */
         .cart-items-wrapper::-webkit-scrollbar {
             width: 5px;

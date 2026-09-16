@@ -1,18 +1,18 @@
 @extends('dashboard.body.main')
 
 @section('container')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-12 mt-4">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between">
-                        <div class="header-title">
-                            <h4 class="card-title">Edit User</h4>
-                        </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12 mt-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <div class="header-title">
+                        <h4 class="card-title">Edit User</h4>
                     </div>
+                </div>
 
-                    <div class="card-body">
-                        <form action="{{ route('users.update', $userData->username) }}" method="POST" enctype="multipart/form-data">
+                <div class="card-body">
+                    <form action="{{ route('users.update', $userData->username) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('put')
                             <!-- begin: Input Image -->
@@ -69,57 +69,40 @@
                                     </div>
                                     @enderror
                                 </div>
-
-                                <div class="form-group col-md-6">
-                                    <label for="password">Password</label>
-                                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password">
-                                    @error('password')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label for="password_confirmation">Confirm Password</label>
-                                    <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" id="password_confirmation" name="password_confirmation">
-                                    @error('password_confirmation')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group col-md-6">
-                                    <label for="role">Role</label>
-                                    <select class="form-control @error('role') is-invalid @enderror" name="role">
-                                        <option selected="" disabled>-- Select Role --</option>
-                                        @foreach ($roles as $role)
-                                            <option value="{{ $role->id }}" {{ $userData->hasRole($role->name) ? 'selected' : '' }}>{{ $role->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('role')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-                                </div>
+                                @enderror
                             </div>
-                            <!-- end: Input Data -->
-                            <div class="mt-2">
-                                <button type="submit" class="btn btn-primary mr-2">
-                                    <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Update
-                                </button>
-                                <a class="btn bg-danger" href="{{ route('users.index') }}">
-                                    <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
-                                </a>
+
+                            <div class="form-group col-md-6">
+                                <label for="role">Role</label>
+                                <select class="form-control @error('role') is-invalid @enderror" name="role">
+                                    <option selected="" disabled>-- Select Role --</option>
+                                    @foreach ($roles as $role)
+                                    <option value="{{ $role->id }}" {{ $userData->hasRole($role->name) ? 'selected' : '' }}>{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('role')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                                @enderror
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                        <!-- end: Input Data -->
+                        <div class="mt-2">
+                            <button type="submit" class="btn btn-save mr-2">
+                                <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Update
+                            </button>
+                            <a class="btn btn-cancel" href="{{ route('users.index') }}">
+                                <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <!-- Page end  -->
     </div>
+    <!-- Page end  -->
+</div>
 
-    @include('components.preview-img-form')
+@include('components.preview-img-form')
 @endsection
