@@ -89,7 +89,7 @@
                                     <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="View" href="{{ route('suppliers.show', $supplier->id) }}">
                                         <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                     </a>
-                                    <a class="btn btn-success mr-2" data-toggle="tooltip" data-placement="top" title="Edit" href="{{ route('suppliers.edit', $supplier->id) }}">
+                                    <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit" href="{{ route('suppliers.edit', $supplier->id) }}">
                                         <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                     </a>
                                     <form action="{{ route('suppliers.destroy', $supplier->id) }}" method="POST" style="display:inline;">

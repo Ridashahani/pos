@@ -14,14 +14,20 @@
                 <div class="card-body">
                     <form action="{{ route('role.store') }}" method="POST">
                         @csrf
-                        <!-- begin: Input Data -->
-                        <div class=" row align-items-center">
-                            <div class="form-group col-md-6">
-                                <label for="name">Role Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required autocomplete="off">
-                                @error('name')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
+                            <!-- begin: Input Data -->
+                            <div class=" row align-items-center">
+                                <div class="form-group col-md-6">
+                                    <label for="name">Role Name <span class="text-danger">*</span></label>
+                                    <select class="form-control @error('name') is-invalid @enderror" id="name" name="name" required>
+                                        <option value="">Select role</option>
+                                        <option value="Admin" @selected(old('name') === 'Admin')>Admin</option>
+                                        <option value="Staff" @selected(old('name') === 'Staff')>Staff</option>
+                                    </select>
+                                    @error('name')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                    @enderror
                                 </div>
                                 @enderror
                             </div>

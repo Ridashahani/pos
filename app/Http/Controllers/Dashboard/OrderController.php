@@ -121,6 +121,7 @@ class OrderController extends Controller
                     'product_id' => $content->id,
                     'quantity' => $content->qty,
                     'unit_price' => $content->price,
+                    'discount' => (float) ($content->options->discount ?? 0) * $content->qty,
                     'total' => $content->total,
                 ]);
             }
