@@ -9,7 +9,7 @@
                         <h4 class="mb-2">Purchase Returns</h4>
                         <p class="mb-0">List of returned purchases.</p>
                     </div>
-                    <a href="{{ route('purchases.index') }}" class="btn btn-light border d-flex align-items-center">
+                    <a href="{{ route('purchases.index') }}" class="btn btn-primary border d-flex align-items-center">
                         <x-heroicon-o-arrow-left class="w-5 h-5 mr-1" /> Purchase List
                     </a>
                 </div>

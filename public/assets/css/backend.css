@@ -28121,6 +28121,62 @@ i {
   }
 }
 
+.table thead th,
+.table thead th a {
+  color: #fff !important;
+  background-color: #32BDEA !important;
+}
+
+.btn-save {
+  color: #fff !important;
+  background-color: #158df7 !important;
+  border-color: #158df7 !important;
+}
+
+.btn-save:hover,
+.btn-save:focus,
+.btn-save:active {
+  color: #fff !important;
+  background-color: #087ade !important;
+  border-color: #0773d2 !important;
+}
+
+.btn-cancel {
+  color: #fff !important;
+  background-color: #ff0000 !important;
+  border-color: #ff0000 !important;
+}
+
+.btn-cancel:hover,
+.btn-cancel:focus,
+.btn-cancel:active {
+  color: #fff !important;
+  background-color: #d90000 !important;
+  border-color: #d90000 !important;
+}
+
+a.btn-action-edit,
+a[title="Edit"],
+a[title^="Edit "],
+button.btn-action-edit,
+button[title="Edit"],
+button[title^="Edit "] {
+  color: #fff !important;
+  background-color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+a.btn-action-delete,
+a[title="Delete"],
+a[title^="Delete "],
+button.btn-action-delete,
+button[title="Delete"],
+button[title^="Delete "] {
+  color: #fff !important;
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
 .btn-save {
   color: #fff !important;
   background-color: #158df7 !important;
