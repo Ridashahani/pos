@@ -75,7 +75,11 @@
                 <div class="card card-block card-stretch">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h4 class="card-title mb-0">{{ $title }} Records</h4>
-                        @if (in_array($type, ['stock-in', 'stock-out']))
+                        @if ($type === 'stock-transfer')
+                            <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary">
+                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
+                            </a>
+                        @elseif (in_array($type, ['stock-in', 'stock-out']))
                             <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center">
                                 <input type="search" name="search" value="{{ request('search') }}"
                                     class="form-control mr-2" placeholder="Search product" aria-label="Search product">
