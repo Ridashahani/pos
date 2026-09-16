@@ -16,7 +16,7 @@
                         @csrf
                         @method('put')
                             <!-- begin: Input Image -->
-                            <div class="form-group row align-items-center">
+                            {{-- <div class="form-group row align-items-center">
                                 <div class="col-md-12">
                                     <div class="profile-img-edit">
                                         <div class="crm-profile-img-edit">
@@ -24,9 +24,9 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="input-group mb-4 col-lg-6">
                                     <div class="custom-file">
                                         <input type="file" class="custom-file-input @error('photo') is-invalid @enderror" id="image" name="photo" accept="image/*" onchange="previewImage();">
@@ -38,7 +38,7 @@
                                     </div>
                                     @enderror
                                 </div>
-                            </div>
+                            </div> --}}
                             <!-- end: Input Image -->
                             <!-- begin: Input Data -->
                             <div class=" row align-items-center">

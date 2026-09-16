@@ -14,18 +14,20 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'pos.menu' => 'pos',
-            'customer.menu' => 'customer',
-            'supplier.menu' => 'supplier',
-            'category.menu' => 'category',
-            'product.menu' => 'product',
-            'sale.menu' => 'sale',
-            'stock.menu' => 'stock',
-            'roles.menu' => 'roles',
-            'user.menu' => 'user',
+            'access.pos' => 'pos',
+            'access.customers' => 'customer',
+            'access.suppliers' => 'supplier',
+            'access.categories' => 'category',
+            'access.products' => 'product',
+            'access.sales' => 'sale',
+            'access.stock' => 'stock',
+            'access.roles' => 'roles',
+            'access.users' => 'user',
         ];
 
         Permission::whereIn('name', [
+            'pos.menu', 'customer.menu', 'supplier.menu', 'category.menu', 'product.menu',
+            'sale.menu', 'stock.menu', 'roles.menu', 'user.menu',
             'employee.menu',
             'salary.menu',
             'attendance.menu',
@@ -44,12 +46,12 @@ class RolePermissionSeeder extends Seeder
 
         $admin->syncPermissions(Permission::all());
         $staff->syncPermissions([
-            'pos.menu',
-            'customer.menu',
-            'supplier.menu',
-            'category.menu',
-            'product.menu',
-            'sale.menu',
+            'access.pos',
+            'access.customers',
+            'access.suppliers',
+            'access.categories',
+            'access.products',
+            'access.sales',
         ]);
     }
 }
