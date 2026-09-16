@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class StockController extends Controller
 {
@@ -15,10 +17,10 @@ class StockController extends Controller
     ];
 
     private array $stockOut = [
-        ['date' => '15 Sep 2026', 'reference' => 'SOUT-2041', 'product' => 'Thermal Receipt Paper', 'quantity' => 12, 'unit_price' => 5.00, 'destination' => 'Main Store'],
-        ['date' => '14 Sep 2026', 'reference' => 'SOUT-2040', 'product' => 'USB-C Charging Cable', 'quantity' => 7, 'unit_price' => 12.50, 'destination' => 'POS Counter'],
-        ['date' => '12 Sep 2026', 'reference' => 'SOUT-2039', 'product' => 'Wireless Barcode Scanner', 'quantity' => 3, 'unit_price' => 95.00, 'destination' => 'Main Store'],
-        ['date' => '09 Sep 2026', 'reference' => 'SOUT-2038', 'product' => 'Cash Drawer', 'quantity' => 1, 'unit_price' => 125.00, 'destination' => 'POS Counter'],
+        ['date' => '15 Sep 2026', 'reference' => 'SOUT-2041', 'product' => 'Thermal Receipt Paper', 'quantity' => 12, 'unit_buying_price' => 3.50, 'unit_price' => 5.00, 'destination' => 'Main Store'],
+        ['date' => '14 Sep 2026', 'reference' => 'SOUT-2040', 'product' => 'USB-C Charging Cable', 'quantity' => 7, 'unit_buying_price' => 7.25, 'unit_price' => 12.50, 'destination' => 'POS Counter'],
+        ['date' => '12 Sep 2026', 'reference' => 'SOUT-2039', 'product' => 'Wireless Barcode Scanner', 'quantity' => 3, 'unit_buying_price' => 65.00, 'unit_price' => 95.00, 'destination' => 'Main Store'],
+        ['date' => '09 Sep 2026', 'reference' => 'SOUT-2038', 'product' => 'Cash Drawer', 'quantity' => 1, 'unit_buying_price' => 85.00, 'unit_price' => 125.00, 'destination' => 'POS Counter'],
     ];
 
     private array $stockTransfers = [
@@ -28,12 +30,15 @@ class StockController extends Controller
         ['date' => '07 Sep 2026', 'reference' => 'TRF-3009', 'product' => 'Cash Drawer', 'quantity' => 2, 'from' => 'Warehouse', 'to' => 'Main Store', 'status' => 'Pending'],
     ];
 
-    public function in()
+    public function in(Request $request)
     {
         $products = Product::with('category')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->string('search') . '%');
+            })
             ->orderBy('id')
-            ->limit(25)
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         $rows = $products->map(function (Product $product): array {
             return [
@@ -50,22 +55,46 @@ class StockController extends Controller
             ];
         })->all();
 
-        return view('stock.index', $this->pageData('Stock-In', 'stock-in', $rows));
+        return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
+            'pagination' => $products,
+            'total_products' => $products->total(),
+        ]));
     }
 
-    public function inDetails()
+    public function inDetails(Product $product)
     {
         return view('stock.details', [
-            'products' => Product::with('category')
-                ->orderBy('id')
-                ->limit(25)
-                ->get(),
+            'product' => $product->load('category'),
         ]);
     }
 
-    public function out()
+    public function out(Request $request)
     {
-        return view('stock.index', $this->pageData('Stock-out', 'stock-out', $this->stockOut));
+        $filteredRows = collect($this->stockOut)
+            ->filter(function (array $row) use ($request): bool {
+                return !$request->filled('search')
+                    || stripos($row['product'], (string) $request->string('search')) !== false;
+            })
+            ->values();
+
+        $pagination = new LengthAwarePaginator(
+            $filteredRows->forPage($request->integer('page', 1), 10)->values(),
+            $filteredRows->count(),
+            10,
+            $request->integer('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $rows = $pagination->getCollection()->map(function (array $row): array {
+            $row['net_sold_price'] = $row['quantity'] * $row['unit_price'];
+
+            return $row;
+        });
+
+        return view('stock.index', array_merge($this->pageData('Stock-out', 'stock-out', $rows), [
+            'pagination' => $pagination,
+            'total_products' => $pagination->total(),
+        ]));
     }
 
     public function transfer()
@@ -73,14 +102,16 @@ class StockController extends Controller
         return view('stock.index', $this->pageData('Stock-Transfer', 'stock-transfer', $this->stockTransfers));
     }
 
-    private function pageData(string $title, string $type, array $rows): array
+    private function pageData(string $title, string $type, iterable $rows): array
     {
+        $rows = collect($rows);
+
         return [
             'title' => $title,
             'type' => $type,
             'rows' => $rows,
             'total_products' => count($rows),
-            'total_units' => array_sum(array_column($rows, 'quantity')),
+            'total_units' => $rows->sum('quantity'),
             'this_month' => count($rows),
             'pending' => $type === 'stock-transfer' ? 2 : 0,
         ];
