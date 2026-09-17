@@ -18,7 +18,8 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
                         <h4 class="mb-3">Customer List</h4>
-                        <p class="mb-0">A customer dashboard lets you easily gather and visualize customer data from optimizing <br>
+                        <p class="mb-0">A customer dashboard lets you easily gather and visualize customer data from
+                            optimizing <br>
                             the customer experience, ensuring customer retention. </p>
                     </div>
                     <div>
@@ -38,10 +39,14 @@
                             <label for="row" class="col-sm-3 align-self-center">Row:</label>
                             <div class="col-sm-9">
                                 <select class="form-control" name="row" onchange="this.form.submit()">
-                                    <option value="10" @if (request('row') == '10') selected="selected" @endif>10</option>
-                                    <option value="25" @if (request('row') == '25') selected="selected" @endif>25</option>
-                                    <option value="50" @if (request('row') == '50') selected="selected" @endif>50</option>
-                                    <option value="100" @if (request('row') == '100') selected="selected" @endif>100</option>
+                                    <option value="10" @if (request('row') == '10') selected="selected" @endif>10
+                                    </option>
+                                    <option value="25" @if (request('row') == '25') selected="selected" @endif>25
+                                    </option>
+                                    <option value="50" @if (request('row') == '50') selected="selected" @endif>50
+                                    </option>
+                                    <option value="100" @if (request('row') == '100') selected="selected" @endif>100
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -82,19 +87,19 @@
                         <tbody class="ligth-body">
                             @foreach ($customers as $customer)
                                 <tr>
-                                    <td>{{ (($customers->currentPage() * 10) - 10) + $loop->iteration }}</td>
+                                    <td>{{ $customers->currentPage() * 10 - 10 + $loop->iteration }}</td>
                                     <td>{{ $customer->name }}</td>
                                     <td>{{ $customer->email }}</td>
                                     <td>{{ $customer->phone }}</td>
                                     <td>{{ $customer->city }}</td>
                                     <td>
                                         <div class="d-flex align-items-center justify-content-center list-action">
-                                            <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="View"
-                                                href="{{ route('customers.show', $customer->id) }}">
+                                            <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top"
+                                                title="View" href="{{ route('customers.show', $customer->id) }}">
                                                 <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                             </a>
-                                            <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit"
-                                                href="{{ route('customers.edit', $customer->id) }}">
+                                            <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top"
+                                                title="Edit" href="{{ route('customers.edit', $customer->id) }}">
                                                 <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                             </a>
                                             <form action="{{ route('customers.destroy', $customer->id) }}" method="POST"

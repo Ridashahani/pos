@@ -23,10 +23,10 @@
                     <div class="col-lg-12">
                         <div class="card card-block card-stretch card-height">
                             <div class="card-body">
-                                <div class="pos-category-tabs mb-3">
+                                <div class="pos-category-tabs mb-3 px-3">
                                     <button type="button" class="pos-tab active">All Product</button>
                                     <button type="button" class="pos-tab">Category</button>
-                                    <button type="button" class="pos-tab">Brand</button>
+                                    <button type="button" class="pos-tab px-4">Brand</button>
                                     <button type="button" class="pos-tab">Featured</button>
                                 </div>
                                 <!-- Filter & Search Form -->
@@ -90,7 +90,7 @@
                                     <div class="product-card h-100 d-flex flex-column">
                                         <!-- Product Image -->
                                         <div class="image-container">
-                                            <img src="{{ $product->image ? asset('storage/products/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                                            <img src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
                                                 class="product-image" alt="{{ $product->name }}">
 
                                             <!-- Stock Badge -->
@@ -120,7 +120,7 @@
                                                         value="{{ $product->selling_price }}">
                                                     <input type="hidden" name="code" value="{{ $product->code }}">
                                                     <input type="hidden" name="image"
-                                                        value="{{ $product->image ? asset('storage/products/' . $product->image) : asset('assets/images/product/default.webp') }}">
+                                                        value="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}">
                                                     <button type="submit"
                                                         class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center">
                                                         <x-heroicon-o-plus class="w-4 h-4 mr-1" /> Add

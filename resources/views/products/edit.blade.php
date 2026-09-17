@@ -29,7 +29,7 @@
         <div class="profile-img-edit">
             <div class="crm-profile-img-edit">
                 <img class="crm-profile-pic rounded-circle avatar-100" id="image-preview"
-                    src="{{ $product->image ? asset('storage/products/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                    src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
                     alt="profile-pic">
             </div>
         </div>
