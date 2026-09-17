@@ -84,17 +84,20 @@
                                             <td>{{ $purchase['total'] }}</td>
                                             <td>{{ $purchase['payment'] }}</td>
                                             <td>
-                                                <span class="badge {{ $purchase['status'] === 'Paid' ? 'badge-success' : 'badge-warning' }}">{{ $purchase['status'] }}</span>
+                                                <span
+                                                    class="badge {{ $purchase['status'] === 'Paid' ? 'badge-success' : 'badge-warning' }}">{{ $purchase['status'] }}</span>
                                             </td>
                                             <td>
-                                                <a href="{{ route('purchases.return.create', $purchase['number']) }}" class="btn btn-sm btn-outline-danger ml-2">Return</a>
+                                                <a href="{{ route('purchases.return.create', $purchase['number']) }}"
+                                                    class="btn btn-sm btn-outline-danger ml-2">Return</a>
                                             </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
-                        <p class="text-muted mb-0">Showing sample purchase records. This page currently uses static data.</p>
+                        <p class="text-muted mb-0">Showing sample purchase records. This page currently uses static data.
+                        </p>
                     </div>
                 </div>
             </div>

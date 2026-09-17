@@ -2,20 +2,99 @@
 
 @section('container')
     <style>
-        .return-page { background: #f8fafc; margin: -1.5rem; min-height: 100%; padding: 1.5rem; }
-        .return-page .return-card { border: 1px solid #e5eaf0; border-radius: 10px; box-shadow: 0 2px 8px rgba(37, 52, 72, 0.04); }
-        .return-page .return-card .card-body { padding: 1.1rem; }
-        .return-page .page-kicker { color: #2f80ed; font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-        .return-page .page-title { color: #1f2937; font-size: 1.25rem; font-weight: 600; margin-bottom: .2rem; }
-        .return-page .page-subtitle, .return-page .field-label { color: #8490a0; font-size: .78rem; }
-        .return-page .field-label { color: #536071; font-weight: 600; margin-bottom: .35rem; }
-        .return-page .form-control { border-color: #dfe5ec; border-radius: 7px; font-size: .78rem; height: 36px; }
-        .return-page textarea.form-control { height: 100px; }
-        .return-page .purchase-info { background: #f5f8fb; border-radius: 8px; color: #536071; font-size: .78rem; padding: .8rem; }
-        .return-page .purchase-info strong { color: #273142; }
-        .return-page .return-table th { border-top: 0; border-bottom: 1px solid #364152; color: #687386; font-size: .72rem; padding: .4rem; }
-        .return-page .return-table td { border-top: 0; color: #273142; font-size: .78rem; padding: .5rem .4rem; vertical-align: middle; }
-        @media (max-width: 767.98px) { .return-page { margin: -1rem; padding: 1rem; } .return-page .return-table { min-width: 620px; } }
+        .return-page {
+            background: #f8fafc;
+            margin: -1.5rem;
+            min-height: 100%;
+            padding: 1.5rem;
+        }
+
+        .return-page .return-card {
+            border: 1px solid #e5eaf0;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(37, 52, 72, 0.04);
+        }
+
+        .return-page .return-card .card-body {
+            padding: 1.1rem;
+        }
+
+        .return-page .page-kicker {
+            color: #2f80ed;
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+
+        .return-page .page-title {
+            color: #1f2937;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: .2rem;
+        }
+
+        .return-page .page-subtitle,
+        .return-page .field-label {
+            color: #8490a0;
+            font-size: .78rem;
+        }
+
+        .return-page .field-label {
+            color: #536071;
+            font-weight: 600;
+            margin-bottom: .35rem;
+        }
+
+        .return-page .form-control {
+            border-color: #dfe5ec;
+            border-radius: 7px;
+            font-size: .78rem;
+            height: 36px;
+        }
+
+        .return-page textarea.form-control {
+            height: 100px;
+        }
+
+        .return-page .purchase-info {
+            background: #f5f8fb;
+            border-radius: 8px;
+            color: #536071;
+            font-size: .78rem;
+            padding: .8rem;
+        }
+
+        .return-page .purchase-info strong {
+            color: #273142;
+        }
+
+        .return-page .return-table th {
+            border-top: 0;
+            border-bottom: 1px solid #364152;
+            color: #687386;
+            font-size: .72rem;
+            padding: .4rem;
+        }
+
+        .return-page .return-table td {
+            border-top: 0;
+            color: #273142;
+            font-size: .78rem;
+            padding: .5rem .4rem;
+            vertical-align: middle;
+        }
+
+        @media (max-width: 767.98px) {
+            .return-page {
+                margin: -1rem;
+                padding: 1rem;
+            }
+
+            .return-page .return-table {
+                min-width: 620px;
+            }
+        }
     </style>
 
     <div class="container-fluid">
@@ -47,14 +126,21 @@
                             <div class="table-responsive rounded">
                                 <table class="table return-table mb-0">
                                     <thead>
-                                        <tr><th>#</th><th>Product</th><th>Purchased Qty</th><th>Return Qty</th><th>Amount</th></tr>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Product</th>
+                                            <th>Purchased Qty</th>
+                                            <th>Return Qty</th>
+                                            <th>Amount</th>
+                                        </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
                                             <td>1</td>
                                             <td>Purchase items from {{ $purchase['number'] }}</td>
                                             <td>{{ $purchase['items'] }}</td>
-                                            <td><input type="number" class="form-control" value="1" min="1" max="{{ $purchase['items'] }}"></td>
+                                            <td><input type="number" class="form-control" value="1" min="1"
+                                                    max="{{ $purchase['items'] }}"></td>
                                             <td>PKR 0.00</td>
                                         </tr>
                                     </tbody>
@@ -69,11 +155,13 @@
                     <div class="card return-card">
                         <div class="card-body">
                             <div class="form-group">
-                                <label class="field-label" for="return-date">Return Date <span class="text-danger">*</span></label>
+                                <label class="field-label" for="return-date">Return Date <span
+                                        class="text-danger">*</span></label>
                                 <input id="return-date" type="date" class="form-control" value="2026-09-15">
                             </div>
                             <div class="form-group">
-                                <label class="field-label" for="return-reason">Reason <span class="text-danger">*</span></label>
+                                <label class="field-label" for="return-reason">Reason <span
+                                        class="text-danger">*</span></label>
                                 <textarea id="return-reason" class="form-control" placeholder="Enter return reason"></textarea>
                             </div>
                             <div class="form-group mb-0">
@@ -86,7 +174,8 @@
                         </div>
                     </div>
                     <button type="button" class="btn btn-primary btn-block mt-3"
-                        onclick="alert('Purchase return submitted successfully. Static  data was not stored.')">Submit Return</button>
+                        onclick="alert('Purchase return submitted successfully. Static  data was not stored.')">Submit
+                        Return</button>
                 </div>
             </div>
         </div>
