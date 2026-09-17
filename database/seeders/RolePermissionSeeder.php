@@ -14,20 +14,20 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'access.pos' => 'pos',
-            'access.customers' => 'customer',
-            'access.suppliers' => 'supplier',
-            'access.categories' => 'category',
-            'access.products' => 'product',
-            'access.sales' => 'sale',
-            'access.stock' => 'stock',
-            'access.roles' => 'roles',
-            'access.users' => 'user',
+            'pos.menu' => 'pos',
+            'customer.menu' => 'customer',
+            'supplier.menu' => 'supplier',
+            'category.menu' => 'category',
+            'product.menu' => 'product',
+            'orders.menu' => 'sale',
+            'stock.menu' => 'stock',
+            'roles.menu' => 'roles',
+            'user.menu' => 'user',
         ];
 
         Permission::whereIn('name', [
-            'pos.menu', 'customer.menu', 'supplier.menu', 'category.menu', 'product.menu',
-            'sale.menu', 'stock.menu', 'roles.menu', 'user.menu',
+            'access.pos', 'access.customers', 'access.suppliers', 'access.categories', 'access.products',
+            'access.sales', 'access.stock', 'access.roles', 'access.users',
             'employee.menu',
             'salary.menu',
             'attendance.menu',
@@ -46,12 +46,12 @@ class RolePermissionSeeder extends Seeder
 
         $admin->syncPermissions(Permission::all());
         $staff->syncPermissions([
-            'access.pos',
-            'access.customers',
-            'access.suppliers',
-            'access.categories',
-            'access.products',
-            'access.sales',
+            'pos.menu',
+            'customer.menu',
+            'supplier.menu',
+            'category.menu',
+            'product.menu',
+            'orders.menu',
         ]);
     }
 }

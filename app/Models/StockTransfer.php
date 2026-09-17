@@ -5,24 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OrderDetails extends Model
+class StockTransfer extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'order_id',
+        'reference',
         'product_id',
         'quantity',
-        'unit_price',
-        'currency',
-        'discount',
-        'total',
-    ];
-
-    protected $casts = [
-        'unit_price' => 'float',
-        'discount' => 'float',
-        'total' => 'float',
+        'from_branch_id',
+        'to_branch_id',
+        'status',
     ];
 
     public function product()
@@ -30,8 +23,13 @@ class OrderDetails extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function order()
+    public function fromBranch()
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Branch::class, 'from_branch_id');
+    }
+
+    public function toBranch()
+    {
+        return $this->belongsTo(Branch::class, 'to_branch_id');
     }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\PurchaseController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\StockController;
+use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 
@@ -38,9 +39,11 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
-        Route::get('/in/details', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/in/details/{product}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
+        Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
+        Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -52,22 +55,22 @@ Route::middleware('auth')->group(function () {
 });
 
 // ====== USERS ======
-Route::middleware(['permission:access.users'])->group(function () {
+Route::middleware(['permission:user.menu'])->group(function () {
     Route::resource('/users', UserController::class)->except(['show']);
 });
 
 // ====== CUSTOMERS ======
-Route::middleware(['permission:access.customers'])->group(function () {
+Route::middleware(['permission:customer.menu'])->group(function () {
     Route::resource('/customers', CustomerController::class);
 });
 
 // ====== SUPPLIERS ======
-Route::middleware(['permission:access.suppliers'])->group(function () {
+Route::middleware(['permission:supplier.menu'])->group(function () {
     Route::resource('/suppliers', SupplierController::class);
 });
 
 // ====== PRODUCTS ======
-Route::middleware(['permission:access.products'])->group(function () {
+Route::middleware(['permission:product.menu'])->group(function () {
     Route::resource('/variations', VariationController::class)->except(['show']);
     Route::get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
     Route::post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
@@ -76,12 +79,12 @@ Route::middleware(['permission:access.products'])->group(function () {
 });
 
 // ====== CATEGORY PRODUCTS ======
-Route::middleware(['permission:access.categories'])->group(function () {
+Route::middleware(['permission:category.menu'])->group(function () {
     Route::resource('/categories', CategoryController::class);
 });
 
 // ====== POS ======
-Route::middleware(['permission:access.pos'])->group(function () {
+Route::middleware(['permission:pos.menu'])->group(function () {
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/add', [PosController::class, 'addCart'])->name('pos.addCart');
     Route::post('/pos/update/{rowId}', [PosController::class, 'updateCart'])->name('pos.updateCart');
@@ -97,7 +100,7 @@ Route::middleware(['permission:access.pos'])->group(function () {
 });
 
 // ====== ORDERS ======
-Route::middleware(['permission:access.sales'])->group(function () {
+Route::middleware(['permission:orders.menu'])->group(function () {
     Route::get('/orders/pending', [OrderController::class, 'pendingOrders'])->name('order.pendingOrders');
     Route::get('/orders/complete', [OrderController::class, 'completeOrders'])->name('order.completeOrders');
     Route::get('/orders/details/{order_id}', [OrderController::class, 'orderDetails'])->name('order.orderDetails');
@@ -120,29 +123,10 @@ Route::middleware(['permission:access.sales'])->group(function () {
 });
 
 // ====== STOCK MANAGEMENT ======
-Route::middleware(['permission:access.stock'])->group(function () {
-    Route::view('/branches', 'modules.index', [
-        'title' => 'Branches',
-        'description' => 'Store branches and locations.',
-        'module' => 'branches',
-        'records' => [
-            [
-                'name' => 'Saddar Main Branch',
-                'code' => 'BR-001',
-                'address' => 'Saddar, Rawalpindi',
-                'phone' => '+92 300 1234567',
-                'status' => 'Active',
-            ],
-            [
-                'name' => 'Commercial Market Branch',
-                'code' => 'BR-002',
-                'address' => 'Commercial Market, Rawalpindi',
-                'phone' => '+92 301 7654321',
-                'status' => 'Active',
-            ],
-        ],
-    ])->name('branches.index');
-    Route::view('/branches/create', 'modules.create-branch')->name('branches.create');
+Route::middleware(['permission:stock.menu'])->group(function () {
+    Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
 
     Route::view('/expenses', 'modules.index', [
         'title' => 'Expenses',
@@ -184,7 +168,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // ====== ROLE CONTROLLER ======
-Route::middleware(['permission:access.roles'])->group(function () {
+Route::middleware(['permission:roles.menu'])->group(function () {
     // Permissions
     Route::get('/permission', [RoleController::class, 'permissionIndex'])->name('permission.index');
     Route::get('/permission/create', [RoleController::class, 'permissionCreate'])->name('permission.create');
