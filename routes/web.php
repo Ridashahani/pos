@@ -5,9 +5,8 @@ use App\Http\Controllers\Dashboard\AdvanceSalaryController;
 use App\Http\Controllers\Dashboard\AttendanceController;
 use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\CustomerController;
+use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\DatabaseBackupController;
-use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\HelpController;
 use App\Http\Controllers\Dashboard\OrderController;
 use App\Http\Controllers\Dashboard\PaySalaryController;
@@ -17,7 +16,7 @@ use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\PurchaseController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\StockController;
-use App\Http\Controllers\Dashboard\SupplierController;
+use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
@@ -47,9 +46,11 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
-        Route::get('/in/details', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/in/details/{product}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
+        Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
+        Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -75,31 +76,6 @@ Route::middleware(['permission:supplier.menu'])->group(function () {
     Route::resource('/suppliers', SupplierController::class);
 });
 
-// ====== EMPLOYEES ======
-Route::middleware(['permission:employee.menu'])->group(function () {
-    Route::resource('/employees', EmployeeController::class);
-});
-
-// ====== EMPLOYEE ATTENDANCE ======
-Route::middleware(['permission:attendance.menu'])->group(function () {
-    Route::resource('/attendance', AttendanceController::class)->except(['show', 'update', 'destroy']);
-});
-
-// ====== SALARY EMPLOYEE ======
-Route::middleware(['permission:salary.menu'])->group(function () {
-    // PaySalary
-    Route::get('/pay-salary/pay-all', [PaySalaryController::class, 'payAllView'])->name('pay-salary.payAllView');
-    Route::post('/pay-salary/pay-all', [PaySalaryController::class, 'payAllStore'])->name('pay-salary.payAllStore');
-    Route::get('/pay-salary/create', [PaySalaryController::class, 'create'])->name('pay-salary.create'); // Explicitly defined
-    Route::resource('/pay-salary', PaySalaryController::class)->except(['show', 'edit', 'update', 'create']); // Added create to except to avoid conflict
-    Route::get('/pay-salary/history', [PaySalaryController::class, 'payHistory'])->name('pay-salary.payHistory');
-    Route::get('/pay-salary/history/{id}', [PaySalaryController::class, 'payHistoryDetail'])->name('pay-salary.payHistoryDetail');
-    Route::get('/pay-salary/{id}', [PaySalaryController::class, 'paySalary'])->name('pay-salary.paySalary');
-
-    // Advance Salary
-    Route::resource('/advance-salary', AdvanceSalaryController::class)->except(['show']);
-});
-
 // ====== PRODUCTS ======
 Route::middleware(['permission:product.menu'])->group(function () {
     Route::resource('/variations', VariationController::class)->except(['show']);
@@ -119,6 +95,7 @@ Route::middleware(['permission:pos.menu'])->group(function () {
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/add', [PosController::class, 'addCart'])->name('pos.addCart');
     Route::post('/pos/update/{rowId}', [PosController::class, 'updateCart'])->name('pos.updateCart');
+    Route::post('/pos/discount/{rowId}', [PosController::class, 'updateDiscount'])->name('pos.updateDiscount');
     Route::get('/pos/delete/{rowId}', [PosController::class, 'deleteCart'])->name('pos.deleteCart');
     Route::post('/pos/customer', [PosController::class, 'storeCustomer'])->name('pos.storeCustomer');
     Route::get('/pos/customers-ajax', [PosController::class, 'searchCustomers'])->name('pos.customers.search');
@@ -153,29 +130,11 @@ Route::middleware(['permission:orders.menu'])->group(function () {
 });
 
 // ====== STOCK MANAGEMENT ======
-// Route::middleware(['permission:stock.menu'])->group(function () {
-//     Route::view('/branches', 'branch.index', [
-//         'title' => 'Branches',
-//         'description' => 'Store branches and locations.',
-//         'module' => 'branches',
-//         'records' => [
-//             [
-//                 'name' => 'Saddar Main Branch',
-//                 'code' => 'BR-001',
-//                 'address' => 'Saddar, Rawalpindi',
-//                 'phone' => '+92 300 1234567',
-//                 'status' => 'Active',
-//             ],
-//             [
-//                 'name' => 'Commercial Market Branch',
-//                 'code' => 'BR-002',
-//                 'address' => 'Commercial Market, Rawalpindi',
-//                 'phone' => '+92 301 7654321',
-//                 'status' => 'Active',
-//             ],
-//         ],
-//     ])->name('branches.index');
-    // Route::view('/branches/create', 'branch.create')->name('branches.create');
+Route::middleware(['permission:stock.menu'])->group(function () {
+    Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
+    Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
+    Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
+
 
 //     Route::view('/expenses', 'expense.index', [
 //         'title' => 'Expenses',
@@ -210,17 +169,11 @@ Route::middleware(['permission:orders.menu'])->group(function () {
 
 //     Route::view('/expenses/create', 'expense.create')->name('expenses.create');
 // });
+});
 Route::resource('expenses',ExpenseController::class);
 
 Route::resource('branches',BranchController::class);
 
-// ====== DATABASE BACKUP ======
-Route::middleware(['permission:database.menu'])->group(function () {
-    Route::get('/database/backup', [DatabaseBackupController::class, 'index'])->name('backup.index');
-    Route::get('/database/backup/now', [DatabaseBackupController::class, 'create'])->name('backup.create');
-    Route::get('/database/backup/download/{getFileName}', [DatabaseBackupController::class, 'download'])->name('backup.download');
-    Route::get('/database/backup/delete/{getFileName}', [DatabaseBackupController::class, 'delete'])->name('backup.delete');
-});
 
 // ====== HELP ======
 Route::middleware('auth')->group(function () {
@@ -254,4 +207,6 @@ Route::middleware(['permission:roles.menu'])->group(function () {
     Route::delete('/role/permission/{id}', [RoleController::class, 'rolePermissionDestroy'])->name('rolePermission.destroy');
 });
 
+
 require __DIR__ . '/auth.php';
+

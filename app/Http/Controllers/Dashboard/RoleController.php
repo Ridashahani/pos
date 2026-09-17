@@ -107,14 +107,14 @@ class RoleController extends Controller
     {
         Role::findOrFail($id)->update($request->validated());
 
-        return Redirect::route('roles.index')->with('success', 'Role has been updated!');
+        return Redirect::route('role.index')->with('success', 'Role has been updated!');
     }
 
     public function roleDestroy(Int $id)
     {
         Role::destroy($id);
 
-        return Redirect::route('roles.index')->with('success', 'Role has been deleted!');
+        return Redirect::route('role.index')->with('success', 'Role has been deleted!');
     }
 
     public function rolePermissionIndex()

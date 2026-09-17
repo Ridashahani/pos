@@ -169,122 +169,131 @@
     <div class="container-fluid">
         <div class="purchase-create-page">
             <div class="row">
-            <div class="col-lg-12">
-                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
-                    <div>
-                        <div class="page-kicker">New Record</div>
-                        <h4 class="page-title">Add Purchase</h4>
-                        <p class="page-subtitle mb-0">Create a new purchase from supplier.</p>
+                <div class="col-lg-12">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+                        <div>
+                            <div class="page-kicker">New Record</div>
+                            <h4 class="page-title">Add Purchase</h4>
+                            <p class="page-subtitle mb-0">Create a new purchase from supplier.</p>
+                        </div>
+                        <a href="{{ route('purchases.index') }}" class="btn btn-light border d-flex align-items-center">
+                            <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
+                        </a>
                     </div>
-                    <a href="{{ route('purchases.index') }}" class="btn btn-light border d-flex align-items-center">
-                        <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
-                    </a>
                 </div>
-            </div>
 
-            <div class="col-xl-8 mb-4 mb-xl-0">
-                <div class="card purchase-card h-100">
-                    <div class="card-body">
-                        <form>
-                            <div class="table-responsive rounded">
-                                <table class="table purchase-table mb-0">
-                                    <thead class="bg-white text-uppercase">
-                                        <tr class="ligth ligth-data">
-                                            <th>#</th>
-                                            <th>Product</th>
-                                            <th width="120">Quantity</th>
-                                            <th width="150">Cost Price</th>
-                                            <th width="130">Amount</th>
-                                            <th width="32"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="purchase-items" class="ligth-body">
-                                        <tr class="purchase-item">
-                                            <td>1</td>
-                                            <td>
-                                                <select class="form-control product-select">
-                                                    <option>Select Product</option>
-                                                    <option>Apple iPhone 15</option>
-                                                    <option>Samsung Galaxy S24</option>
-                                                    <option>Anker 20W Fast Charger</option>
-                                                    <option>Type-C Fast Charging Cable</option>
-                                                    <option>iPhone 15 Silicone Case</option>
-                                                    <option>9D Tempered Glass Protector</option>
-                                                    <option>Anker 10000mAh Power Bank</option>
-                                                    <option>AirPods Pro 2</option>
-                                                </select>
-                                            </td>
-                                            <td><input type="number" class="form-control quantity-input" value="1" min="1"></td>
-                                            <td><input type="number" class="form-control cost-input" value="0" min="0" step="0.01"></td>
-                                            <td class="amount-cell">PKR 0.00</td>
-                                            <td><button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                <div class="col-xl-8 mb-4 mb-xl-0">
+                    <div class="card purchase-card h-100">
+                        <div class="card-body">
+                            <form>
+                                <div class="table-responsive rounded">
+                                    <table class="table purchase-table mb-0">
+                                        <thead class="bg-white text-uppercase">
+                                            <tr class="ligth ligth-data">
+                                                <th>#</th>
+                                                <th>Product</th>
+                                                <th width="120">Quantity</th>
+                                                <th width="150">Cost Price</th>
+                                                <th width="130">Amount</th>
+                                                <th width="32"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="purchase-items" class="ligth-body">
+                                            <tr class="purchase-item">
+                                                <td>1</td>
+                                                <td>
+                                                    <select class="form-control product-select">
+                                                        <option>Select Product</option>
+                                                        <option>Apple iPhone 15</option>
+                                                        <option>Samsung Galaxy S24</option>
+                                                        <option>Anker 20W Fast Charger</option>
+                                                        <option>Type-C Fast Charging Cable</option>
+                                                        <option>iPhone 15 Silicone Case</option>
+                                                        <option>9D Tempered Glass Protector</option>
+                                                        <option>Anker 10000mAh Power Bank</option>
+                                                        <option>AirPods Pro 2</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="number" class="form-control quantity-input" value="1"
+                                                        min="1"></td>
+                                                <td><input type="number" class="form-control cost-input" value="0"
+                                                        min="0" step="0.01"></td>
+                                                <td class="amount-cell">PKR 0.00</td>
+                                                <td><button type="button" class="btn btn-link p-0 remove-product"
+                                                        aria-label="Remove product">&times;</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button type="button" id="add-product" class="add-product-row btn btn-block mt-3">+ Add
+                                    Product</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4">
+                    <div class="card purchase-card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="side-card-title mb-0">Purchase Details</div>
+                                <button type="button" id="open-supplier-modal" class="btn btn-primary btn-sm p-1"
+                                    aria-label="Add supplier">+</button>
                             </div>
-                            <button type="button" id="add-product" class="add-product-row btn btn-block mt-3">+ Add Product</button>
-                        </form>
+                            <div class="form-group mb-3">
+                                <label class="field-label" for="supplier">Supplier <span
+                                        class="text-danger">*</span></label>
+                                <select id="supplier" class="form-control">
+                                    <option>Select a supplier</option>
+                                    <option>Metro Wholesale</option>
+                                    <option>Fresh Foods Ltd.</option>
+                                    <option>City Distributors</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="field-label" for="branch">Branch <span class="text-danger">*</span></label>
+                                <select id="branch" class="form-control">
+                                    <option>Select a branch</option>
+                                    <option>Main Branch</option>
+                                    <option>North Branch</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="field-label" for="purchase-date">Date <span
+                                        class="text-danger">*</span></label>
+                                <input id="purchase-date" type="date" class="form-control" value="2026-09-15">
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="col-xl-4">
-                <div class="card purchase-card mb-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="side-card-title mb-0">Purchase Details</div>
-                            <button type="button" id="open-supplier-modal" class="btn btn-primary btn-sm p-1" aria-label="Add supplier">+</button>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="field-label" for="supplier">Supplier <span class="text-danger">*</span></label>
-                            <select id="supplier" class="form-control">
-                                <option>Select a supplier</option>
-                                <option>Metro Wholesale</option>
-                                <option>Fresh Foods Ltd.</option>
-                                <option>City Distributors</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="field-label" for="branch">Branch <span class="text-danger">*</span></label>
-                            <select id="branch" class="form-control">
-                                <option>Select a branch</option>
-                                <option>Main Branch</option>
-                                <option>North Branch</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-0">
-                            <label class="field-label" for="purchase-date">Date <span class="text-danger">*</span></label>
-                            <input id="purchase-date" type="date" class="form-control" value="2026-09-15">
+                    <div class="card purchase-card">
+                        <div class="card-body">
+                            <div class="side-card-title">Payment Summary</div>
+                            <div class="d-flex justify-content-between summary-line mb-3">
+                                <span>Total amount</span><span id="total-amount" class="text-dark">PKR 0.00</span>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="field-label" for="payment-status">Payment Status <span
+                                        class="text-danger">*</span></label>
+                                <select id="payment-status" class="form-control">
+                                    <option>Paid</option>
+                                    <option>Partial</option>
+                                    <option>Due</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="field-label" for="amount-paid">Amount Paid</label>
+                                <input id="amount-paid" type="number" class="form-control" value="0" min="0"
+                                    step="0.01">
+                            </div>
+                            <div class="d-flex justify-content-between summary-total">
+                                <span>Due Amount</span><span id="due-amount" class="due-amount">PKR 0.00</span>
+                            </div>
                         </div>
                     </div>
+                    <button type="button" class="btn btn-primary btn-block mt-3"
+                        onclick="alert('Purchase saved successfully. Static data was not stored.')">Save Purchase</button>
                 </div>
-
-                <div class="card purchase-card">
-                    <div class="card-body">
-                        <div class="side-card-title">Payment Summary</div>
-                        <div class="d-flex justify-content-between summary-line mb-3">
-                            <span>Total amount</span><span id="total-amount" class="text-dark">PKR 0.00</span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="field-label" for="payment-status">Payment Status <span class="text-danger">*</span></label>
-                            <select id="payment-status" class="form-control">
-                                <option>Paid</option>
-                                <option>Partial</option>
-                                <option>Due</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="field-label" for="amount-paid">Amount Paid</label>
-                            <input id="amount-paid" type="number" class="form-control" value="0" min="0" step="0.01">
-                        </div>
-                        <div class="d-flex justify-content-between summary-total">
-                            <span>Due Amount</span><span id="due-amount" class="due-amount">PKR 0.00</span>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-primary btn-block mt-3"
-                    onclick="alert('Purchase saved successfully. Static data was not stored.')">Save Purchase</button>
-            </div>
             </div>
         </div>
     </div>
@@ -293,7 +302,8 @@
         <div class="supplier-modal" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
             <div class="supplier-modal-header d-flex align-items-center justify-content-between">
                 <span id="supplier-modal-title">Add Supplier</span>
-                <button type="button" id="close-supplier-modal" class="supplier-modal-close" aria-label="Close">&times;</button>
+                <button type="button" id="close-supplier-modal" class="supplier-modal-close"
+                    aria-label="Close">&times;</button>
             </div>
             <div class="supplier-modal-body">
                 <div class="form-group">
@@ -314,7 +324,7 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const items = document.getElementById('purchase-items');
             const addProduct = document.getElementById('add-product');
             const totalAmount = document.getElementById('total-amount');
@@ -339,7 +349,7 @@
             function updateTotals() {
                 let total = 0;
 
-                items.querySelectorAll('.purchase-item').forEach(function (row) {
+                items.querySelectorAll('.purchase-item').forEach(function(row) {
                     const quantity = Math.max(0, Number(row.querySelector('.quantity-input').value) || 0);
                     const cost = Math.max(0, Number(row.querySelector('.cost-input').value) || 0);
                     const amount = quantity * cost;
@@ -354,7 +364,7 @@
             }
 
             function updateRowNumbers() {
-                items.querySelectorAll('.purchase-item').forEach(function (row, index) {
+                items.querySelectorAll('.purchase-item').forEach(function(row, index) {
                     row.querySelector('td').textContent = index + 1;
                 });
             }
@@ -362,7 +372,8 @@
             function addProductRow() {
                 const row = document.createElement('tr');
                 row.className = 'purchase-item';
-                row.innerHTML = `
+                row.innerHTML =
+                    `
                     <td></td>
                     <td><select class="form-control product-select">${productOptions}</select></td>
                     <td><input type="number" class="form-control quantity-input" value="1" min="1"></td>
@@ -376,7 +387,7 @@
             addProduct.addEventListener('click', addProductRow);
             amountPaid.addEventListener('input', updateTotals);
             items.addEventListener('input', updateTotals);
-            items.addEventListener('click', function (event) {
+            items.addEventListener('click', function(event) {
                 const removeButton = event.target.closest('.remove-product');
 
                 if (!removeButton) {
@@ -404,17 +415,17 @@
                 supplierModal.setAttribute('aria-hidden', 'true');
             }
 
-            openSupplierModal.addEventListener('click', function () {
+            openSupplierModal.addEventListener('click', function() {
                 supplierModal.classList.add('is-open');
                 supplierModal.setAttribute('aria-hidden', 'false');
             });
             closeSupplierModal.addEventListener('click', closeModal);
-            supplierModal.addEventListener('click', function (event) {
+            supplierModal.addEventListener('click', function(event) {
                 if (event.target === supplierModal) {
                     closeModal();
                 }
             });
-            saveSupplier.addEventListener('click', function () {
+            saveSupplier.addEventListener('click', function() {
                 const name = document.getElementById('new-supplier-name').value.trim();
                 if (name) {
                     const option = new Option(name, name, true, true);

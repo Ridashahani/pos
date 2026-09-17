@@ -30,7 +30,7 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <form class="compact-form" action="{{ route('branches.store') }}" method="POST">
+                    <form class="compact-form" method="POST" action="{{ route('branches.store') }}">
                         @csrf
                         <div class="row">
                             <div class="form-group col-md-6">

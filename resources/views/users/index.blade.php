@@ -17,7 +17,9 @@
                     <h4 class="mb-3">User List</h4>
                 </div>
                 <div>
-                <a href="{{ route('users.create') }}" class="btn btn-primary add-list"><x-heroicon-o-plus class="w-5 h-5 mr-3" />Create User</a>
+                    <a href="{{ route('users.create') }}" class="btn btn-primary add-list">
+                        <x-heroicon-o-plus class="w-5 h-5 mr-3" />Create User
+                    </a>
                 </div>
             </div>
         </div>
@@ -58,7 +60,7 @@
                     <thead class="bg-white text-uppercase">
                         <tr class="ligth ligth-data">
                             <th>No.</th>
-                            <th>Photo</th>
+                            {{-- <th>Photo</th> --}}
                             <th><x-sort-link name="name" label="Name" /></th>
                             <th><x-sort-link name="username" label="Username" /></th>
                             <th><x-sort-link name="email" label="Email" /></th>
@@ -70,9 +72,9 @@
                         @forelse ($users as $item)
                         <tr>
                             <td>{{ (($users->currentPage() * 10) - 10) + $loop->iteration  }}</td>
-                            <td>
+                            {{-- <td>
                                 <img class="avatar-60 rounded" src="{{ $item->photo ? asset('storage/profile/'.$item->photo) : asset('assets/images/user/1.png') }}">
-                            </td>
+                            </td> --}}
                             <td>{{ $item->name }}</td>
                             <td>{{ $item->username }}</td>
                             <td>{{ $item->email }}</td>
@@ -82,12 +84,11 @@
                                 @endforeach
                             </td>
                             <td>
-                            <td>
                                 <div class="d-flex align-items-center justify-content-center list-action">
                                     {{-- <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="View"
                                         href="{{ route('users.show', $item->username) }}"><x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                     </a> --}}
-                                    <a class="btn btn-success mr-2" data-toggle="tooltip" data-placement="top" title="Edit" href="{{ route('users.edit', $item->username) }}"><x-heroicon-o-pencil class="w-5 h-5 mr-0" />
+                                    <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top" title="Edit" href="{{ route('users.edit', $item->username) }}"><x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                     </a>
                                     <form action="{{ route('users.destroy', $item->username) }}" method="POST" style="display:inline;">
                                         @method('delete')

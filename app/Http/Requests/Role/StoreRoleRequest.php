@@ -22,7 +22,7 @@ class StoreRoleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|unique:roles,name',
+            'name' => 'required|string|in:Admin,Staff|unique:roles,name',
         ];
     }
 }

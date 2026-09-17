@@ -24,6 +24,7 @@ class Product extends Model
         'stock',
         'buying_price',
         'selling_price',
+        'currency',
         'product_cost', 'product_price', 'wholesale_price', 'special_price', 'stock_alert',
         'order_tax', 'tax_type', 'add_product_quantity',
         'image',

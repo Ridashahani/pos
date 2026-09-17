@@ -22,6 +22,8 @@ class ProductSeeder extends Seeder
                 'stock' => 10,
                 'buying_price' => 215000,
                 'selling_price' => 239999,
+                'image' => 'iphone15.jpg',
+                
             ],
             [
                 'name' => 'Samsung Galaxy S24',
@@ -29,6 +31,7 @@ class ProductSeeder extends Seeder
                 'stock' => 12,
                 'buying_price' => 185000,
                 'selling_price' => 209999,
+                'image' => 'Samsung S24.jpg',
             ],
             // Mobile Accessories (Category 2)
             [
@@ -37,6 +40,7 @@ class ProductSeeder extends Seeder
                 'stock' => 45,
                 'buying_price' => 850,
                 'selling_price' => 1299,
+                'image' => 'Mobile Holder.jpg',
             ],
             [
                 'name' => 'Mobile Camera Lens Kit',
@@ -44,6 +48,7 @@ class ProductSeeder extends Seeder
                 'stock' => 25,
                 'buying_price' => 1800,
                 'selling_price' => 2499,
+                'image' => 'mobile-lens-kit.jpg',
             ],
             // Chargers & Cables (Category 3)
             [
@@ -52,6 +57,7 @@ class ProductSeeder extends Seeder
                 'stock' => 50,
                 'buying_price' => 2200,
                 'selling_price' => 2999,
+                'image' => 'Anker-Charger.jpg',
             ],
             [
                 'name' => 'Type-C Fast Charging Cable',
@@ -59,6 +65,7 @@ class ProductSeeder extends Seeder
                 'stock' => 100,
                 'buying_price' => 450,
                 'selling_price' => 799,
+                'image' => 'Type-C-Charging-Cable.jpg',
             ],
             // Mobile Covers & Cases (Category 4)
             [
@@ -67,6 +74,7 @@ class ProductSeeder extends Seeder
                 'stock' => 60,
                 'buying_price' => 650,
                 'selling_price' => 1199,
+                'image' => 'iPhone 15-Case.jpg',
             ],
             [
                 'name' => 'Samsung Galaxy S24 Armor Case',
@@ -74,6 +82,7 @@ class ProductSeeder extends Seeder
                 'stock' => 45,
                 'buying_price' => 800,
                 'selling_price' => 1499,
+                'image' => 'Samsung S24.jpg',
             ],
             // Screen Protectors (Category 5)
             [
@@ -82,6 +91,7 @@ class ProductSeeder extends Seeder
                 'stock' => 120,
                 'buying_price' => 180,
                 'selling_price' => 399,
+                'image' => '9D-Protector.jpg',
             ],
             // Power Banks (Category 6)
             [
@@ -90,6 +100,7 @@ class ProductSeeder extends Seeder
                 'stock' => 30,
                 'buying_price' => 4500,
                 'selling_price' => 5999,
+                'image' => 'Anker Power Bank.jpg',
             ],
             // Earbuds & Headphones (Category 7)
             [
@@ -98,6 +109,7 @@ class ProductSeeder extends Seeder
                 'stock' => 18,
                 'buying_price' => 52000,
                 'selling_price' => 64999,
+                'image' => 'AirPods Pro 2.jpg',
             ],
             // Smartwatches (Category 8)
             [
@@ -106,6 +118,7 @@ class ProductSeeder extends Seeder
                 'stock' => 14,
                 'buying_price' => 42000,
                 'selling_price' => 52999,
+                'image' => 'Samsung Galaxy Watch.jpg',
             ],
             [
                 'name' => 'Google Pixel 9 Pro',
@@ -116,6 +129,7 @@ class ProductSeeder extends Seeder
                 'stock' => 12,
                 'buying_price' => 850,
                 'selling_price' => 999,
+                'image' => 'Gogle Pixel 6.jpg',
             ],
             [
                 'name' => 'OnePlus 12',
@@ -126,34 +140,38 @@ class ProductSeeder extends Seeder
                 'stock' => 10,
                 'buying_price' => 700,
                 'selling_price' => 849,
+                'image' => 'OnePlus 12.jpg',
             ],
             [
-                'name' => 'Dell XPS 15',
+                'name' => 'Vivo X200 Ultra',
                 'brand' => 'Dell',
                 'model' => 'XPS 15 9530',
                 'category_id' => 1,
                 'stock' => 6,
                 'buying_price' => 1250,
                 'selling_price' => 1500,
+                'image' => 'Vivo X200 Ultra.jpg',
             ],
-            [
-                'name' => 'Lenovo ThinkPad X1 Carbon',
-                'brand' => 'Lenovo',
-                'model' => 'Gen 12',
-                'category_id' => 1,
-                'stock' => 7,
-                'buying_price' => 1300,
-                'selling_price' => 1550,
-            ],
-            [
-                'name' => 'HP Spectre x360',
-                'brand' => 'HP',
-                'model' => '14-eu0000',
-                'category_id' => 1,
-                'stock' => 5,
-                'buying_price' => 1100,
-                'selling_price' => 1350,
-            ],
+            // [
+            //     'name' => 'Lenovo ThinkPad X1 Carbon',
+            //     'brand' => 'Lenovo',
+            //     'model' => 'Gen 12',
+            //     'category_id' => 1,
+            //     'stock' => 7,
+            //     'buying_price' => 1300,
+            //     'selling_price' => 1550,
+            //     'image' => 'Dell XPS 15.jpg',
+            // ],
+            // [
+            //     'name' => 'HP Spectre x360',
+            //     'brand' => 'HP',
+            //     'model' => '14-eu0000',
+            //     'category_id' => 1,
+            //     'stock' => 5,
+            //     'buying_price' => 1100,
+            //     'selling_price' => 1350,
+            //     'image' => 'Hp- x360.jpg',
+            // ],
             [
                 'name' => 'iPad Pro 13-inch',
                 'brand' => 'Apple',
@@ -163,6 +181,7 @@ class ProductSeeder extends Seeder
                 'stock' => 9,
                 'buying_price' => 950,
                 'selling_price' => 1150,
+                'image' => 'iPad Pro.jpg',
             ],
             [
                 'name' => 'Xiaomi 14 Ultra',
@@ -173,6 +192,7 @@ class ProductSeeder extends Seeder
                 'stock' => 14,
                 'buying_price' => 780,
                 'selling_price' => 920,
+                'image' => 'Xiaomi.jpg',
             ],
             [
                 'name' => 'Anker USB-C Hub',
@@ -182,6 +202,7 @@ class ProductSeeder extends Seeder
                 'stock' => 30,
                 'buying_price' => 45,
                 'selling_price' => 65,
+                'image' => 'USB-C Hub.jpg',
             ],
             [
                 'name' => 'Samsung T7 Portable SSD',
@@ -191,6 +212,7 @@ class ProductSeeder extends Seeder
                 'stock' => 18,
                 'buying_price' => 75,
                 'selling_price' => 105,
+                'image' => 'Samsung T7 Portable SSD.jpg',
             ],
             [
                 'name' => 'Bose QuietComfort Ultra',
@@ -200,16 +222,18 @@ class ProductSeeder extends Seeder
                 'stock' => 11,
                 'buying_price' => 280,
                 'selling_price' => 350,
+                'image' => 'Bose QuietComfort Ultra.jpg',
             ],
-            [
-                'name' => 'Canon EOS R6 Mark II',
-                'brand' => 'Canon',
-                'model' => 'EOS R6 Mark II',
-                'category_id' => 5,
-                'stock' => 4,
-                'buying_price' => 1900,
-                'selling_price' => 2300,
-            ],
+            // [
+            //     'name' => 'Canon EOS R6 Mark II',
+            //     'brand' => 'Canon',
+            //     'model' => 'EOS R6 Mark II',
+            //     'category_id' => 5,
+            //     'stock' => 4,
+            //     'buying_price' => 1900,
+            //     'selling_price' => 2300,
+            //     'image' => 'Canon EOS R6 Mark II.jpg',
+            // ],
             [
                 'name' => 'TP-Link Archer AX73',
                 'brand' => 'TP-Link',
@@ -218,16 +242,18 @@ class ProductSeeder extends Seeder
                 'stock' => 13,
                 'buying_price' => 120,
                 'selling_price' => 165,
+                'image' => 'TP-Link.jpg',
             ],
-            [
-                'name' => 'Logitech Brio 4K Webcam',
-                'brand' => 'Logitech',
-                'model' => 'Brio 4K',
-                'category_id' => 3,
-                'stock' => 16,
-                'buying_price' => 110,
-                'selling_price' => 150,
-            ],
+            // [
+            //     'name' => 'Logitech Brio 4K Webcam',
+            //     'brand' => 'Logitech',
+            //     'model' => 'Brio 4K',
+            //     'category_id' => 3,
+            //     'stock' => 16,
+            //     'buying_price' => 110,
+            //     'selling_price' => 150,
+            //     'image' => 'Logitech Brio.jpg',
+            // ],
             [
                 'name' => 'Nintendo Switch OLED',
                 'brand' => 'Nintendo',
@@ -236,48 +262,61 @@ class ProductSeeder extends Seeder
                 'stock' => 8,
                 'buying_price' => 280,
                 'selling_price' => 340,
+                'image' => 'Nintendo Switch.jpg',
             ],
-            [
-                'name' => 'Epson EcoTank Printer',
-                'brand' => 'Epson',
-                'model' => 'L3250',
-                'category_id' => 8,
-                'stock' => 6,
-                'buying_price' => 180,
-                'selling_price' => 240,
-            ],
-            [
-                'name' => 'Microsoft Surface Laptop 6',
-                'brand' => 'Microsoft',
-                'model' => 'Surface Laptop 6',
-                'category_id' => 1,
-                'stock' => 5,
-                'buying_price' => 1150,
-                'selling_price' => 1400,
-            ],
+            // [
+            //     'name' => 'Epson EcoTank Printer',
+            //     'brand' => 'Epson',
+            //     'model' => 'L3250',
+            //     'category_id' => 8,
+            //     'stock' => 6,
+            //     'buying_price' => 180,
+            //     'selling_price' => 240,
+            //     'image' => 'EpsonPrinter.jpg',
+            // ],
+            // [
+            //     'name' => 'Microsoft Surface Laptop 6',
+            //     'brand' => 'Microsoft',
+            //     'model' => 'Surface Laptop 6',
+            //     'category_id' => 1,
+            //     'stock' => 5,
+            //     'buying_price' => 1150,
+            //     'selling_price' => 1400,
+            //     'image' => 'MicrosoftLaptop 6.jpg',
+            // ],
         ];
 
         foreach ($products as $product) {
-            Product::create([
+            $slug = Str::slug($product['name']);
+            $productData = [
                 'name' => $product['name'],
                 'brand' => $product['brand'] ?? null,
                 'model' => $product['model'] ?? null,
                 'imei' => $product['imei'] ?? null,
-                'slug' => Str::slug($product['name']),
-                'code' => IdGenerator::generate([
-                    'table' => 'products',
-                    'field' => 'code',
-                    'length' => 10,
-                    'prefix' => 'PRD-'
-                ]),
                 'category_id' => $product['category_id'],
                 'stock' => $product['stock'],
                 'buying_price' => $product['buying_price'],
                 'selling_price' => $product['selling_price'],
                 'buying_date' => now()->subDays(rand(1, 30)),
                 'expire_date' => now()->addYear(),
-                'image' => null,
-            ]);
+                'image' => $product['image'],
+            ];
+
+            $existingProduct = Product::where('slug', $slug)->first();
+
+            if ($existingProduct) {
+                $existingProduct->update($productData);
+            } else {
+                Product::create(array_merge($productData, [
+                    'slug' => $slug,
+                    'code' => IdGenerator::generate([
+                        'table' => 'products',
+                        'field' => 'code',
+                        'length' => 10,
+                        'prefix' => 'PRD-'
+                    ]),
+                ]));
+            }
         }
     }
 }

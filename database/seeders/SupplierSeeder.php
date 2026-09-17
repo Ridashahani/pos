@@ -14,22 +14,22 @@ class SupplierSeeder extends Seeder
     {
         $suppliers = [
             [
-                'name' => 'Future Tech Inc.',
-                'email' => 'contact@futuretech.com',
-                'phone' => '123-456-7890',
-                'address' => '123 Tech Avenue, Silicon Valley, CA, USA'
+                 'name' => 'Usman Mobile Traders',
+                 'email' => 'sales@usmanmobile.pk',
+                 'phone' => '03009876543',
+                 'address' => 'Hall Road, Lahore, Pakistan'
             ],
             [
-                'name' => 'Global Supplies LLC',
-                'email' => 'sales@globalsupplies.com',
-                'phone' => '987-654-3210',
-                'address' => '456 Market Street, San Francisco, CA, USA'
+                 'name' => 'Al-Madina Mobile Accessories',
+                 'email' => 'orders@almadinamobile.pk',
+                 'phone' => '03119876543',
+                 'address' => 'Saddar Mobile Market, Karachi, Pakistan'
             ],
             [
-                'name' => 'Gadget World Ltd.',
-                'email' => 'support@gadgetworld.com',
-                'phone' => '555-123-4567',
-                'address' => '789 Innovation Drive, Austin, TX, USA'
+                 'name' => 'Hassan Electronics Wholesale',
+                 'email' => 'info@hassanelectronics.pk',
+                 'phone' => '03219876543',
+                 'address' => 'Blue Area Mobile Market, Islamabad, Pakistan'
             ],
         ];
 
