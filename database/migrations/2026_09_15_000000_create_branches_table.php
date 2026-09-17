@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code', 30)->unique();
             $table->string('address');
             $table->string('phone', 30)->nullable();
             $table->enum('status', ['Active', 'Inactive'])->default('Active');

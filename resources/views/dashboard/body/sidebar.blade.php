@@ -67,17 +67,6 @@
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
                             </a>
                         </li>
-                        <!-- <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
-                            <a href="{{ route('order.pendingDue') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
-                            </a>
-                        </li> -->
-
-                        <li class="{{ Request::is('orders/pending*') ? 'active' : '' }}">
-                            <a href="{{ route('order.pendingOrders') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
-                            </a>
-                        </li>
 
                         <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
                             <a href="{{ route('order.pendingDue') }}">
@@ -149,15 +138,6 @@
 
                 <hr>
 
-                @if (auth()->user()->can('employee.menu'))
-                {{-- <li class="{{ Request::is('employees*') ? 'active' : '' }}">
-                <a href="{{ route('employees.index') }}" class="svg-icon">
-                    <x-heroicon-o-user-group class="w-6 h-6" />
-                    <span class="ml-3">Employees</span>
-                </a>
-                </li> --}}
-                @endif
-
                 @if (auth()->user()->can('customer.menu'))
                 <li class="{{ Request::is('customers*') ? 'active' : '' }}">
                     <a href="{{ route('customers.index') }}" class="svg-icon">
@@ -175,66 +155,21 @@
                     </a>
                 </li>
                 @endif
-
-                @if (auth()->user()->can('salary.menu'))
-                {{-- <li>
-                        <a href="#advance-salary" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                        <x-heroicon-o-banknotes class="w-6 h-6" />
-                        <span class="ml-3">Salary</span>
-                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                        </a>
-                        <ul id="advance-salary" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-
-                            <li class="{{ Request::is(['advance-salary', 'advance-salary/*/edit']) ? 'active' : '' }}">
-                <a href="{{ route('advance-salary.index') }}">
-                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>All Advance Salary</span>
-                </a>
-                </li>
-                <li class="{{ Request::is('advance-salary/create*') ? 'active' : '' }}">
-                    <a href="{{ route('advance-salary.create') }}">
-                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Create Advance Salary</span>
+                @if (auth()->user()->can('stock.menu'))
+                <li class="{{ Request::is('expenses*') ? 'active' : '' }}">
+                    <a href="{{ route('expenses.index') }}" class="svg-icon">
+                        <x-heroicon-o-receipt-percent class="w-6 h-6" />
+                        <span class="ml-3">Expenses</span>
                     </a>
                 </li>
-                <li class="{{ Request::is('pay-salary') ? 'active' : '' }}">
-                    <a href="{{ route('pay-salary.index') }}">
-                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pay Salary</span>
+                <li class="{{ Request::is('branches*') ? 'active' : '' }}">
+                    <a href="{{ route('branches.index') }}" class="svg-icon">
+                        <x-heroicon-o-building-office-2 class="w-6 h-6" />
+                        <span class="ml-3">Branches</span>
                     </a>
                 </li>
-                <li class="{{ Request::is('pay-salary/history*') ? 'active' : '' }}">
-                    <a href="{{ route('pay-salary.payHistory') }}">
-                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>History Pay Salary</span>
-                    </a>
-                </li>
-            </ul>
-            </li> --}}
-            @endif
-
-            @if (auth()->user()->can('attendance.menu'))
-            {{-- <li>
-                        <a href="#attendance" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                            <x-heroicon-o-calendar-days class="w-6 h-6" />
-                            <span class="ml-3">Attendance</span>
-                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                            </a>
-                            <ul id="attendance" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-
-                                <li class="{{ Request::is(['attendance']) ? 'active' : '' }}">
-            <a href="{{ route('attendance.index') }}">
-                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>All Attendance</span>
-            </a>
-            </li>
-            <li class="{{ Request::is('attendance/create') ? 'active' : '' }}">
-                <a href="{{ route('attendance.create') }}">
-                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Create Attendance</span>
-                </a>
-            </li>
-            </ul>
-            </li> --}}
-            @endif
-
-            <hr>
-
-
+                @endif
+            
             @if (auth()->user()->can('roles.menu'))
             <li>
                 <a href="#permission" class="collapsed" data-toggle="collapse" aria-expanded="false">
@@ -270,36 +205,6 @@
                 </a>
             </li>
             @endif
-            @if (auth()->user()->can('stock.menu'))
-            <li class="{{ Request::is('expenses*') ? 'active' : '' }}">
-                <a href="{{ route('expenses.index') }}" class="svg-icon">
-                    <x-heroicon-o-receipt-percent class="w-6 h-6" />
-                    <span class="ml-3">Expenses</span>
-                </a>
-            </li>
-            <li class="{{ Request::is('branches*') ? 'active' : '' }}">
-                <a href="{{ route('branches.index') }}" class="svg-icon">
-                    <x-heroicon-o-building-office-2 class="w-6 h-6" />
-                    <span class="ml-3">Branches</span>
-                </a>
-            </li>
-            @endif
-
-            @if (auth()->user()->can('database.menu'))
-            {{-- <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
-            <a href="{{ route('backup.index') }}" class="svg-icon">
-                <x-heroicon-o-circle-stack class="w-6 h-6" />
-                <span class="ml-3">Backup Database</span>
-            </a>
-            </li> --}}
-            @endif
-
-            {{-- <li class="{{ Request::is('help*') ? 'active' : '' }}">
-            <a href="{{ route('help.index') }}" class="svg-icon">
-                <x-heroicon-o-question-mark-circle class="w-6 h-6" />
-                <span class="ml-3">Help</span>
-            </a>
-            </li> --}}
             </ul>
         </nav>
         <div class="p-3"></div>

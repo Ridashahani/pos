@@ -1,25 +1,29 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Dashboard\ProductController;
-use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\Dashboard\AdvanceSalaryController;
+use App\Http\Controllers\Dashboard\AttendanceController;
 use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\CustomerController;
-use App\Http\Controllers\Dashboard\EmployeeController;
-use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\PaySalaryController;
-use App\Http\Controllers\Dashboard\AttendanceController;
-use App\Http\Controllers\Dashboard\AdvanceSalaryController;
 use App\Http\Controllers\Dashboard\DatabaseBackupController;
+use App\Http\Controllers\Dashboard\EmployeeController;
 use App\Http\Controllers\Dashboard\HelpController;
 use App\Http\Controllers\Dashboard\OrderController;
-use App\Http\Controllers\Dashboard\PurchaseController;
+use App\Http\Controllers\Dashboard\PaySalaryController;
 use App\Http\Controllers\Dashboard\PosController;
+use App\Http\Controllers\Dashboard\ProductController;
+use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\PurchaseController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\StockController;
+use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
+use App\Http\Controllers\ExpenseController;
+use Illuminate\Support\Facades\Route;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -149,63 +153,66 @@ Route::middleware(['permission:orders.menu'])->group(function () {
 });
 
 // ====== STOCK MANAGEMENT ======
-Route::middleware(['permission:stock.menu'])->group(function () {
-    Route::view('/branches', 'modules.index', [
-        'title' => 'Branches',
-        'description' => 'Store branches and locations.',
-        'module' => 'branches',
-        'records' => [
-            [
-                'name' => 'Saddar Main Branch',
-                'code' => 'BR-001',
-                'address' => 'Saddar, Rawalpindi',
-                'phone' => '+92 300 1234567',
-                'status' => 'Active',
-            ],
-            [
-                'name' => 'Commercial Market Branch',
-                'code' => 'BR-002',
-                'address' => 'Commercial Market, Rawalpindi',
-                'phone' => '+92 301 7654321',
-                'status' => 'Active',
-            ],
-        ],
-    ])->name('branches.index');
-    Route::view('/branches/create', 'modules.create-branch')->name('branches.create');
+// Route::middleware(['permission:stock.menu'])->group(function () {
+//     Route::view('/branches', 'branch.index', [
+//         'title' => 'Branches',
+//         'description' => 'Store branches and locations.',
+//         'module' => 'branches',
+//         'records' => [
+//             [
+//                 'name' => 'Saddar Main Branch',
+//                 'code' => 'BR-001',
+//                 'address' => 'Saddar, Rawalpindi',
+//                 'phone' => '+92 300 1234567',
+//                 'status' => 'Active',
+//             ],
+//             [
+//                 'name' => 'Commercial Market Branch',
+//                 'code' => 'BR-002',
+//                 'address' => 'Commercial Market, Rawalpindi',
+//                 'phone' => '+92 301 7654321',
+//                 'status' => 'Active',
+//             ],
+//         ],
+//     ])->name('branches.index');
+    // Route::view('/branches/create', 'branch.create')->name('branches.create');
 
-    Route::view('/expenses', 'modules.index', [
-        'title' => 'Expenses',
-        'description' => 'Operating expenses recorded per branch.',
-        'module' => 'expenses',
-        'records' => [
-            [
-                'date' => '2026-09-01',
-                'branch' => 'Saddar Main Branch',
-                'category' => 'Rent',
-                'amount' => 'Rs 45,000',
-                'note' => 'September shop rent',
-            ],
-            [
-                'date' => '2026-08-30',
-                'branch' => 'Saddar Main Branch',
-                'category' => 'Utilities',
-                'amount' => 'Rs 8,500',
-                'note' => 'Electricity bill',
-            ],
-            [
-                'date' => '2026-08-22',
-                'branch' => 'Commercial Market Branch',
-                'category' => 'Marketing',
-                'amount' => 'Rs 5,000',
-                'note' => 'Local flyers/banner',
-            ],
-        ],
-    ])->name('expenses.index');
+//     Route::view('/expenses', 'expense.index', [
+//         'title' => 'Expenses',
+//         'description' => 'Operating expenses recorded per branch.',
+//         'module' => 'expenses',
+//         'records' => [
+//             [
+//                 'date' => '2026-09-01',
+//                 'branch' => 'Saddar Main Branch',
+//                 'category' => 'Rent',
+//                 'amount' => 'Rs 45,000',
+//                 'note' => 'September shop rent',
+//             ],
+//             [
+//                 'date' => '2026-08-30',
+//                 'branch' => 'Saddar Main Branch',
+//                 'category' => 'Utilities',
+//                 'amount' => 'Rs 8,500',
+//                 'note' => 'Electricity bill',
+//             ],
+//             [
+//                 'date' => '2026-08-22',
+//                 'branch' => 'Commercial Market Branch',
+//                 'category' => 'Marketing',
+//                 'amount' => 'Rs 5,000',
+//                 'note' => 'Local flyers/banner',
+//             ],
+//         ],
+//     ])->name('expenses.index');
 
 
 
-    Route::view('/expenses/create', 'modules.create-expense')->name('expenses.create');
-});
+//     Route::view('/expenses/create', 'expense.create')->name('expenses.create');
+// });
+Route::resource('expenses',ExpenseController::class);
+
+Route::resource('branches',BranchController::class);
 
 // ====== DATABASE BACKUP ======
 Route::middleware(['permission:database.menu'])->group(function () {

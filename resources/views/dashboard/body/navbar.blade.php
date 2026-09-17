@@ -10,14 +10,14 @@
                     <h5 class="logo-title ml-3">POSDash</h5>
                 </a>
             </div>
-            <div class="iq-search-bar device-search">
-                <form action="#" class="searchbox">
-                    <a class="search-link" href="#">
-                        <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                    </a>
-                    <input type="text" class="text search-input" placeholder="Search here...">
-                </form>
-            </div>
+                <div class="iq-search-bar device-search">
+                    <!-- <form action="#" class="searchbox">
+                        <a class="search-link" href="#">
+                            <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                        </a>
+                        <input type="text" class="text search-input" placeholder="Search here...">
+                    </form> -->
+                </div>
             <div class="d-flex align-items-center">
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
