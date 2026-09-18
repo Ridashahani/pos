@@ -7,10 +7,10 @@
                 'slug' => 'pos',
                 'name' => 'POS',
             ],
-            [
-                'slug' => 'employee',
-                'name' => 'Employee',
-            ],
+            // [
+            //     'slug' => 'employee',
+            //     'name' => 'Employee',
+            // ],
             [
                 'slug' => 'customer',
                 'name' => 'Customer',
@@ -19,14 +19,14 @@
                 'slug' => 'supplier',
                 'name' => 'Supplier',
             ],
-            [
-                'slug' => 'salary',
-                'name' => 'Salary',
-            ],
-            [
-                'slug' => 'attendance',
-                'name' => 'Attendance',
-            ],
+            // [
+            //     'slug' => 'salary',
+            //     'name' => 'Salary',
+            // ],
+            // [
+            //     'slug' => 'attendance',
+            //     'name' => 'Attendance',
+            // ],
             [
                 'slug' => 'category',
                 'name' => 'Category',
@@ -36,8 +36,8 @@
                 'name' => 'Product',
             ],
             [
-                'slug' => 'orders',
-                'name' => 'Orders',
+                'slug' => 'sales',
+                'name' => 'Saless',
             ],
             [
                 'slug' => 'stock',
@@ -51,10 +51,10 @@
                 'slug' => 'user',
                 'name' => 'User',
             ],
-            [
-                'slug' => 'database',
-                'name' => 'Database',
-            ],
+            // [
+            //     'slug' => 'database',
+            //     'name' => 'Database',
+            // ],
         ];
     @endphp
 
@@ -89,7 +89,7 @@
                                     <label for="group_name">Group Name <span class="text-danger">*</span></label>
                                     <select class="form-control @error('group_name') is-invalid @enderror" name="group_name"
                                         required>
-                                        <option selected="" disabled>-- Select Group --</option>
+                                        <option selected="" disabled> Select Group </option>
                                         @foreach ($group_names as $item)
                                             <option value="{{ $item['slug'] }}">{{ $item['name'] }}</option>
                                         @endforeach

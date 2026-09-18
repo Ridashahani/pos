@@ -33,7 +33,7 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
                         <h4 class="mb-3">Pending Due List</h4>
-                        <p class="mb-0">List of orders with outstanding due amounts.</p>
+                        <p class="mb-0">List of Sales with outstanding due amounts.</p>
                     </div>
                 </div>
                 </div>
@@ -66,7 +66,7 @@
                                     <label class="control-label col-sm-3 align-self-center" for="search">Search:</label>
                                     <div class="col-sm-8">
                                         <div class="input-group">
-                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search order"
+                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search Sale"
                                                 value="{{ request('search') }}">
                                             <div class="input-group-append">
                                                 <button type="submit" class="input-group-text bg-primary">
@@ -87,7 +87,7 @@
                                         <th>No.</th>
                                         <th>Invoice No</th>
                                         <th><x-sort-link name="customer.name" label="Name" /></th>
-                                        <th><x-sort-link name="order_date" label="Order Date" /></th>
+                                        <th><x-sort-link name="order_date" label="Sale Date" /></th>
                                         <th>Payment</th>
                                         <th><x-sort-link name="pay_amount" label="Pay" /></th>
                                         <th><x-sort-link name="due_amount" label="Due" /></th>
@@ -123,7 +123,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No pending due orders found.</td>
+                                            <td colspan="8" class="text-center">No pending due sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

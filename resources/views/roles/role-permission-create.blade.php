@@ -25,7 +25,7 @@
                                     <label for="role_id">Role Name <span class="text-danger">*</span></label>
                                     <select class="form-control @error('role') is-invalid @enderror" id="role_id"
                                         name="role_id" required>
-                                        <option selected="" disabled>-- Select Role --</option>
+                                        <option selected="" disabled>Select Role </option>
                                         @foreach ($roles as $role)
                                             <option value="{{ $role->id }}">{{ $role->name }}</option>
                                         @endforeach
