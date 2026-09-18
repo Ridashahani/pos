@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -20,14 +21,13 @@ class DashboardController extends Controller
         // 2. Today's Snapshot
         $today_sales = Order::whereDate('created_at', \Carbon\Carbon::today())->sum('total');
 
-        // 3. Top 5 Best Selling Products (by Quantity Sold)
         $top_products = \Illuminate\Support\Facades\DB::table('order_details')
             ->join('products', 'order_details.product_id', '=', 'products.id')
             ->select(
                 'products.name as product_name',
                 'products.image as product_image',
                 'products.code as product_code',
-                \Illuminate\Support\Facades\DB::raw('SUM(order_details.quantity) as total_sold')
+                DB::raw('SUM(order_details.quantity) as total_sold')
             )
             ->groupBy('products.id', 'products.name', 'products.image', 'products.code')
             ->orderByDesc('total_sold')

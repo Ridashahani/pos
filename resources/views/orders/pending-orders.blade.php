@@ -32,8 +32,8 @@
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
-                        <h4 class="mb-3">Pending Order List</h4>
-                        <p class="mb-0">Orders that are currently pending. You can view details to complete them.</p>
+                        <h4 class="mb-3">Pending sales List</h4>
+                        <p class="mb-0">Saless that are currently pending. You can view details to complete them.</p>
                     </div>
                 </div>
                 </div>

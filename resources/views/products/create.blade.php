@@ -273,7 +273,7 @@
     })();
 </script> --}}
 
-// Handle paste events (some scanners use paste)
+{{-- // Handle paste events (some scanners use paste)
 barcodeScanner.addEventListener('paste', function(e) {
 setTimeout(function() {
 const pastedValue = barcodeScanner.value.trim();
@@ -289,7 +289,7 @@ barcodeScanner.value = '';
 });
 }
 })();
-</script>
+</script> --}}
 
 @include('components.preview-img-form')
 @endsection

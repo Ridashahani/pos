@@ -55,22 +55,22 @@ Route::middleware('auth')->group(function () {
 });
 
 // ====== USERS ======
-Route::middleware(['permission:user.menu'])->group(function () {
+Route::middleware(['permission:access.users'])->group(function () {
     Route::resource('/users', UserController::class)->except(['show']);
 });
 
 // ====== CUSTOMERS ======
-Route::middleware(['permission:customer.menu'])->group(function () {
+Route::middleware(['permission:access.customers'])->group(function () {
     Route::resource('/customers', CustomerController::class);
 });
 
 // ====== SUPPLIERS ======
-Route::middleware(['permission:supplier.menu'])->group(function () {
+Route::middleware(['permission:access.suppliers'])->group(function () {
     Route::resource('/suppliers', SupplierController::class);
 });
 
 // ====== PRODUCTS ======
-Route::middleware(['permission:product.menu'])->group(function () {
+Route::middleware(['permission:access.products'])->group(function () {
     Route::resource('/variations', VariationController::class)->except(['show']);
     Route::get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
     Route::post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
@@ -79,12 +79,12 @@ Route::middleware(['permission:product.menu'])->group(function () {
 });
 
 // ====== CATEGORY PRODUCTS ======
-Route::middleware(['permission:category.menu'])->group(function () {
+Route::middleware(['permission:access.categories'])->group(function () {
     Route::resource('/categories', CategoryController::class);
 });
 
 // ====== POS ======
-Route::middleware(['permission:pos.menu'])->group(function () {
+Route::middleware(['permission:access.pos'])->group(function () {
     Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
     Route::post('/pos/add', [PosController::class, 'addCart'])->name('pos.addCart');
     Route::post('/pos/update/{rowId}', [PosController::class, 'updateCart'])->name('pos.updateCart');
@@ -100,7 +100,7 @@ Route::middleware(['permission:pos.menu'])->group(function () {
 });
 
 // ====== ORDERS ======
-Route::middleware(['permission:orders.menu'])->group(function () {
+Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/orders/pending', [OrderController::class, 'pendingOrders'])->name('order.pendingOrders');
     Route::get('/orders/complete', [OrderController::class, 'completeOrders'])->name('order.completeOrders');
     Route::get('/orders/details/{order_id}', [OrderController::class, 'orderDetails'])->name('order.orderDetails');
@@ -123,7 +123,7 @@ Route::middleware(['permission:orders.menu'])->group(function () {
 });
 
 // ====== STOCK MANAGEMENT ======
-Route::middleware(['permission:stock.menu'])->group(function () {
+Route::middleware(['permission:access.stock'])->group(function () {
     Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
     Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
     Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
@@ -168,7 +168,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // ====== ROLE CONTROLLER ======
-Route::middleware(['permission:roles.menu'])->group(function () {
+Route::middleware(['permission:access.roles'])->group(function () {
     // Permissions
     Route::get('/permission', [RoleController::class, 'permissionIndex'])->name('permission.index');
     Route::get('/permission/create', [RoleController::class, 'permissionCreate'])->name('permission.create');
