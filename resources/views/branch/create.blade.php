@@ -7,21 +7,18 @@
         border-color: #ff0000 !important;
         color: #fff !important;
     }
-
     .btn-pure-red:hover,
     .btn-pure-red:focus {
         background-color: #d90000 !important;
         border-color: #d90000 !important;
         color: #fff !important;
     }
-
     .compact-form .form-control {
         height: 38px;
         padding-bottom: 6px;
         padding-top: 6px;
     }
 </style>
-
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-12">
@@ -50,17 +47,12 @@
                                 @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="form-group col-md-6">
-                                <label for="code">Branch Code <span class="text-danger">*</span></label>
-                                <input type="text" id="code" name="code" value="{{ old('code') }}"
-                                    class="form-control @error('code') is-invalid @enderror" required>
-                                @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="phone">Phone</label>
+                                <label for="phone">Phone <span class="text-danger">*</span></label>
                                 <input type="text" id="phone" name="phone" value="{{ old('phone') }}"
-                                    class="form-control @error('phone') is-invalid @enderror">
+                                    class="form-control @error('phone') is-invalid @enderror" required>
                                 @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+
                             <div class="form-group col-md-6">
                                 <label for="status">Status <span class="text-danger">*</span></label>
                                 <select id="status" name="status" class="form-control" required>
@@ -69,10 +61,10 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-save mr-2">
-                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save Branch
+                        <button type="submit" class=" btn btn-primary mr-2">
+                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
                         </button>
-                        <a href="{{ route('branches.index') }}" class="btn btn-cancel" role="button">
+                        <a href="{{ route('branches.index') }}" class=" btn btn-orange">
                             <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
                         </a>
                     </form>

@@ -14,16 +14,6 @@
                 <div class="card-body">
                     <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                            <!-- begin: Input Image -->
-                            {{-- <div class="form-group row align-items-center">
-                                <div class="col-md-12">
-                                    <div class="profile-img-edit">
-                                        <div class="crm-profile-img-edit">
-                                            <img class="crm-profile-pic rounded-circle avatar-100" id="image-preview" src="{{ asset('assets/images/user/1.png') }}" alt="profile-pic">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> --}}
 
                             {{-- <div class="row">
                                 <div class="input-group mb-4 col-lg-6">
@@ -101,29 +91,14 @@
                                     </div>
                                     @enderror
                                 </div>
-                                @enderror
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="role">Role</label>
-                                <select class="form-control @error('role') is-invalid @enderror" name="role">
-                                    <option selected="" disabled>-- Select Role --</option>
-                                    @foreach ($roles as $role)
-                                    <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('role')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                                @enderror
                             </div>
                         </div>
                         <!-- end: Input Data -->
-                        <div class="mt-2">
-                            <button type="submit" class="btn btn-save mr-2">
+                        <div class="mb-5 ml-3">
+                            <button type="submit" class="btn btn-primary mr-2">
                                 <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
                             </button>
-                            <a class="btn btn-cancel" href="{{ route('users.index') }}">
+                            <a class="btn btn-orange" href="{{ route('users.index') }}">
                                 <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
                             </a>
                         </div>
