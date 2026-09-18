@@ -81,7 +81,7 @@
                                 <x-heroicon-o-check-circle class="w-6 h-6 text-success" />
                             </div>
                             <div>
-                                <p class="mb-2">Complete Orders</p>
+                                <p class="mb-2">Complete Sales</p>
                                 <h4>{{ $complete_orders }}</h4>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                                 <x-heroicon-o-clock class="w-6 h-6 text-warning" />
                             </div>
                             <div>
-                                <p class="mb-2">Pending Orders</p>
+                                <p class="mb-2">Pending Sales</p>
                                 <h4>{{ $pending_orders }}</h4>
                             </div>
                         </div>
@@ -130,7 +130,7 @@
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
-                            <h4 class="card-title">Recent Orders</h4>
+                            <h4 class="card-title">Recent Sales</h4>
                         </div>
                         <div class="card-header-toolbar d-flex align-items-center">
                             <a href="{{ route('order.pendingOrders') }}"
