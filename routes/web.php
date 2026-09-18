@@ -1,45 +1,27 @@
 <?php
 
 use App\Http\Controllers\BranchController;
-use App\Http\Controllers\Dashboard\AdvanceSalaryController;
-use App\Http\Controllers\Dashboard\AttendanceController;
 use App\Http\Controllers\Dashboard\CategoryController;
 use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\HelpController;
 use App\Http\Controllers\Dashboard\OrderController;
-use App\Http\Controllers\Dashboard\PaySalaryController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\PurchaseController;
 use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\StockController;
-use App\Http\Controllers\Dashboard\BranchController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Route;
 
 
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
 Route::get('/', function () {
     return redirect()->route('dashboard');
 });
-
-
 // DEFAULT DASHBOARD & PROFILE
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
@@ -128,51 +110,11 @@ Route::middleware(['permission:orders.menu'])->group(function () {
     // Stock Management
 
 });
-
-// ====== STOCK MANAGEMENT ======
-Route::middleware(['permission:stock.menu'])->group(function () {
-    Route::get('/branches', [BranchController::class, 'index'])->name('branches.index');
-    Route::get('/branches/create', [BranchController::class, 'create'])->name('branches.create');
-    Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
-
-
-//     Route::view('/expenses', 'expense.index', [
-//         'title' => 'Expenses',
-//         'description' => 'Operating expenses recorded per branch.',
-//         'module' => 'expenses',
-//         'records' => [
-//             [
-//                 'date' => '2026-09-01',
-//                 'branch' => 'Saddar Main Branch',
-//                 'category' => 'Rent',
-//                 'amount' => 'Rs 45,000',
-//                 'note' => 'September shop rent',
-//             ],
-//             [
-//                 'date' => '2026-08-30',
-//                 'branch' => 'Saddar Main Branch',
-//                 'category' => 'Utilities',
-//                 'amount' => 'Rs 8,500',
-//                 'note' => 'Electricity bill',
-//             ],
-//             [
-//                 'date' => '2026-08-22',
-//                 'branch' => 'Commercial Market Branch',
-//                 'category' => 'Marketing',
-//                 'amount' => 'Rs 5,000',
-//                 'note' => 'Local flyers/banner',
-//             ],
-//         ],
-//     ])->name('expenses.index');
-
-
-
-//     Route::view('/expenses/create', 'expense.create')->name('expenses.create');
-// });
-});
+// Branches
+Route::resource('branches', BranchController::class);
+// Expense
 Route::resource('expenses',ExpenseController::class);
 
-Route::resource('branches',BranchController::class);
 
 
 // ====== HELP ======
@@ -206,7 +148,6 @@ Route::middleware(['permission:roles.menu'])->group(function () {
     Route::put('/role/permission/{id}', [RoleController::class, 'rolePermissionUpdate'])->name('rolePermission.update');
     Route::delete('/role/permission/{id}', [RoleController::class, 'rolePermissionDestroy'])->name('rolePermission.destroy');
 });
-
 
 require __DIR__ . '/auth.php';
 
