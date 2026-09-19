@@ -40,6 +40,7 @@ class StockController extends Controller
         $rows = collect($products->items())->map(function (Product $product): array {
             return [
                 'product_id' => $product->id,
+                'image' => $product->image,
                 'date' => $product->buying_date ?: $product->created_at->format('d M Y'),
                 'reference' => $product->code,
                 'product' => $product->name,

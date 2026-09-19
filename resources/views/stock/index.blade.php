@@ -92,8 +92,13 @@
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
                                     <tr class="ligth ligth-data">
-                                        <th>Date</th>
-                                        <th>Reference</th>
+                                        @if ($type !== 'stock-in')
+                                            <th>Date</th>
+                                            <th>Reference</th>
+                                        @endif
+                                        @if ($type === 'stock-in')
+                                            <th>Photo</th>
+                                        @endif
                                         <th>Product</th>
                                         <th>Quantity</th>
                                         @if ($type === 'stock-in')
@@ -117,8 +122,17 @@
                                 <tbody class="ligth-body">
                                     @forelse ($rows as $row)
                                         <tr>
-                                            <td>{{ $row['date'] }}</td>
-                                            <td><span class="font-weight-bold">{{ $row['reference'] }}</span></td>
+                                            @if ($type !== 'stock-in')
+                                                <td>{{ $row['date'] }}</td>
+                                                <td><span class="font-weight-bold">{{ $row['reference'] }}</span></td>
+                                            @endif
+                                            @if ($type === 'stock-in')
+                                                <td>
+                                                    <img class="avatar-60 rounded"
+                                                        src="{{ $row['image'] ? asset('assets/images/product/' . $row['image']) : asset('assets/images/product/default.webp') }}"
+                                                        alt="{{ $row['product'] }}">
+                                                </td>
+                                            @endif
                                             <td>{{ $row['product'] }}</td>
                                             <td>{{ number_format($row['quantity']) }}</td>
                                             @if ($type === 'stock-in')
