@@ -33,6 +33,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
         Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
+        Route::get('/transfer/{transfer}/edit', [StockController::class, 'editTransfer'])->name('transfer.edit');
+        Route::put('/transfer/{transfer}', [StockController::class, 'updateTransfer'])->name('transfer.update');
+        Route::delete('/transfer/{transfer}', [StockController::class, 'destroyTransfer'])->name('transfer.destroy');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');

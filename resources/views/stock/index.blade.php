@@ -116,6 +116,8 @@
                                         @endif
                                         @if ($type === 'stock-in')
                                             <th>Action</th>
+                                        @elseif ($type === 'stock-transfer')
+                                            <th class="text-center">Actions</th>
                                         @endif
                                     </tr>
                                 </thead>
@@ -159,6 +161,24 @@
                                                         title="View details" aria-label="View details">
                                                         <x-heroicon-o-eye class="w-5 h-5" />
                                                     </a>
+                                                </td>
+                                            @elseif ($type === 'stock-transfer')
+                                                <td class="text-center">
+                                                    @if (!empty($row['id']))
+                                                        <a href="{{ route('stock.transfer.edit', $row['id']) }}"
+                                                            class="btn btn-light btn-sm mr-1" title="Edit stock transfer"
+                                                            aria-label="Edit stock transfer">
+                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                        </a>
+                                                        <form action="{{ route('stock.transfer.destroy', $row['id']) }}" method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete stock transfer"
+                                                                aria-label="Delete stock transfer">
+                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </td>
                                             @endif
                                         </tr>

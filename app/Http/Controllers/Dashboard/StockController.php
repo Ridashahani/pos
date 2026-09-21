@@ -7,6 +7,8 @@ use App\Models\Branch;
 use App\Models\OrderDetails;
 use App\Models\Product;
 use App\Models\StockTransfer;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -17,13 +19,6 @@ class StockController extends Controller
         ['date' => '13 Sep 2026', 'reference' => 'SIN-1000', 'product' => 'Thermal Receipt Paper', 'quantity' => 100, 'unit_cost' => 3.50, 'supplier' => 'Office Mart'],
         ['date' => '10 Sep 2026', 'reference' => 'SIN-0999', 'product' => 'Cash Drawer', 'quantity' => 8, 'unit_cost' => 85.00, 'supplier' => 'Retail Equip'],
         ['date' => '08 Sep 2026', 'reference' => 'SIN-0998', 'product' => 'USB-C Charging Cable', 'quantity' => 50, 'unit_cost' => 7.25, 'supplier' => 'Tech Supplies'],
-    ];
-
-    private array $stockTransfers = [
-        ['date' => '15 Sep 2026', 'reference' => 'TRF-3012', 'product' => 'Wireless Barcode Scanner', 'quantity' => 4, 'from_branch_index' => 0, 'to_branch_index' => 1, 'status' => 'In Transit'],
-        ['date' => '13 Sep 2026', 'reference' => 'TRF-3011', 'product' => 'Thermal Receipt Paper', 'quantity' => 20, 'from_branch_index' => 1, 'to_branch_index' => 0, 'status' => 'Completed'],
-        ['date' => '11 Sep 2026', 'reference' => 'TRF-3010', 'product' => 'USB-C Charging Cable', 'quantity' => 10, 'from_branch_index' => 0, 'to_branch_index' => 2, 'status' => 'Completed'],
-        ['date' => '07 Sep 2026', 'reference' => 'TRF-3009', 'product' => 'Cash Drawer', 'quantity' => 2, 'from_branch_index' => 2, 'to_branch_index' => 0, 'status' => 'Pending'],
     ];
 
     public function in(Request $request)
@@ -78,11 +73,10 @@ class StockController extends Controller
                 });
             })
             ->latest()
-            ->paginate(10);
-        $sales->appends($request->query());
-
-        $rows = collect($sales->items())->map(function (OrderDetails $detail): array {
+            ->get()
+            ->map(function (OrderDetails $detail): array {
             return [
+                'date_sort' => $detail->order->order_date,
                 'date' => $detail->order->order_date->format('d M Y'),
                 'reference' => $detail->order->invoice_no,
                 'product' => $detail->product->name,
@@ -93,7 +87,42 @@ class StockController extends Controller
                 'currency' => $detail->currency ?: ($detail->product->currency ?: 'PKR'),
                 'destination' => 'POS Counter',
             ];
-        })->all();
+        });
+
+        $transfers = StockTransfer::with(['product', 'toBranch'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->whereHas('product', function ($productQuery) use ($request) {
+                    $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
+                });
+            })
+            ->latest()
+            ->get()
+            ->map(function (StockTransfer $transfer): array {
+                return [
+                    'date_sort' => $transfer->created_at,
+                    'date' => $transfer->created_at->format('d M Y'),
+                    'reference' => $transfer->reference,
+                    'product' => $transfer->product->name,
+                    'quantity' => $transfer->quantity,
+                    'unit_buying_price' => $transfer->product->buying_price,
+                    'unit_price' => 0,
+                    'net_sold_price' => 0,
+                    'currency' => $transfer->product->currency ?: 'PKR',
+                    'destination' => 'Transferred to ' . $transfer->toBranch->name,
+                ];
+            });
+
+        $allRows = $sales->concat($transfers)->sortByDesc('date_sort')->values();
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $sales = new LengthAwarePaginator(
+            $allRows->forPage($page, 10)->values(),
+            $allRows->count(),
+            10,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+        );
+        $sales->appends($request->query());
+        $rows = $sales->items();
 
         return view('stock.index', array_merge($this->pageData('Stock-out', 'stock-out', $rows), [
             'pagination' => $sales,
@@ -104,19 +133,11 @@ class StockController extends Controller
     public function transfer()
     {
         $branches = Branch::where('status', 'Active')->orderBy('name')->get()->values();
-        $sampleRows = array_map(function (array $row) use ($branches): array {
-            $row['from_branch_id'] = $branches->get($row['from_branch_index'])?->id;
-            $row['to_branch_id'] = $branches->get($row['to_branch_index'])?->id;
-            $row['from'] = $branches->get($row['from_branch_index'])?->name ?? 'No branch assigned';
-            $row['to'] = $branches->get($row['to_branch_index'])?->name ?? 'No branch assigned';
-            unset($row['from_branch_index'], $row['to_branch_index']);
-
-            return $row;
-        }, $this->stockTransfers);
         $savedRows = StockTransfer::with(['product', 'fromBranch', 'toBranch'])
             ->latest()
             ->get()
             ->map(fn (StockTransfer $transfer): array => [
+                'id' => $transfer->id,
                 'date' => $transfer->created_at->format('d M Y'),
                 'reference' => $transfer->reference,
                 'product' => $transfer->product->name,
@@ -129,7 +150,7 @@ class StockController extends Controller
             ])
             ->all();
 
-        return view('stock.index', $this->pageData('Stock-Transfer', 'stock-transfer', array_merge($savedRows, $sampleRows)) + [
+        return view('stock.index', $this->pageData('Stock-Transfer', 'stock-transfer', $savedRows) + [
             'branches' => $branches,
         ]);
     }
@@ -138,6 +159,18 @@ class StockController extends Controller
     {
         return view('stock.transfer-create', [
             'products' => Product::where('stock', '>', 0)->orderBy('name')->get(),
+            'branches' => Branch::where('status', 'Active')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function editTransfer(StockTransfer $transfer)
+    {
+        return view('stock.transfer-create', [
+            'transfer' => $transfer,
+            'products' => Product::where('stock', '>', 0)
+                ->orWhere('id', $transfer->product_id)
+                ->orderBy('name')
+                ->get(),
             'branches' => Branch::where('status', 'Active')->orderBy('name')->get(),
         ]);
     }
@@ -158,13 +191,60 @@ class StockController extends Controller
             ]);
         }
 
-        StockTransfer::create([
-            ...$validated,
-            'reference' => 'TRF-' . Str::upper(Str::random(6)),
-            'status' => 'In Transit',
-        ]);
+        DB::transaction(function () use ($validated, $product): void {
+            $product->decrement('stock', $validated['quantity']);
+
+            StockTransfer::create([
+                ...$validated,
+                'reference' => 'TRF-' . Str::upper(Str::random(6)),
+                'status' => 'In Transit',
+            ]);
+        });
 
         return redirect()->route('stock.transfer')->with('success', 'Stock transfer added successfully.');
+    }
+
+    public function updateTransfer(Request $request, StockTransfer $transfer)
+    {
+        $validated = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'from_branch_id' => ['required', 'exists:branches,id'],
+            'to_branch_id' => ['required', 'exists:branches,id', 'different:from_branch_id'],
+        ]);
+        $available = DB::transaction(function () use ($validated, $transfer): ?int {
+            $oldProduct = Product::whereKey($transfer->product_id)->lockForUpdate()->firstOrFail();
+            $oldProduct->increment('stock', $transfer->quantity);
+
+            $newProduct = Product::whereKey($validated['product_id'])->lockForUpdate()->firstOrFail();
+            if ($validated['quantity'] > $newProduct->stock) {
+                $oldProduct->decrement('stock', $transfer->quantity);
+                return $newProduct->stock;
+            }
+
+            $newProduct->decrement('stock', $validated['quantity']);
+            $transfer->update($validated);
+
+            return null;
+        });
+
+        if ($available !== null) {
+            return back()->withInput()->withErrors([
+                'quantity' => "Only {$available} units of this product are available in stock.",
+            ]);
+        }
+
+        return redirect()->route('stock.transfer')->with('success', 'Stock transfer updated successfully.');
+    }
+
+    public function destroyTransfer(StockTransfer $transfer)
+    {
+        DB::transaction(function () use ($transfer): void {
+            Product::whereKey($transfer->product_id)->lockForUpdate()->firstOrFail()->increment('stock', $transfer->quantity);
+            $transfer->delete();
+        });
+
+        return redirect()->route('stock.transfer')->with('success', 'Stock transfer deleted successfully.');
     }
 
     private function pageData(string $title, string $type, iterable $rows): array
