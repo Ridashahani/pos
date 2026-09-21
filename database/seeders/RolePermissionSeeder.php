@@ -23,11 +23,13 @@ class RolePermissionSeeder extends Seeder
             'access.stocks' => 'stock',
             'access.roles' => 'roles',
             'access.users' => 'user',
+            'access.payments' => 'payment',
         ];
 
         Permission::whereIn('name', [
             'access.pos', 'access.customers', 'access.suppliers', 'access.categories', 'access.products',
             'access.sales', 'access.stocks', 'access.roles', 'access.users',
+            'access.payments',
         ])->delete();
 
         foreach ($permissions as $name => $group) {
@@ -47,6 +49,7 @@ class RolePermissionSeeder extends Seeder
             'access.categories',
             'access.products',
             'access.sales',
+            'access.payments',
         ]);
     }
 }
