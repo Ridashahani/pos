@@ -23,32 +23,6 @@
         color: #1f2937;
         vertical-align: middle;
     }
-
-    .account-balance-card {
-        border-radius: 10px;
-        padding: 18px 20px;
-        color: #fff;
-    }
-
-    .account-balance-card.jazzcash {
-        background: linear-gradient(135deg, #d0006f, #770d0d);
-    }
-
-    .account-balance-card.easypaisa {
-        background: linear-gradient(135deg, #00a651, #046b36);
-    }
-
-    .account-balance-card.bank {
-        background: linear-gradient(135deg, #1e3a8a, #1e293b);
-    }
-
-    .account-balance-card .acc-badge {
-        font-size: 11px;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 2px 8px;
-        border-radius: 999px;
-        text-transform: uppercase;
-    }
 </style>
 
 <div class="container-fluid">
@@ -59,9 +33,12 @@
                     <h4 class="mb-2">Payments</h4>
                     <p class="mb-0 text-muted">Money transfer &amp; cash withdrawal transactions.</p>
                 </div>
-                <a href="{{ route('payments.create') }}" class="btn btn-primary add-list d-flex align-items-center mt-3 mt-md-0">
-                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Transaction
-                </a>
+                <div class="mt-3 mt-md-0">
+                    <a href="{{ route('payment-accounts.index') }}" class="btn btn-light mr-2">Manage Accounts</a>
+                    <a href="{{ route('payments.create') }}" class="btn btn-primary add-list">
+                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Transaction
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -74,32 +51,6 @@
                 </button>
             </div>
             @endif
-        </div>
-
-        {{-- Accounts overview --}}
-        <div class="col-lg-12">
-            <div class="row">
-                @foreach ($accounts as $acc)
-                <div class="col-md-4">
-                    <div class="account-balance-card {{ $acc->type }} mb-4">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="font-weight-bold">{{ $acc->name }}</span>
-                            <span class="acc-badge">{{ ucfirst($acc->type) }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between mt-3">
-                            <div>
-                                <p class="mb-0" style="font-size:11px;opacity:.85;">Opening</p>
-                                <strong>Rs {{ number_format($acc->opening_balance, 0) }}</strong>
-                            </div>
-                            <div>
-                                <p class="mb-0" style="font-size:11px;opacity:.85;">Current Balance</p>
-                                <strong style="font-size:18px;">Rs {{ number_format($acc->balance, 0) }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
         </div>
 
         {{-- Summary stats --}}
