@@ -18,6 +18,7 @@ use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentAccountController;
 
 
 Route::get('/', function () {
@@ -121,6 +122,7 @@ Route::resource('branches', BranchController::class);
 Route::resource('expenses', ExpenseController::class);
 // Payments
 Route::middleware(['permission:access.payments'])->group(function () {
+    Route::resource('payment-accounts', PaymentAccountController::class)->except(['show']);
     Route::resource('payments', PaymentController::class);
 });
 
