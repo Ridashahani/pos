@@ -130,18 +130,18 @@
                     </ul>
                 </div>
 
-                <!-- Order Management -->
+                <!-- Sales Management -->
                 <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow">
                     <div class="flex items-center mb-4">
                         <div class="bg-green-100 rounded-lg p-3 mr-4">
                             <x-heroicon-o-shopping-bag class="w-6 h-6 text-green-600" />
                         </div>
-                        <h3 class="text-xl font-semibold text-gray-800">Order Management</h3>
+                        <h3 class="text-xl font-semibold text-gray-800">Sales Management</h3>
                     </div>
                     <ul class="space-y-2">
                         <li class="flex items-start text-gray-700">
                             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>Track pending and completed orders</span>
+                            <span>Track pending and completed sales</span>
                         </li>
                         <li class="flex items-start text-gray-700">
                             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -149,11 +149,11 @@
                         </li>
                         <li class="flex items-start text-gray-700">
                             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>Detailed order information and history</span>
+                            <span>Detailed sale information and history</span>
                         </li>
                         <li class="flex items-start text-gray-700">
                             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>Update order status (pending to complete)</span>
+                            <span>Update sale status (pending to complete)</span>
                         </li>
                         <li class="flex items-start text-gray-700">
                             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -189,7 +189,7 @@
                         </li>
                         <li class="flex items-start text-gray-700">
                             <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>Customer order history tracking</span>
+                            <span>Customer sales history tracking</span>
                         </li>
                     </ul>
                 </div>
@@ -407,7 +407,7 @@
                     </li>
                     <li class="flex items-start text-gray-700">
                         <x-heroicon-o-light-bulb class="w-5 h-5 text-yellow-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span>Stock is automatically deducted when orders are marked as complete</span>
+                        <span>Stock is automatically deducted when sales are marked as complete</span>
                     </li>
                     <li class="flex items-start text-gray-700">
                         <x-heroicon-o-light-bulb class="w-5 h-5 text-yellow-500 mr-3 mt-0.5 flex-shrink-0" />

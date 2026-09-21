@@ -32,20 +32,21 @@
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
-                        <h4 class="mb-3">Pending Due List</h4>
-                        <p class="mb-0">List of Sales with outstanding due amounts.</p>
+                        <h4 class="mb-3">Complete Sales List</h4>
+                        <p class="mb-0">List of all completed sales. You can view details or reprint invoices.</p>
                     </div>
                 </div>
-                </div>
+            </div>
 
             <div class="col-lg-12">
-                <!-- Main Content Card -->
+                <!-- Main Request Card -->
                 <div class="card">
                     <div class="card-body">
 
-                        <!-- Filter Form -->
-                        <form action="{{ route('order.pendingDue') }}" method="get">
+                        <!-- Search and Validation Form -->
+                        <form action="{{ route('sale.completeSales') }}" method="get">
                             <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                <!-- Rows Selector -->
                                 <div class="form-group mb-0 mr-2 mt-n3 row-selector-container">
                                     <div class="d-flex align-items-center">
                                         <label for="row" class="mb-0 mr-2" style="min-width: 50px;">Row:</label>
@@ -62,24 +63,25 @@
                                     </div>
                                 </div>
 
+                                <!-- Search Input -->
                                 <div class="form-group row">
                                     <label class="control-label col-sm-3 align-self-center" for="search">Search:</label>
                                     <div class="col-sm-8">
                                         <div class="input-group">
-                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search Sale"
-                                                value="{{ request('search') }}">
+                                            <input type="text" id="search" class="form-control" name="search"
+                                                placeholder="Search sale" value="{{ request('search') }}">
                                             <div class="input-group-append">
                                                 <button type="submit" class="input-group-text bg-primary">
                                                     <x-heroicon-o-magnifying-glass class="w-5 h-5" />
                                                 </button>
                                             </div>
-                                            </div>
-                                            </div>
-                                            </div>
-                                            </div>
-                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
 
-                        <!-- Orders Table -->
+                        <!-- Sales Table -->
                         <div class="table-responsive rounded mb-3">
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
@@ -87,43 +89,43 @@
                                         <th>No.</th>
                                         <th>Invoice No</th>
                                         <th><x-sort-link name="customer.name" label="Name" /></th>
-                                        <th><x-sort-link name="order_date" label="Sale Date" /></th>
+                                        <th><x-sort-link name="sale_date" label="Sale Date" /></th>
                                         <th>Payment</th>
-                                        <th><x-sort-link name="pay_amount" label="Pay" /></th>
-                                        <th><x-sort-link name="due_amount" label="Due" /></th>
+                                        <th><x-sort-link name="total" label="Total" /></th>
+                                        <th>Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @forelse ($orders as $order)
+                                    @forelse ($sales as $sale)
                                         <tr>
-                                            <td>{{ (($orders->currentPage() * 10) - 10) + $loop->iteration }}</td>
-                                            <td>{{ $order->invoice_no }}</td>
-                                            <td>{{ $order->customer->name }}</td>
-                                            <td>{{ $order->order_date->format('Y-m-d') }}</td>
-                                            <td>{{ $order->payment_type }}</td>
-                                            <td>{{ number_format($order->pay_amount, 2) }}</td>
+                                            <td>{{ (($sales->currentPage() * 10) - 10) + $loop->iteration }}</td>
+                                            <td>{{ $sale->invoice_no }}</td>
+                                            <td>{{ $sale->customer->name }}</td>
+                                            <td>{{ $sale->sale_date->format('Y-m-d') }}</td>
+                                            <td>{{ $sale->payment_type }}</td>
+                                            <td>{{ number_format($sale->total, 2) }}</td>
                                             <td>
-                                                <span class="badge badge-warning">{{ number_format($order->due_amount, 2) }}</span>
+                                                <span class="badge badge-success">{{ ucfirst($sale->sale_status) }}</span>
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center list-action">
-                                                    <!-- Details Button -->
-                                                    <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="Details"
-                                                        href="{{ route('order.orderDetails', $order->id) }}">
+                                                    <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top"
+                                                        title="Details"
+                                                        href="{{ route('sale.saleDetails', $sale->id) }}">
                                                         <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                                     </a>
-                                                    <!-- Pay Due Button -->
-                                                    <button type="button" class="btn btn-primary bg-primary mr-2 border-0" data-toggle="modal"
-                                                        data-target="#pay-due-modal" id="{{ $order->id }}" onclick="payDue(this.id)">
-                                                        <x-heroicon-o-banknotes class="w-5 h-5 mr-0" />
-                                                    </button>
+                                                    <a class="btn btn-warning mr-2" data-toggle="tooltip"
+                                                        data-placement="top" title="Print Invoice"
+                                                        href="{{ route('sale.invoiceDownload', $sale->id) }}">
+                                                        <x-heroicon-o-printer class="w-5 h-5 mr-0" />
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No pending due sales found.</td>
+                                            <td colspan="8" class="text-center">No complete sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -131,54 +133,10 @@
                         </div>
 
                         <!-- Pagination -->
-                        {{ $orders->links() }}
-                        </div>
-                        </div>
-                        </div>
-                        </div>
-                        </div>
-
-    <!-- Modal: Pay Due Amount -->
-    <div class="modal fade" id="pay-due-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Pay Due Amount</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                        {{ $sales->links() }}
+                    </div>
                 </div>
-                <form action="{{ route('order.updateDue') }}" method="POST">
-                    @csrf
-                    @method('put')
-                    <div class="modal-body">
-                        <input type="hidden" name="order_id" id="order_id">
-                        <div class="form-group">
-                            <label for="due_amount">Pay Amount</label>
-                            <input type="number" class="form-control" name="due_amount" id="due_amount" required step="0.01">
-                            </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="submit" class="btn btn-primary">Pay</button>
-                            </div>
-                            </form>
-                            </div>
-                            </div>
-                            </div>
-
-    <script>
-        function payDue(id) {
-            $.ajax({
-                type: 'GET',
-                url: '/order/due/' + id,
-                dataType: 'json',
-                success: function (data) {
-                    $('#due_amount').val(data.due_amount);
-                    $('#order_id').val(data.id);
-                }
-            });
-        }
-    </script>
+            </div>
+        </div>
+    </div>
 @endsection
