@@ -44,7 +44,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Total Paid</p>
-                                <h4>${{ number_format($total_paid, 2) }}</h4>
+                                <h4>PKR:{{ number_format($total_paid, 2) }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -63,7 +63,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Total Due</p>
-                                <h4>${{ number_format($total_due, 2) }}</h4>
+                                <h4>PKR:{{ number_format($total_due, 2) }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -249,7 +249,7 @@
                     tooltip: {
                         y: {
                             formatter: function (val) {
-                                return "$ " + val
+                                return "PKR " + val
                             }
                         }
                     },

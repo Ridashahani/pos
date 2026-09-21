@@ -142,7 +142,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            return Redirect::route('order.invoiceDownload', $order->id)->with('success', 'Order has been created!');
+            return Redirect::route('order.invoiceDownload', $order->id)->with('success', 'Sales has been created!');
         });
     }
 
@@ -192,7 +192,7 @@ class OrderController extends Controller
             }
         });
 
-        return Redirect::route('order.pendingOrders')->with('success', 'Order has been completed!');
+        return Redirect::route('order.pendingOrders')->with('success', 'Sale has been completed!');
     }
 
     public function invoiceDownload(int $order_id)
