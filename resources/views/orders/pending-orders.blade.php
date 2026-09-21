@@ -68,7 +68,7 @@
                                     <label class="control-label col-sm-3 align-self-center" for="search">Search:</label>
                                     <div class="col-sm-8">
                                         <div class="input-group">
-                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search order"
+                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search sale"
                                                 value="{{ request('search') }}">
                                             <div class="input-group-append">
                                                 <button type="submit" class="input-group-text bg-primary">
@@ -89,7 +89,7 @@
                                         <th>No.</th>
                                         <th>Invoice No</th>
                                         <th><x-sort-link name="customer.name" label="Name" /></th>
-                                        <th><x-sort-link name="order_date" label="Order Date" /></th>
+                                        <th><x-sort-link name="order_date" label="Sale Date" /></th>
                                         <th>Payment</th>
                                         <th><x-sort-link name="total" label="Total" /></th>
                                         <th>Status</th>
@@ -119,7 +119,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No pending orders found.</td>
+                                            <td colspan="8" class="text-center">No pending Sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

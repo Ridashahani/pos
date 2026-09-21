@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between">
                     <div class="header-title">
-                        <h4 class="card-title">Order Details Information</h4>
+                        <h4 class="card-title">Sales Details Information</h4>
                     </div>
                     <div>
                         <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">
@@ -42,13 +42,13 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Order Date</label>
+                                <label>Sales Date</label>
                                 <input type="text" class="form-control bg-white" value="{{ $order->order_date->format('Y-m-d') }}" readonly>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>Order Invoice</label>
+                                <label>Sales Invoice</label>
                                 <input class="form-control bg-white" value="{{ $order->invoice_no }}" readonly />
                             </div>
                         </div>
@@ -97,7 +97,7 @@
 
                                 <button type="submit" class="btn btn-success"
                                     onclick="return confirm('Are you sure you want to complete this order? This reduces stock.')">
-                                    <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Complete Order
+                                    <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Complete Sale
                                 </button>
                             </form>
                         </div>
@@ -106,7 +106,7 @@
                     <div class="row mt-3">
                         <div class="col-lg-12">
                             <div class="alert alert-success text-center" role="alert">
-                                <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> This order is completed.
+                                <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> This Sale is completed.
                             </div>
                         </div>
                     </div>
@@ -119,7 +119,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Order Items</h4>
+                    <h4 class="card-title">Sale Items</h4>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive rounded">

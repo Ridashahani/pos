@@ -32,8 +32,8 @@
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
-                        <h4 class="mb-3">Complete Order List</h4>
-                        <p class="mb-0">List of all completed orders. You can view details or reprint invoices.</p>
+                        <h4 class="mb-3">Complete Sales List</h4>
+                        <p class="mb-0">List of all completed saless. You can view details or reprint invoices.</p>
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No complete orders found.</td>
+                                            <td colspan="8" class="text-center">No complete Sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

@@ -121,7 +121,7 @@
                                     <div class="col-6">
                                         <h3 class="invoice-brand mb-1">POS SHOP</h3>
                                         <p class="text-muted mb-0">123 Commerce Avenue</p>
-                                        <p class="text-muted">Jakarta, Indonesia</p>
+                                        <p class="text-muted">Islamabad, Pakistan</p>
                                     </div>
                                     <div class="col-6 text-right">
                                         <h6 class="text-uppercase text-muted font-weight-bold letter-spacing-2 mb-2">Invoice

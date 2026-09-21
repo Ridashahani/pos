@@ -191,9 +191,9 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-2">
-                                    <label class="pos-field-label">Warehouse</label>
+                                    <label class="pos-field-label">Branches</label>
                                     <select class="form-control">
-                                        <option>Main Warehouse</option>
+                                        <option>Main Branches</option>
                                         <option>Mobile Store</option>
                                     </select>
                                 </div>
