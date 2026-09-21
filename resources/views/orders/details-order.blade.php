@@ -63,7 +63,7 @@
                                 <label>Paid Amount</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">PKR</span>
                                     </div>
                                     <input type="text" class="form-control bg-white" value="{{ number_format($order->pay_amount, 2) }}" readonly>
                                 </div>
@@ -74,7 +74,7 @@
                                 <label>Due Amount</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">PKR</span>
                                     </div>
                                     <input type="text" class="form-control bg-white" value="{{ number_format($order->due_amount, 2) }}" readonly>
                                 </div>

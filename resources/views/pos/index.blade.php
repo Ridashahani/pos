@@ -193,7 +193,7 @@
                                 <div class="col-md-6 form-group mb-2">
                                     <label class="pos-field-label">Branches</label>
                                     <select class="form-control">
-                                        <option>Main Branches</option>
+                                        <option>Main Branch</option>
                                         <option>Mobile Store</option>
                                     </select>
                                 </div>
@@ -715,6 +715,112 @@
 
     <!-- Page Specific Styles -->
     <style>
+        .product-grid .pos-product-row {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            background: #fff;
+            border: 1px solid #e5eaf0;
+            border-radius: 6px;
+            padding: .5rem .65rem;
+            transition: box-shadow .2s;
+        }
+
+        .product-grid .pos-product-row:hover {
+            box-shadow: 0 4px 12px rgba(37, 52, 72, .08);
+        }
+
+        /* Image + badge */
+        .pos-product-thumb {
+            position: relative;
+            flex: 0 0 70px;
+            width: 70px;
+            height: 56px;
+        }
+
+        .pos-product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .pos-stock-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 5px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .65rem;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+        }
+
+        .pos-stock-badge.in {
+            background: #10b981;
+        }
+
+        .pos-stock-badge.low {
+            background: #ef4444;
+        }
+
+        /* Name + price */
+        .pos-product-info {
+            flex: 1 1 auto;
+            min-width: 0;
+            /* taake naam truncate ho */
+        }
+
+        .pos-product-name {
+            font-size: .85rem;
+            font-weight: 700;
+            color: #273142;
+            margin: 0 0 .15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pos-product-price {
+            font-size: .9rem;
+            font-weight: 800;
+        }
+
+        /* Add button */
+        .product-grid .add-to-cart-form {
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .product-grid .pos-add-btn {
+            width: 40px;
+            height: 34px;
+            padding: 0;
+            border-radius: 17px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff !important;
+        }
+
+        .product-grid .pos-add-btn svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+            stroke: #fff;
+        }
+
+        .product-grid .pos-add-btn:active {
+            transform: scale(.94);
+        }
+
         .pos-shell {
             align-items: flex-start;
             background: #f8fafc;

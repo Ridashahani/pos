@@ -7,9 +7,7 @@
                     <tr>
                         <th>Image</th>
                         <th>Product</th>
-                        <th>Code</th>
                         <th>Price</th>
-                        <th>Tax</th>
                         <th>Discount</th>
                         <th>Quantity</th>
                         <th>Sub Total</th>
@@ -30,15 +28,20 @@
                             <td>
                                 <img class="pos-cart-product-image" src="{{ $image }}" alt="{{ $item->name }}">
                             </td>
-                            <td class="pos-cart-product-name">{{ $item->name }}</td>
-                            <td>{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}</td>
-                            <td>{{ $currency }} {{ number_format($originalPrice, 2) }}</td>
-                            <td>{{ number_format($tax, 2) }}</td>
+                            <td class="pos-cart-product-name">
+                                <div>{{ $item->name }}</div>
+                                <small
+                                    class="text-muted">{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}</small>
+                            </td>
+                            <td>
+                                <div>{{ $currency }} {{ number_format($originalPrice, 2) }}</div>
+                                <small class="text-muted">Tax: {{ number_format($tax, 2) }}</small>
+                            </td>
                             <td>
                                 <div class="pos-discount-control">
                                     <input type="number" class="form-control form-control-sm pos-discount-input"
-                                        value="{{ number_format($discount, 2, '.', '') }}" min="0"
-                                        max="{{ $originalPrice + $tax }}" step="0.01" aria-label="Discount">
+                                        value="{{ (int) $discount }}" min="0" max="{{ $originalPrice + $tax }}"
+                                        step="0.01" aria-label="Discount">
                                     <button type="button" class="btn btn-primary btn-sm pos-discount-apply"
                                         onclick="applyDiscount('{{ $item->rowId }}', this)">Apply</button>
                                 </div>
@@ -56,7 +59,7 @@
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     onclick="deleteCart('{{ $item->rowId }}')">
-                                    <x-heroicon-o-trash class="w-4 h-4" />
+                                    <x-heroicon-o-trash class="w-5 h-4" />
                                 </button>
                             </td>
                         </tr>
@@ -84,15 +87,15 @@
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
-            <input class="form-control form-control-sm" value="{{ $cartCurrency }} {{ number_format((float) Cart::subtotal(), 2) }}"
-                readonly>
+            <input class="form-control form-control-sm"
+                value="{{ $cartCurrency }} {{ number_format((float) Cart::subtotal(), 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>
-            <input class="form-control form-control-sm" value="{{ $cartCurrency }} {{ number_format((float) Cart::tax(), 2) }}"
-                readonly>
+            <input class="form-control form-control-sm"
+                value="{{ $cartCurrency }} {{ number_format((float) Cart::tax(), 2) }}" readonly>
         </div>
-        <div class="col-md-3 col-6 form-group mb-2">
+        <div class="col-md-3 col-6 form-group">
             <label>Discount</label>
             <input class="form-control form-control-sm"
                 value="{{ $cartCurrency }} {{ number_format($productItem->sum(function ($item) {return (float) ($item->options->discount ?? 0) * $item->qty;}),2) }}"
@@ -139,20 +142,24 @@
 </div>
 
 <style>
-    .pos-cart-table-wrap {
-        overflow-x: auto;
+    .pos-cart-table {
+        min-width: 0;
+        width: 100%;
+        table-layout: fixed;
+        font-size: 10px;
+
     }
 
-    .pos-cart-table {
-        min-width: 760px;
-        font-size: .68rem;
+    .pos-cart-product-name small {
+        display: block;
+        font-size: .70rem;
     }
 
     .pos-cart-table th {
         background: #fafbfd;
         border-top: 0;
         color: #273142;
-        font-weight: 700;
+        font-weight: 900;
         padding: .55rem .4rem;
         white-space: nowrap;
     }
@@ -161,7 +168,6 @@
         border-top: 1px solid #edf0f4;
         color: #536071;
         padding: .45rem .4rem;
-        vertical-align: middle;
         white-space: nowrap;
     }
 
@@ -186,7 +192,7 @@
     }
 
     .pos-quantity-control span {
-        min-width: 25px;
+        min-width: 20px;
         text-align: center;
     }
 
@@ -209,7 +215,7 @@
     .pos-cart-summary label {
         color: #273142;
         display: block;
-        font-size: .68rem;
+        font-size: .70rem;
         font-weight: 700;
         margin-bottom: .25rem;
     }
@@ -221,14 +227,15 @@
     }
 
     .pos-discount-input {
-        max-width: 68px;
-        min-width: 58px;
+        min-width:50px;
+        max-width: 60px;
+        padding: 0.25rem 0.3rem;
     }
 
     .pos-discount-control {
         align-items: center;
         display: flex;
-        gap: .25rem;
+        gap: .20rem;
     }
 
     .pos-discount-apply {

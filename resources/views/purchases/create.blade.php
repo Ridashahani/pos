@@ -78,12 +78,13 @@
         }
 
         .purchase-create-page .add-product-row {
-            border: 2px dashed #dce3eb;
+            border: 2px solid #dce3eb;
+            background:rgb(15, 197, 247);
             border-radius: 8px;
-            color: #8490a0;
+            color: white;
             cursor: default;
             font-size: 0.78rem;
-            padding: 0.48rem;
+            padding: 0.50rem;
             text-align: center;
         }
 
