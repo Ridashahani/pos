@@ -44,7 +44,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Total Paid</p>
-                                <h4>${{ number_format($total_paid, 2) }}</h4>
+                                <h4>PKR:{{ number_format($total_paid, 2) }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -63,7 +63,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Total Due</p>
-                                <h4>${{ number_format($total_due, 2) }}</h4>
+                                <h4>PKR:{{ number_format($total_due, 2) }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -82,7 +82,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Complete Sales</p>
-                                <h4>{{ $complete_orders }}</h4>
+                                <h4>{{ $complete_sales}}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -101,7 +101,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Pending Sales</p>
-                                <h4>{{ $pending_orders }}</h4>
+                                <h4>{{ $pending_sales }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -125,7 +125,7 @@
                 </div>
             </div>
 
-            <!-- Bottom Section: Recent Orders & Top Products -->
+            <!-- Bottom Section: Recent Sales & Top Products -->
             <div class="col-lg-7 col-md-12">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
@@ -133,7 +133,7 @@
                             <h4 class="card-title">Recent Sales</h4>
                         </div>
                         <div class="card-header-toolbar d-flex align-items-center">
-                            <a href="{{ route('order.pendingOrders') }}"
+                            <a href="{{ route('sale.pendingSales') }}"
                                 class="btn btn-outline-primary position-relative text-nowrap">View All</a>
                         </div>
                     </div>
@@ -150,26 +150,26 @@
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @forelse($recent_orders as $order)
+                                    @forelse(($recent_sales ) as $sale)
                                         <tr>
-                                            <td>{{ $order->created_at->format('d M Y') }}</td>
-                                            <td>{{ $order->customer->name ?? 'Walk-in Customer' }}</td>
-                                            <td>${{ number_format($order->total, 2) }}</td>
+                                            <td>{{ $sale->created_at->format('d M Y') }}</td>
+                                            <td>{{ $sale->customer->name ?? 'Walk-in Customer' }}</td>
+                                            <td>${{ number_format($sale->total, 2) }}</td>
                                             <td>
                                                 <span
-                                                    class="badge {{ $order->order_status == 'complete' ? 'bg-success' : 'bg-warning' }}">
-                                                    {{ ucfirst($order->order_status) }}
+                                                    class="badge {{ $sale->sale_status == 'complete' ? 'bg-success' : 'bg-warning' }}">
+                                                    {{ ucfirst($sale->sale_status) }}
                                                 </span>
                                             </td>
                                             <td>
-                                                <a class="btn btn-primary btn-sm" href="{{ route('order.orderDetails', $order->id) }}">
+                                                <a class="btn btn-primary btn-sm" href="{{ route('sale.saleDetails', $sale->id) }}">
                                                     <x-heroicon-o-eye class="w-4 h-4" />
                                                 </a>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center">No recent orders found.</td>
+                                            <td colspan="5" class="text-center">No recent sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -249,7 +249,7 @@
                     tooltip: {
                         y: {
                             formatter: function (val) {
-                                return "$ " + val
+                                return "PKR " + val
                             }
                         }
                     },
