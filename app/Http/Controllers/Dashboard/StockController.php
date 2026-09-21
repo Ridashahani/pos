@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\OrderDetails;
+use App\Models\SaleDetails;
 use App\Models\Product;
 use App\Models\StockTransfer;
 use Illuminate\Http\Request;
@@ -68,9 +68,9 @@ class StockController extends Controller
 
     public function out(Request $request)
     {
-        $sales = OrderDetails::query()
-            ->whereHas('order', fn ($query) => $query->where('order_status', 'complete'))
-            ->with(['product', 'order'])
+        $sales = SaleDetails::query()
+            ->whereHas('sale', fn ($query) => $query->where('sale_status', 'complete'))
+            ->with(['product', 'sale'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->whereHas('product', function ($productQuery) use ($request) {
                     $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
@@ -80,10 +80,11 @@ class StockController extends Controller
             ->paginate(10);
         $sales->appends($request->query());
 
-        $rows = collect($sales->items())->map(function (OrderDetails $detail): array {
+        $rows = collect($sales->items())->map(function (SaleDetails $detail): array {
+            $sale = $detail->sale;
             return [
-                'date' => $detail->order->order_date->format('d M Y'),
-                'reference' => $detail->order->invoice_no,
+                'date' => $sale->sale_date->format('d M Y'),
+                'reference' => $sale->invoice_no,
                 'product' => $detail->product->name,
                 'quantity' => $detail->quantity,
                 'unit_buying_price' => $detail->product->buying_price,

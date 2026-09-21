@@ -48,7 +48,7 @@ class HelpTest extends TestCase
         $response->assertSee('Point of Sale', false);
         $response->assertSee('Product', false);
         $response->assertSee('Inventory', false);
-        $response->assertSee('Order Management', false);
+        $response->assertSee('Sales Management', false);
         $response->assertSee('Technical Stack', false);
         $response->assertSee('Quick Tips', false);
     }

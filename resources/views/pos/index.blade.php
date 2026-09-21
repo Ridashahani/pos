@@ -155,7 +155,7 @@
                 <div class="card border-0 shadow-lg sticky-top" style="top: 20px; z-index: 100;">
                     <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between p-3">
                         <h5 class="mb-0 text-white">
-                            <x-heroicon-o-shopping-cart class="w-5 h-5 mr-1 inline" /> Current Order
+                            <x-heroicon-o-shopping-cart class="w-5 h-5 mr-1 inline" /> Current Sale
                         </h5>
                         <span class="badge badge-light text-primary font-weight-bold" id="cart-count-badge">
                             {{ Cart::count() }} items
@@ -598,7 +598,7 @@
             $('#paymentModal').modal('show');
         }
 
-        // Logic: Final Order Submission (AJAX)
+        // Logic: Final Sale Submission (AJAX)
         async function submitOrder(event) {
             event.preventDefault();
 
@@ -614,7 +614,7 @@
             if (payAmountElem) formData.append('pay_amount', payAmountElem.value);
 
             try {
-                const response = await fetch("{{ route('pos.storeOrder') }}", {
+                const response = await fetch("{{ route('pos.storeSale') }}", {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json'
@@ -647,14 +647,14 @@
                     if (document.getElementById('change_amount')) document.getElementById('change_amount').innerText =
                         '0.00';
 
-                    alert('Order Successful!');
+                    alert('Sale Successful!');
 
                 } else {
-                    alert('Order Failed: ' + (data.message || 'Unknown error'));
+                    alert('Sale Failed: ' + (data.message || 'Unknown error'));
                 }
             } catch (error) {
-                console.error('Error submitting order:', error);
-                alert('An error occurred while processing the order.');
+                console.error('Error submitting sale:', error);
+                alert('An error occurred while processing the sale.');
             }
         }
 
