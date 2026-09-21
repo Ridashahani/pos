@@ -82,7 +82,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Complete Sales</p>
-                                <h4>{{ $complete_sales ?? $complete_orders }}</h4>
+                                <h4>{{ $complete_sales}}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -101,7 +101,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Pending Sales</p>
-                                <h4>{{ $pending_sales ?? $pending_orders }}</h4>
+                                <h4>{{ $pending_sales }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -150,7 +150,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @forelse(($recent_sales ?? $recent_orders) as $sale)
+                                    @forelse(($recent_sales ) as $sale)
                                         <tr>
                                             <td>{{ $sale->created_at->format('d M Y') }}</td>
                                             <td>{{ $sale->customer->name ?? 'Walk-in Customer' }}</td>

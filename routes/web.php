@@ -7,7 +7,6 @@ use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\HelpController;
 use App\Http\Controllers\Dashboard\SaleController;
-use App\Http\Controllers\Dashboard\OrderController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProfileController;
@@ -109,17 +108,6 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');
     Route::post('/sales/update/due', [SaleController::class, 'updateDue'])->name('sale.updateDue');
-
-    // Backward-compatibility Aliases for Orders
-    Route::get('/orders/pending', [SaleController::class, 'pendingSales'])->name('order.pendingOrders');
-    Route::get('/orders/complete', [SaleController::class, 'completeSales'])->name('order.completeOrders');
-    Route::get('/orders/details/{order_id}', [SaleController::class, 'saleDetails'])->name('order.orderDetails');
-    Route::put('/orders/update/status', [SaleController::class, 'updateStatus'])->name('order.updateStatus');
-    Route::get('/orders/invoice/download/{order_id}', [SaleController::class, 'invoiceDownload'])->name('order.invoiceDownload');
-    Route::get('/orders/receipt/print/{order_id}', [SaleController::class, 'printReceipt'])->name('order.printReceipt');
-    Route::get('/pending/due', [SaleController::class, 'pendingDue'])->name('order.pendingDue');
-    Route::get('/order/due/{id}', [SaleController::class, 'saleDueAjax'])->name('order.orderDueAjax');
-    Route::post('/update/due', [SaleController::class, 'updateDue'])->name('order.updateDue');
 
     // Stock Management
 

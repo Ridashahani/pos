@@ -1,10 +1,6 @@
 @extends('dashboard.body.main')
 
 @section('container')
-@php
-    $sale = $sale ?? $order;
-    $saleDetails = $saleDetails ?? $saleDetails;
-@endphp
     <style>
         .invoice-page {
             background: #f5f7fb;
