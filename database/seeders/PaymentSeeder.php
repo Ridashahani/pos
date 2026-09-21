@@ -11,7 +11,7 @@ class PaymentSeeder extends Seeder
     public function run(): void
     {
         $jazzCash = PaymentAccount::create([
-            'name' => 'JazzCash Main',
+            'name' => 'JazzCash',
             'type' => 'jazzcash',
             'account_number' => '0300-1234567',
             'holder_name' => 'POS Store',
@@ -20,7 +20,7 @@ class PaymentSeeder extends Seeder
         ]);
 
         $easypaisa = PaymentAccount::create([
-            'name' => 'Easypaisa Business',
+            'name' => 'Easypaisa',
             'type' => 'easypaisa',
             'account_number' => '0345-7654321',
             'holder_name' => 'POS Store',
@@ -29,7 +29,7 @@ class PaymentSeeder extends Seeder
         ]);
 
         $bank = PaymentAccount::create([
-            'name' => 'Business Bank Account',
+            'name' => 'Bank Account',
             'type' => 'bank',
             'account_number' => 'PK00 POS 0000 1234',
             'holder_name' => 'POS Store',
