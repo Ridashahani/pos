@@ -17,6 +17,7 @@ use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentController;
 
 
 Route::get('/', function () {
@@ -116,9 +117,11 @@ Route::middleware(['permission:access.sales'])->group(function () {
 // Branches
 Route::resource('branches', BranchController::class);
 // Expense
-Route::resource('expenses',ExpenseController::class);
-
-
+Route::resource('expenses', ExpenseController::class);
+// Payments
+Route::middleware(['permission:access.payments'])->group(function () {
+    Route::resource('payments', PaymentController::class);
+});
 
 // ====== HELP ======
 Route::middleware('auth')->group(function () {
@@ -153,4 +156,3 @@ Route::middleware(['permission:access.roles'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
-

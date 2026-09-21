@@ -215,8 +215,15 @@
                     </a>
                 </li>
                 @endif
-
-
+               @if (auth()->user()->can('access.payments'))
+                <li class="{{ Request::is('payments*') ? 'active' : '' }}">
+                    <a href="{{ route('payments.index') }}" class="svg-icon">
+                        <x-heroicon-o-currency-dollar class="w-6 h-6" />
+                        <span class="ml-3">Money Services</span>
+                    </a>
+                </li>
+                @endif
+            
                 @if (auth()->user()->can('database.menu'))
                 {{-- <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
                 <a href="{{ route('backup.index') }}" class="svg-icon">
