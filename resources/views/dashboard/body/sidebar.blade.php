@@ -66,24 +66,24 @@
                 @endif
                 @if (auth()->user()->can('access.sales'))
                 <li>
-                    <a href="#orders" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('orders*') || Request::is('pending/due*') ? 'true' : 'false' }}">
+                    <a href="#sales" class="collapsed" data-toggle="collapse" aria-expanded="{{ Request::is('sales*') || Request::is('orders*') || Request::is('pending/due*') ? 'true' : 'false' }}">
                         <x-heroicon-o-shopping-bag class="w-6 h-6" />
                         <span class="ml-3">Sales</span>
                         <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
                     </a>
-                    <ul id="orders" class="iq-submenu collapse {{ Request::is('orders*') || Request::is('pending/due*') ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
-                        <li class="{{ Request::is('orders/pending*') ? 'active' : '' }}">
-                            <a href="{{ route('order.pendingOrders') }}">
+                    <ul id="sales" class="iq-submenu collapse {{ Request::is('sales*') || Request::is('orders*') || Request::is('pending/due*') ? 'show' : '' }}" data-parent="#iq-sidebar-toggle">
+                        <li class="{{ Request::is('sales/pending*') || Request::is('orders/pending*') ? 'active' : '' }}">
+                            <a href="{{ route('sale.pendingSales') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('orders/complete*') ? 'active' : '' }}">
-                            <a href="{{ route('order.completeOrders') }}">
+                        <li class="{{ Request::is('sales/complete*') || Request::is('orders/complete*') ? 'active' : '' }}">
+                            <a href="{{ route('sale.completeSales') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('pending/due*') ? 'active' : '' }}">
-                            <a href="{{ route('order.pendingDue') }}">
+                        <li class="{{ Request::is('pending/due*') || Request::is('sales/pending-due*') ? 'active' : '' }}">
+                            <a href="{{ route('sale.pendingDue') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
                             </a>
                         </li>
@@ -215,8 +215,15 @@
                     </a>
                 </li>
                 @endif
-
-
+               @if (auth()->user()->can('access.payments'))
+                <li class="{{ Request::is('payments*') ? 'active' : '' }}">
+                    <a href="{{ route('payments.index') }}" class="svg-icon">
+                        <x-heroicon-o-currency-dollar class="w-6 h-6" />
+                        <span class="ml-3">Money Services</span>
+                    </a>
+                </li>
+                @endif
+            
                 @if (auth()->user()->can('database.menu'))
                 {{-- <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
                 <a href="{{ route('backup.index') }}" class="svg-icon">

@@ -1,6 +1,10 @@
 @extends('dashboard.body.main')
 
 @section('container')
+@php
+    $sale = $sale ?? $order;
+    $saleDetails = $saleDetails ?? $saleDetails;
+@endphp
     <style>
         .invoice-page {
             background: #f5f7fb;
@@ -101,7 +105,7 @@
                                 <div>
                                     <div class="invoice-kicker">Sales document</div>
                                     <h5 class="mb-0 font-weight-bold text-dark">Invoice Preview</h5>
-                                    <p class="mb-0 text-muted small">Order #{{ $order->invoice_no }}</p>
+                                    <p class="mb-0 text-muted small">Sale #{{ $sale->invoice_no }}</p>
                                 </div>
                                 <div>
                                     <a href="{{ route('pos.index') }}" class="btn btn-outline-secondary btn-sm mr-2">
@@ -126,8 +130,8 @@
                                     <div class="col-6 text-right">
                                         <h6 class="text-uppercase text-muted font-weight-bold letter-spacing-2 mb-2">Invoice
                                         </h6>
-                                        <h4 class="invoice-number mb-0">{{ $order->invoice_no }}</h4>
-                                        <p class="text-muted small mb-0">{{ $order->created_at->format('d M Y, H:i') }}</p>
+                                        <h4 class="invoice-number mb-0">{{ $sale->invoice_no }}</h4>
+                                        <p class="text-muted small mb-0">{{ $sale->created_at->format('d M Y, H:i') }}</p>
                                         <span class="badge badge-success mt-1 px-3 py-1">PAID</span>
                                     </div>
                                 </div>
@@ -138,8 +142,8 @@
                                 <div class="row mb-5">
                                     <div class="col-6">
                                         <p class="text-uppercase text-muted small font-weight-bold mb-2">Billed To</p>
-                                        <h6 class="font-weight-bold text-dark mb-1">{{ $order->customer->name }}</h6>
-                                        <p class="text-muted small mb-0">{{ $order->customer->phone ?? '' }}</p>
+                                        <h6 class="font-weight-bold text-dark mb-1">{{ $sale->customer->name }}</h6>
+                                        <p class="text-muted small mb-0">{{ $sale->customer->phone ?? '' }}</p>
                                     </div>
                                     <div class="col-6 text-right">
                                         <p class="text-uppercase text-muted small font-weight-bold mb-2">Cashier</p>
@@ -148,7 +152,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Order Items Table -->
+                                <!-- Sale Items Table -->
                                 <div class="table-responsive mb-4">
                                     <table class="table invoice-table">
                                         <thead class="bg-light">
@@ -170,7 +174,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($orderDetails as $item)
+                                            @foreach ($saleDetails as $item)
                                                 <tr>
                                                     <td class="border-bottom-0 pl-4 py-3">
                                                         <p class="font-weight-bold text-dark mb-0">
@@ -197,27 +201,27 @@
                                                 <tr>
                                                     <td class="text-muted">Subtotal</td>
                                                     <td class="text-right font-weight-bold">
-                                                        {{ number_format($order->sub_total, 2) }}</td>
+                                                        {{ number_format($sale->sub_total, 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Discount</td>
                                                     <td class="text-danger text-right font-weight-bold">-
-                                                        {{ number_format($orderDetails->sum('discount'), 2) }}</td>
+                                                        {{ number_format($saleDetails->sum('discount'), 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Tax (VAT)</td>
                                                     <td class="text-right font-weight-bold">
-                                                        {{ number_format($order->vat, 2) }}</td>
+                                                        {{ number_format($sale->vat, 2) }}</td>
                                                 </tr>
                                                 <tr class="border-top">
                                                     <td class="text-dark font-weight-bold pt-3 h5">Total</td>
                                                     <td class="text-primary font-weight-bold text-right pt-3 h5">
-                                                        {{ number_format($order->total, 2) }}</td>
+                                                        {{ number_format($sale->total, 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Paid</td>
                                                     <td class="text-success text-right font-weight-bold">
-                                                        {{ number_format($order->pay_amount, 2) }}</td>
+                                                        {{ number_format($sale->pay_amount, 2) }}</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -237,7 +241,7 @@
          * Opens the dedicated Thermal Receipt View in a new small window for printing.
          */
         function openPrintWindow() {
-            const url = "{{ route('order.printReceipt', $order->id) }}";
+            const url = "{{ route('sale.printReceipt', $sale->id) }}";
             const width = 400;
             const height = 600;
             const left = (screen.width - width) / 2;

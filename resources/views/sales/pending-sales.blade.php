@@ -32,21 +32,21 @@
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
-                        <h4 class="mb-3">Complete Sales List</h4>
-                        <p class="mb-0">List of all completed saless. You can view details or reprint invoices.</p>
+                        <h4 class="mb-3">Pending Sales List</h4>
+                        <p class="mb-0">Sales that are currently pending. You can view details to complete them.</p>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-12">
-                <!-- Main Request Card -->
+                <!-- Main Card -->
                 <div class="card">
                     <div class="card-body">
 
-                        <!-- Search and Validation Form -->
-                        <form action="{{ route('order.completeOrders') }}" method="get">
+                        <!-- Filter Form -->
+                        <form action="{{ route('sale.pendingSales') }}" method="get">
                             <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                <!-- Rows Selector -->
+                                <!-- Row Selector -->
                                 <div class="form-group mb-0 mr-2 mt-n3 row-selector-container">
                                     <div class="d-flex align-items-center">
                                         <label for="row" class="mb-0 mr-2" style="min-width: 50px;">Row:</label>
@@ -68,8 +68,8 @@
                                     <label class="control-label col-sm-3 align-self-center" for="search">Search:</label>
                                     <div class="col-sm-8">
                                         <div class="input-group">
-                                            <input type="text" id="search" class="form-control" name="search"
-                                                placeholder="Search order" value="{{ request('search') }}">
+                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search sale"
+                                                value="{{ request('search') }}">
                                             <div class="input-group-append">
                                                 <button type="submit" class="input-group-text bg-primary">
                                                     <x-heroicon-o-magnifying-glass class="w-5 h-5" />
@@ -81,7 +81,7 @@
                             </div>
                         </form>
 
-                        <!-- Orders Table -->
+                        <!-- Sales Table -->
                         <div class="table-responsive rounded mb-3">
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
@@ -89,7 +89,7 @@
                                         <th>No.</th>
                                         <th>Invoice No</th>
                                         <th><x-sort-link name="customer.name" label="Name" /></th>
-                                        <th><x-sort-link name="order_date" label="Order Date" /></th>
+                                        <th><x-sort-link name="sale_date" label="Sale Date" /></th>
                                         <th>Payment</th>
                                         <th><x-sort-link name="total" label="Total" /></th>
                                         <th>Status</th>
@@ -97,35 +97,29 @@
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @forelse ($orders as $order)
+                                    @forelse ($sales as $sale)
                                         <tr>
-                                            <td>{{ (($orders->currentPage() * 10) - 10) + $loop->iteration }}</td>
-                                            <td>{{ $order->invoice_no }}</td>
-                                            <td>{{ $order->customer->name }}</td>
-                                            <td>{{ $order->order_date->format('Y-m-d') }}</td>
-                                            <td>{{ $order->payment_type }}</td>
-                                            <td>{{ number_format($order->total, 2) }}</td>
+                                            <td>{{ (($sales->currentPage() * 10) - 10) + $loop->iteration }}</td>
+                                            <td>{{ $sale->invoice_no }}</td>
+                                            <td>{{ $sale->customer->name }}</td>
+                                            <td>{{ $sale->sale_date->format('Y-m-d') }}</td>
+                                            <td>{{ $sale->payment_type }}</td>
+                                            <td>{{ number_format($sale->total, 2) }}</td>
                                             <td>
-                                                <span class="badge badge-success">{{ ucfirst($order->order_status) }}</span>
+                                                <span class="badge badge-warning">{{ ucfirst($sale->sale_status) }}</span>
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center list-action">
-                                                    <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top"
-                                                        title="Details"
-                                                        href="{{ route('order.orderDetails', $order->id) }}">
+                                                    <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="Details"
+                                                        href="{{ route('sale.saleDetails', $sale->id) }}">
                                                         <x-heroicon-o-eye class="w-5 h-5 mr-0" />
-                                                    </a>
-                                                    <a class="btn btn-warning mr-2" data-toggle="tooltip"
-                                                        data-placement="top" title="Print Invoice"
-                                                        href="{{ route('order.invoiceDownload', $order->id) }}">
-                                                        <x-heroicon-o-printer class="w-5 h-5 mr-0" />
                                                     </a>
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">No complete Sales found.</td>
+                                            <td colspan="8" class="text-center">No pending sales found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -133,7 +127,7 @@
                         </div>
 
                         <!-- Pagination -->
-                        {{ $orders->links() }}
+                        {{ $sales->links() }}
                     </div>
                 </div>
             </div>

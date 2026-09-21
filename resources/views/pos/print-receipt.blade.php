@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt #{{ $order->invoice_no }}</title>
+    <title>Receipt #{{ $sale->invoice_no }}</title>
 
     <!-- Thermal Receipt Styles -->
     <style>
@@ -213,11 +214,11 @@
         <!-- Metadata -->
         <div class="d-flex justify-between mb-1">
             <span>Date:</span>
-            <span>{{ $order->created_at->format('d/m/Y H:i') }}</span>
+            <span>{{ $sale->created_at->format('d/m/Y H:i') }}</span>
         </div>
         <div class="d-flex justify-between mb-1">
             <span>Invoice:</span>
-            <span>#{{ $order->invoice_no }}</span>
+            <span>#{{ $sale->invoice_no }}</span>
         </div>
         <div class="d-flex justify-between mb-1">
             <span>Cashier:</span>
@@ -225,7 +226,7 @@
         </div>
         <div class="d-flex justify-between">
             <span>Customer:</span>
-            <span class="font-bold">{{ substr($order->customer->name, 0, 15) }}</span>
+            <span class="font-bold">{{ substr($sale->customer->name, 0, 15) }}</span>
         </div>
 
         <div class="dashed-line"></div>
@@ -241,7 +242,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($orderDetails as $item)
+                @foreach ($saleDetails as $item)
                     <tr>
                         <td colspan="4" class="text-left font-bold" style="padding-top: 5px;">
                             {{ $item->product->name }}</td>
@@ -268,29 +269,29 @@
         <div class="total-section">
             <div class="d-flex justify-between mb-1">
                 <span>Subtotal</span>
-                <span>{{ number_format($order->sub_total, 0, ',', '.') }}</span>
+                <span>{{ number_format($sale->sub_total, 0, ',', '.') }}</span>
             </div>
             <div class="d-flex justify-between mb-1">
                 <span>Discount</span>
-                <span>-{{ number_format($orderDetails->sum('discount'), 0, ',', '.') }}</span>
+                <span>-{{ number_format($saleDetails->sum('discount'), 0, ',', '.') }}</span>
             </div>
             <div class="d-flex justify-between mb-1">
                 <span>Tax</span>
-                <span>{{ number_format($order->vat, 0, ',', '.') }}</span>
+                <span>{{ number_format($sale->vat, 0, ',', '.') }}</span>
             </div>
 
             <div class="grand-total d-flex justify-between align-center font-bold">
                 <span>TOTAL</span>
-                <span style="font-size: 16px;">{{ number_format($order->total, 0, ',', '.') }}</span>
+                <span style="font-size: 16px;">{{ number_format($sale->total, 0, ',', '.') }}</span>
             </div>
 
             <div class="d-flex justify-between mt-2 mb-1">
-                <span>Pay ({{ $order->payment_type ?? 'Cash' }})</span>
-                <span>{{ number_format($order->pay_amount, 0, ',', '.') }}</span>
+                <span>Pay ({{ $sale->payment_type ?? 'Cash' }})</span>
+                <span>{{ number_format($sale->pay_amount, 0, ',', '.') }}</span>
             </div>
             <div class="d-flex justify-between">
                 <span>Change</span>
-                <span>{{ number_format($order->due_amount < 0 ? abs($order->due_amount) : 0, 0, ',', '.') }}</span>
+                <span>{{ number_format($sale->due_amount < 0 ? abs($sale->due_amount) : 0, 0, ',', '.') }}</span>
             </div>
         </div>
 
@@ -299,7 +300,7 @@
             <p class="mb-1">*** THANK YOU ***</p>
             <p>Please keep this receipt for warranty.</p>
             <br>
-            <p style="letter-spacing: 2px;">{{ $order->invoice_no }}</p>
+            <p style="letter-spacing: 2px;">{{ $sale->invoice_no }}</p>
         </div>
     </div>
 

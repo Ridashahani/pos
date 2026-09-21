@@ -6,6 +6,7 @@ use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\HelpController;
+use App\Http\Controllers\Dashboard\SaleController;
 use App\Http\Controllers\Dashboard\OrderController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\ProductController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PaymentController;
 
 
 Route::get('/', function () {
@@ -84,18 +86,19 @@ Route::middleware(['permission:access.pos'])->group(function () {
 
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
 
-    // Create Order
-    Route::post('/pos/order', [OrderController::class, 'storeOrder'])->name('pos.storeOrder');
+    // Create Sale
+    Route::post('/pos/sale', [SaleController::class, 'storeSale'])->name('pos.storeSale');
+    Route::post('/pos/order', [SaleController::class, 'storeSale'])->name('pos.storeOrder');
 });
 
-// ====== ORDERS ======
+// ====== SALES ======
 Route::middleware(['permission:access.sales'])->group(function () {
-    Route::get('/orders/pending', [OrderController::class, 'pendingOrders'])->name('order.pendingOrders');
-    Route::get('/orders/complete', [OrderController::class, 'completeOrders'])->name('order.completeOrders');
-    Route::get('/orders/details/{order_id}', [OrderController::class, 'orderDetails'])->name('order.orderDetails');
-    Route::put('/orders/update/status', [OrderController::class, 'updateStatus'])->name('order.updateStatus');
-    Route::get('/orders/invoice/download/{order_id}', [OrderController::class, 'invoiceDownload'])->name('order.invoiceDownload');
-    Route::get('/orders/receipt/print/{order_id}', [OrderController::class, 'printReceipt'])->name('order.printReceipt');
+    Route::get('/sales/pending', [SaleController::class, 'pendingSales'])->name('sale.pendingSales');
+    Route::get('/sales/complete', [SaleController::class, 'completeSales'])->name('sale.completeSales');
+    Route::get('/sales/details/{sale_id}', [SaleController::class, 'saleDetails'])->name('sale.saleDetails');
+    Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');
+    Route::get('/sales/invoice/download/{sale_id}', [SaleController::class, 'invoiceDownload'])->name('sale.invoiceDownload');
+    Route::get('/sales/receipt/print/{sale_id}', [SaleController::class, 'printReceipt'])->name('sale.printReceipt');
 
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
@@ -103,9 +106,20 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
 
     // Pending Due
-    Route::get('/pending/due', [OrderController::class, 'pendingDue'])->name('order.pendingDue');
-    Route::get('/order/due/{id}', [OrderController::class, 'orderDueAjax'])->name('order.orderDueAjax');
-    Route::post('/update/due', [OrderController::class, 'updateDue'])->name('order.updateDue');
+    Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
+    Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');
+    Route::post('/sales/update/due', [SaleController::class, 'updateDue'])->name('sale.updateDue');
+
+    // Backward-compatibility Aliases for Orders
+    Route::get('/orders/pending', [SaleController::class, 'pendingSales'])->name('order.pendingOrders');
+    Route::get('/orders/complete', [SaleController::class, 'completeSales'])->name('order.completeOrders');
+    Route::get('/orders/details/{order_id}', [SaleController::class, 'saleDetails'])->name('order.orderDetails');
+    Route::put('/orders/update/status', [SaleController::class, 'updateStatus'])->name('order.updateStatus');
+    Route::get('/orders/invoice/download/{order_id}', [SaleController::class, 'invoiceDownload'])->name('order.invoiceDownload');
+    Route::get('/orders/receipt/print/{order_id}', [SaleController::class, 'printReceipt'])->name('order.printReceipt');
+    Route::get('/pending/due', [SaleController::class, 'pendingDue'])->name('order.pendingDue');
+    Route::get('/order/due/{id}', [SaleController::class, 'saleDueAjax'])->name('order.orderDueAjax');
+    Route::post('/update/due', [SaleController::class, 'updateDue'])->name('order.updateDue');
 
     // Stock Management
 
@@ -113,9 +127,11 @@ Route::middleware(['permission:access.sales'])->group(function () {
 // Branches
 Route::resource('branches', BranchController::class);
 // Expense
-Route::resource('expenses',ExpenseController::class);
-
-
+Route::resource('expenses', ExpenseController::class);
+// Payments
+Route::middleware(['permission:access.payments'])->group(function () {
+    Route::resource('payments', PaymentController::class);
+});
 
 // ====== HELP ======
 Route::middleware('auth')->group(function () {
@@ -150,4 +166,3 @@ Route::middleware(['permission:access.roles'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
-

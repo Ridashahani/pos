@@ -5,14 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Order extends Model
+class Sale extends Model
 {
     use HasFactory;
 
+    protected $table = 'sales';
+
     protected $fillable = [
         'customer_id',
-        'order_date',
-        'order_status',
+        'sale_date',
+        'sale_status',
         'total_products',
         'sub_total',
         'vat',
@@ -24,7 +26,7 @@ class Order extends Model
     ];
 
     protected $casts = [
-        'order_date' => 'datetime',
+        'sale_date' => 'datetime',
         'sub_total' => 'float',
         'vat' => 'float',
         'total' => 'float',
@@ -39,6 +41,6 @@ class Order extends Model
 
     public function details()
     {
-        return $this->hasMany(OrderDetails::class);
+        return $this->hasMany(SaleDetails::class, 'sale_id');
     }
 }
