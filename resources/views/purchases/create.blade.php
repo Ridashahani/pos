@@ -1,4 +1,4 @@
-@extends('dashboard.body.main')
+﻿@extends('dashboard.body.main')
 
 @section('container')
     <style>
@@ -55,6 +55,13 @@
             vertical-align: middle;
         }
 
+        .purchase-create-page .purchase-table .quantity-input {
+            min-width: 50px;
+            text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+
         .purchase-create-page .form-control {
             border-color: #dfe5ec;
             border-radius: 7px;
@@ -75,17 +82,6 @@
             font-size: 0.8rem;
             font-weight: 700;
             margin-bottom: 0.7rem;
-        }
-
-        .purchase-create-page .add-product-row {
-            border: 2px solid #dce3eb;
-            background:rgb(15, 197, 247);
-            border-radius: 8px;
-            color: white;
-            cursor: default;
-            font-size: 0.78rem;
-            padding: 0.50rem;
-            text-align: center;
         }
 
         .purchase-create-page .remove-product {
@@ -160,10 +156,37 @@
                 margin: -1rem;
                 padding: 1rem;
             }
+        }
 
-            .purchase-create-page .purchase-table {
-                min-width: 590px;
-            }
+        .purchase-create-page .purchase-table {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .purchase-create-page .purchase-table td.truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .purchase-create-page .purchase-table .ref-price-input {
+            background: #f3f5f8;
+            color: #687386;
+        }
+
+        .purchase-create-page .product-picker {
+            background: #f5f8fb;
+            border: 1px solid #e5eaf0;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            padding: 0.9rem;
+        }
+
+        .purchase-create-page .empty-row td {
+            color: #8490a0;
+            font-size: 0.78rem;
+            padding: 1.2rem 0.45rem;
+            text-align: center;
         }
     </style>
 
@@ -187,47 +210,50 @@
                     <div class="card purchase-card h-100">
                         <div class="card-body">
                             <form>
+                                <div class="product-picker">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group mb-2 mb-md-0">
+                                            <label class="field-label" for="picker-product">Product</label>
+                                            <select id="picker-product" class="form-control"></select>
+                                        </div>
+                                        <div class="col-md-6 form-group mb-0">
+                                            <label class="field-label" for="picker-variant">Combination / Variant</label>
+                                            <select id="picker-variant" class="form-control" disabled>
+                                                <option value="">Select product first</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="table-responsive rounded">
                                     <table class="table purchase-table mb-0">
+                                        <colgroup>
+                                            <col style="width:5%">
+                                            <col style="width:29%">
+                                            <col style="width:9%">
+                                            <col style="width:16%">
+                                            <col style="width:16%">
+                                            <col style="width:19%">
+                                            <col style="width:6%">
+                                        </colgroup>
                                         <thead class="bg-white text-uppercase">
                                             <tr class="ligth ligth-data">
                                                 <th>#</th>
-                                                <th>Product</th>
-                                                <th width="120">Quantity</th>
-                                                <th width="150">Cost Price</th>
-                                                <th width="130">Amount</th>
-                                                <th width="32"></th>
+                                                <th>Product / Combination</th>
+                                                <th>Qty</th>
+                                                {{-- <th>Purchase Price</th> --}}
+                                                <th>Purchase Unit Price</th>
+                                                <th> Total Amount</th>
+                                                <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody id="purchase-items" class="ligth-body">
-                                            <tr class="purchase-item">
-                                                <td>1</td>
-                                                <td>
-                                                    <select class="form-control product-select">
-                                                        <option>Select Product</option>
-                                                        <option>Apple iPhone 15</option>
-                                                        <option>Samsung Galaxy S24</option>
-                                                        <option>Anker 20W Fast Charger</option>
-                                                        <option>Type-C Fast Charging Cable</option>
-                                                        <option>iPhone 15 Silicone Case</option>
-                                                        <option>9D Tempered Glass Protector</option>
-                                                        <option>Anker 10000mAh Power Bank</option>
-                                                        <option>AirPods Pro 2</option>
-                                                    </select>
-                                                </td>
-                                                <td><input type="number" class="form-control quantity-input" value="1"
-                                                        min="1"></td>
-                                                <td><input type="number" class="form-control cost-input" value="0"
-                                                        min="0" step="0.01"></td>
-                                                <td class="amount-cell">PKR 0.00</td>
-                                                <td><button type="button" class="btn btn-link p-0 remove-product"
-                                                        aria-label="Remove product">&times;</button></td>
+                                            <tr class="empty-row">
+                                                <td colspan="6">Select a product & combination above to add it here.</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                                <button type="button" id="add-product" class="add-product-row btn btn-block mt-3">+ Add
-                                    Product</button>
                             </form>
                         </div>
                     </div>
@@ -327,7 +353,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const items = document.getElementById('purchase-items');
-            const addProduct = document.getElementById('add-product');
             const totalAmount = document.getElementById('total-amount');
             const amountPaid = document.getElementById('amount-paid');
             const dueAmount = document.getElementById('due-amount');
@@ -336,95 +361,126 @@
             const openSupplierModal = document.getElementById('open-supplier-modal');
             const closeSupplierModal = document.getElementById('close-supplier-modal');
             const saveSupplier = document.getElementById('save-supplier');
-            const productOptions = `
-                <option>Select Product</option>
-                <option>Apple iPhone 15</option>
-                <option>Samsung Galaxy S24</option>
-                <option>Anker 20W Fast Charger</option>
-                <option>Type-C Fast Charging Cable</option>
-                <option>iPhone 15 Silicone Case</option>
-                <option>9D Tempered Glass Protector</option>
-                <option>Anker 10000mAh Power Bank</option>
-                <option>AirPods Pro 2</option>`;
+            const pickerProduct = document.getElementById('picker-product');
+            const pickerVariant = document.getElementById('picker-variant');
+
+            const PRODUCTS = @json($products);
+
+            function populateProductPicker() {
+                pickerProduct.innerHTML = '<option value="">Select Product</option>' +
+                    PRODUCTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            }
+
+            function resetVariantPicker() {
+                pickerVariant.innerHTML = '<option value="">Select product first</option>';
+                pickerVariant.disabled = true;
+            }
+
+            pickerProduct.addEventListener('change', function() {
+                const product = PRODUCTS.find(p => p.id === Number(this.value));
+                if (!product) {
+                    resetVariantPicker();
+                    return;
+                }
+                pickerVariant.disabled = false;
+                pickerVariant.innerHTML = '<option value="">Select Combination</option>' +
+                    product.variants.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+            });
+
+            pickerVariant.addEventListener('change', function() {
+                const productId = Number(pickerProduct.value);
+                const variantId = String(this.value);
+                const product = PRODUCTS.find(p => p.id === productId);
+                const variant = product && product.variants.find(v => String(v.id) === variantId);
+                if (!product || !variant) return;
+
+                addOrIncrementRow(product, variant);
+
+                pickerProduct.selectedIndex = 0;
+                resetVariantPicker();
+            });
+
+            function addOrIncrementRow(product, variant) {
+                const existing = items.querySelector(`.purchase-item[data-variant-id="${variant.id}"]`);
+                if (existing) {
+                    const qtyInput = existing.querySelector('.quantity-input');
+                    qtyInput.value = Number(qtyInput.value) + 1;
+                } else {
+                    const emptyRow = items.querySelector('.empty-row');
+                    if (emptyRow) emptyRow.remove();
+
+                    const label = `${product.name} — ${variant.name}`;
+                    const row = document.createElement('tr');
+                    row.className = 'purchase-item';
+                    row.dataset.variantId = variant.id;
+                    row.innerHTML =
+                        `
+                        <td></td>
+                        <td class="truncate" title="${label}">${label}</td>
+                        <td><input type="number" class="form-control quantity-input" value="1" min="1"></td>
+                        <td><input type="number" class="form-control cost-input" value="${Number(variant.purchasePrice).toFixed(2)}" min="0" step="0.01"></td>
+                        <td class="amount-cell">PKR 0.00</td>
+                        <td><button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button></td>`;
+                    items.appendChild(row);
+                }
+                updateRowNumbers();
+                updateTotals();
+            }
 
             function updateTotals() {
                 let total = 0;
-
                 items.querySelectorAll('.purchase-item').forEach(function(row) {
                     const quantity = Math.max(0, Number(row.querySelector('.quantity-input').value) || 0);
-                    const cost = Math.max(0, Number(row.querySelector('.cost-input').value) || 0);
-                    const amount = quantity * cost;
-
+                    const unitPrice = Math.max(0, Number(row.querySelector('.cost-input').value) || 0);
+                    const amount = quantity * unitPrice;
                     row.querySelector('.amount-cell').textContent = `PKR ${amount.toFixed(2)}`;
                     total += amount;
                 });
-
                 const paid = Math.max(0, Number(amountPaid.value) || 0);
                 totalAmount.textContent = `PKR ${total.toFixed(2)}`;
                 dueAmount.textContent = `PKR ${Math.max(0, total - paid).toFixed(2)}`;
             }
 
             function updateRowNumbers() {
-                items.querySelectorAll('.purchase-item').forEach(function(row, index) {
+                const rows = items.querySelectorAll('.purchase-item');
+                rows.forEach(function(row, index) {
                     row.querySelector('td').textContent = index + 1;
                 });
+                if (rows.length === 0) {
+                    items.innerHTML =
+                        '<tr class="empty-row"><td colspan="7">Select a product & combination above to add it here.</td></tr>';
+                }
             }
 
-            function addProductRow() {
-                const row = document.createElement('tr');
-                row.className = 'purchase-item';
-                row.innerHTML =
-                    `
-                    <td></td>
-                    <td><select class="form-control product-select">${productOptions}</select></td>
-                    <td><input type="number" class="form-control quantity-input" value="1" min="1"></td>
-                    <td><input type="number" class="form-control cost-input" value="0" min="0" step="0.01"></td>
-                    <td class="amount-cell">PKR 0.00</td>
-                    <td><button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button></td>`;
-                items.appendChild(row);
-                updateRowNumbers();
-            }
-
-            addProduct.addEventListener('click', addProductRow);
+            populateProductPicker();
+            resetVariantPicker();
             amountPaid.addEventListener('input', updateTotals);
-            items.addEventListener('input', updateTotals);
+            items.addEventListener('input', function(e) {
+                if (e.target.classList.contains('quantity-input') || e.target.classList.contains(
+                        'cost-input')) {
+                    updateTotals();
+                }
+            });
             items.addEventListener('click', function(event) {
                 const removeButton = event.target.closest('.remove-product');
-
-                if (!removeButton) {
-                    return;
-                }
-
-                const rows = items.querySelectorAll('.purchase-item');
-                if (rows.length > 1) {
-                    removeButton.closest('.purchase-item').remove();
-                    updateRowNumbers();
-                } else {
-                    const row = removeButton.closest('.purchase-item');
-                    row.querySelector('.product-select').selectedIndex = 0;
-                    row.querySelector('.quantity-input').value = 1;
-                    row.querySelector('.cost-input').value = 0;
-                }
-
+                if (!removeButton) return;
+                removeButton.closest('.purchase-item').remove();
+                updateRowNumbers();
                 updateTotals();
             });
-
             updateTotals();
 
             function closeModal() {
                 supplierModal.classList.remove('is-open');
                 supplierModal.setAttribute('aria-hidden', 'true');
             }
-
             openSupplierModal.addEventListener('click', function() {
                 supplierModal.classList.add('is-open');
                 supplierModal.setAttribute('aria-hidden', 'false');
             });
             closeSupplierModal.addEventListener('click', closeModal);
             supplierModal.addEventListener('click', function(event) {
-                if (event.target === supplierModal) {
-                    closeModal();
-                }
+                if (event.target === supplierModal) closeModal();
             });
             saveSupplier.addEventListener('click', function() {
                 const name = document.getElementById('new-supplier-name').value.trim();
