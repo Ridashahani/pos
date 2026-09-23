@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Http\Controllers\Controller;
+use Artisan;
 use File;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 
 class DatabaseBackupController extends Controller
 {    public function index()
@@ -18,7 +19,7 @@ class DatabaseBackupController extends Controller
 
     // Backup database is not working, and you need to enter manually in terminal with command php artisan backup:run.
     public function create(){
-        \Artisan::call('backup:run');
+        Artisan::call('backup:run');
 
         return Redirect::route('backup.index')->with('success', 'Database Backup Successfully!');
     }

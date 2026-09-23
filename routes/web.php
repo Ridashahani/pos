@@ -125,6 +125,14 @@ Route::middleware(['permission:access.payments'])->group(function () {
     Route::resource('payment-accounts', PaymentAccountController::class)->except(['show']);
     Route::resource('payments', PaymentController::class);
 });
+// privacy policy and terms of use of service
+Route::get('/privacy-policy', function () {
+    return view('backend.privacy-policy');
+})->name('privacy-policy');
+
+Route::get('/terms-of-service', function () {
+    return view('backend.terms-of-service');
+})->name('terms-of-service');
 
 // ====== HELP ======
 Route::middleware('auth')->group(function () {
