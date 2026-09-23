@@ -17,8 +17,8 @@ class Product extends Model
         'slug',
         'code',
         'category_id',
-        'brand', 'barcode_symbology', 'product_unit', 'sale_unit', 'purchase_unit',
-        'quantity_limit', 'supplier_id', 'warehouse', 'status', 'note', 'product_type',
+        'subcategory_id',
+        'brand', 'branch_id', 'supplier_id', 'note', 'product_type',
         'variation', 'variation_types', 'variation_type',
         'variation_id', 'variation_ids',
         'stock',
@@ -54,9 +54,19 @@ class Product extends Model
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    public function subcategory()
+    {
+        return $this->belongsTo(Subcategory::class, 'subcategory_id');
+    }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function variationDefinition()
