@@ -273,22 +273,7 @@
     })();
 </script> --}}
 
-// Handle paste events (some scanners use paste)
-barcodeScanner.addEventListener('paste', function(e) {
-setTimeout(function() {
-const pastedValue = barcodeScanner.value.trim();
-if (pastedValue) {
-codeField.value = pastedValue;
-codeField.classList.add('border-success');
-setTimeout(function() {
-codeField.classList.remove('border-success');
-}, 1000);
-barcodeScanner.value = '';
-}
-}, 10);
-});
-}
-})();
+
 </script>
 
 @include('components.preview-img-form')

@@ -115,7 +115,7 @@
                 @endif
 
                 @if (auth()->user()->can('product.menu'))
-                @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*'))
+                @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*') || Request::is('subcategories*'))
                 <li class="{{ $productsMenuActive ? 'active' : '' }}">
                     <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse" aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
                         <x-heroicon-o-archive-box class="w-6 h-6" />
@@ -141,6 +141,11 @@
                         <li class="{{ Request::is('categories*') ? 'active' : '' }}">
                             <a href="{{ route('categories.index') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('subcategories*') ? 'active' : '' }}">
+                            <a href="{{ route('subcategories.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Subcategories</span>
                             </a>
                         </li>
                     </ul>

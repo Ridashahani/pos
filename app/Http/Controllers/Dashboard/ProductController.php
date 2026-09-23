@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Dashboard;
 use Exception;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Subcategory;
+use App\Models\Branch;
 use App\Models\Supplier;
 use App\Models\Variation;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -63,7 +65,10 @@ class ProductController extends Controller
     {
         return view('products.create', [
             'categories' => Category::all(),
+            'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
+            'branches' => Branch::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
+            'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
             'variations' => Variation::orderBy('name')->get(),
         ]);
     }
@@ -146,7 +151,10 @@ class ProductController extends Controller
     {
         return view('products.edit', [
             'categories' => Category::all(),
+            'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
+            'branches' => Branch::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
+            'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
             'variations' => Variation::orderBy('name')->get(),
             'product' => $product
         ]);

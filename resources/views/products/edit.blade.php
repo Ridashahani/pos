@@ -8,7 +8,7 @@
 
 @section('container')
 @include('products._form', ['formAction' => route('products.update', $product), 'formMethod' => 'PUT', 'submitLabel' => 'Update'])
-{{--
+<!-- @verbatim
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
@@ -22,7 +22,6 @@
                 <div class="card-body">
                     <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
 @csrf
-@method('put')
 <!-- begin: Input Image -->
 <div class="form-group row align-items-center">
     <div class="col-md-12">
@@ -33,7 +32,6 @@
                     alt="profile-pic">
             </div>
         </div>
-    </div>
 </div>
 
 <div class="row">
@@ -276,4 +274,5 @@
 </script>
 
 @include('components.preview-img-form')
+@endverbatim -->
 @endsection

@@ -23,33 +23,48 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                     </div>
                 </div>
                 <div class="row">
+                    <div class="form-group col-md-12 mb-3">
+                        <label class="font-weight-bold d-block mb-2">Category Type</label>
+                        <div class="custom-control custom-radio custom-control-inline mr-4">
+                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'mobile')>
+                            <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'accessories')>
+                            <label class="custom-control-label" for="cat_type_accessories" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Accessories</label>
+                        </div>
+                    </div>
+                    <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" id="category_id" class="form-control" required>
+                            <option value="">Choose Product Category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected($field('category_id')==$category->id)>{{ $category->name }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4"><label>Product Subcategory</label><select name="subcategory_id" id="subcategory_id" class="form-control">
+                            <option value="">-- Select a category first --</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category="{{ $subcategory->category_id }}" @selected($field('subcategory_id')==$subcategory->id)>{{ $subcategory->name }}</option>@endforeach
+                        </select>
+                    </div>
                     <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
-                    <div class="form-group col-md-4"><label>Product Code / SKU/Barcode <span class="text-danger">*</span></label><input name="code" id="code" value="{{ $field('code') }}" class="form-control" placeholder="Enter Code"></div>
+                    <!-- <div class="form-group col-md-4"><label>Product Code / SKU/Barcode <span class="text-danger">*</span></label><input name="code" id="code" value="{{ $field('code') }}" class="form-control" placeholder="Enter Code"></div> -->
+                    <div class="form-group col-md-4"><label>Brand</label><select name="brand" class="form-control">
+                            <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand }}" @selected($field('brand') === $brand)>{{ $brand }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>
+                    <div class="mobile-extra-fields form-group col-md-4"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
                     <div class="form-group col-md-4"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file pt-2"></div>
                     {{-- Barcode Scanner is temporarily hidden until the scanner workflow is finalized. --}}
                     <!-- Barcode Scanner: <input id="barcode_scanner" disabled> -->
-                    <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" class="form-control" required>
-                            <option value="">Choose Product Category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected($field('category_id')==$category->id)>{{ $category->name }}</option>@endforeach
-                        </select></div>
-                    <div class="form-group col-md-4"><label>Brand</label><input name="brand" value="{{ $field('brand') }}" class="form-control" placeholder="Choose Brand"></div>
-                    <div class="form-group col-md-4"><label>Warehouse</label><input name="warehouse" value="{{ $field('warehouse') }}" class="form-control" placeholder="Choose Warehouse"></div>
-                    <div class="form-group col-md-4"><label>Barcode Symbology</label><select name="barcode_symbology" class="form-control">
-                            <option value="">Choose Barcode Symbology</option>@foreach(['CODE128','EAN13','UPC','CODE39'] as $option)<option @selected($field('barcode_symbology')===$option)>{{ $option }}</option>@endforeach
-                        </select></div>
-                    <div class="form-group col-md-4"><label>Product Unit</label><input name="product_unit" value="{{ $field('product_unit') }}" class="form-control" placeholder="Choose Product Unit"></div>
-                    <div class="form-group col-md-4"><label>Supplier</label><select name="supplier_id" class="form-control">
+                    
+                    
+                    <!-- <div class="form-group col-md-4"><label>Branch</label><select name="branch_id" class="form-control">
+                            <option value="">Choose Branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}" @selected($field('branch_id')==$branch->id)>{{ $branch->name }}</option>@endforeach
+                        </select>
+                    </div> -->
+                    <!-- <div class="form-group col-md-4"><label>Supplier</label><select name="supplier_id" class="form-control">
                             <option value="">Choose Supplier</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}" @selected($field('supplier_id')==$supplier->id)>{{ $supplier->name }}</option>@endforeach
-                        </select></div>
-                    <div class="form-group col-md-4"><label>Sale Unit</label><input name="sale_unit" value="{{ $field('sale_unit') }}" class="form-control" placeholder="Choose Sale Unit"></div>
-                    <div class="form-group col-md-4"><label>Purchase Unit</label><input name="purchase_unit" value="{{ $field('purchase_unit') }}" class="form-control" placeholder="Choose Purchase Unit"></div>
-                    <div class="form-group col-md-4"><label>Status <span class="text-danger">*</span></label><select name="status" class="form-control">
-                            <option value="received" @selected($field('status', 'received' )==='received' )>Received</option>
-                            <option value="pending" @selected($field('status')==='pending' )>Pending</option>
-                            <option value="ordered" @selected($field('status')==='ordered' )>Ordered</option>
-                        </select></div>
-                    <div class="form-group col-md-4"><label>Quantity Limitation</label><input name="quantity_limit" type="number" min="0" value="{{ $field('quantity_limit') }}" class="form-control" placeholder="Enter Quantity Limitation"></div>
+                        </select>
+                    </div> -->
                     <div class="form-group col-md-4"><label>Expiry Date</label><input name="expire_date" type="date" value="{{ $field('expire_date') }}" class="form-control"></div>
-                    <div class="form-group col-md-4"><label>Note</label><textarea name="note" class="form-control" rows="2" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
+                    <div class="form-group col-md-4"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
                 </div>
                 <div class="form-section-heading section-divider"><span class="form-section-number">02</span>
                     <div>
@@ -97,27 +112,27 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                             <div class="input-group-append"><span class="input-group-text">$</span></div>
                         </div>
                     </div>
-                    <div class="form-group col-md-3"><label>Product Wholesale Price</label>
+                    <!-- <div class="form-group col-md-3"><label>Product Wholesale Price</label>
                         <div class="input-group"><input name="wholesale_price" value="{{ $field('wholesale_price') }}" type="number" step="0.01" class="form-control">
                             <div class="input-group-append"><span class="input-group-text">$</span></div>
                         </div>
-                    </div>
-                    <div class="form-group col-md-3"><label>Product Special/Offer Price</label>
+                    </div> -->
+                    <!-- <div class="form-group col-md-3"><label>Product Special/Offer Price</label>
                         <div class="input-group"><input name="special_price" value="{{ $field('special_price') }}" type="number" step="0.01" class="form-control">
                             <div class="input-group-append"><span class="input-group-text">$</span></div>
                         </div>
-                    </div>
-                    <div class="form-group col-md-3"><label>Stock Alert</label><input name="stock_alert" value="{{ $field('stock_alert', 0) }}" type="number" min="0" class="form-control"></div>
-                    <div class="form-group col-md-3"><label>Order Tax</label>
+                    </div> -->
+                    <!-- <div class="form-group col-md-3"><label>Stock Alert</label><input name="stock_alert" value="{{ $field('stock_alert', 0) }}" type="number" min="0" class="form-control"></div> -->
+                    <!-- <div class="form-group col-md-3"><label>Order Tax</label>
                         <div class="input-group"><input name="order_tax" value="{{ $field('order_tax', 0) }}" type="number" min="0" step="0.01" class="form-control">
                             <div class="input-group-append"><span class="input-group-text">%</span></div>
                         </div>
-                    </div>
-                    <div class="form-group col-md-3"><label>Tax Type <span class="text-danger">*</span></label><select name="tax_type" class="form-control">
+                    </div> -->
+                    <!-- <div class="form-group col-md-3"><label>Tax Type <span class="text-danger">*</span></label><select name="tax_type" class="form-control">
                             <option value="">Choose Tax Type</option>
                             <option @selected($field('tax_type')==='exclusive' ) value="exclusive">Exclusive</option>
                             <option @selected($field('tax_type')==='inclusive' ) value="inclusive">Inclusive</option>
-                        </select></div>
+                        </select></div> -->
                     <div class="form-group col-md-3"><label>Add Product Quantity <span class="text-danger">*</span></label><input name="add_product_quantity" value="{{ $field('add_product_quantity', $field('stock', 0)) }}" type="number" min="0" class="form-control"></div>
                 </div>
                 <input type="hidden" name="buying_price" id="buying_price" value="{{ $field('buying_price', 0) }}"><input type="hidden" name="selling_price" id="selling_price" value="{{ $field('selling_price', 0) }}"><input type="hidden" name="stock" id="stock" value="{{ $field('stock', 0) }}">
@@ -391,6 +406,76 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     }
 </style>
 <script>
+    // ── Subcategory filtering ─────────────────────────────────────────────────
+    (function () {
+        const categorySelect    = document.getElementById('category_id');
+        const subcategorySelect = document.getElementById('subcategory_id');
+        const allOptions        = Array.from(subcategorySelect.options); // snapshot
+
+        function filterSubcategories() {
+            const selectedCategoryId = categorySelect.value;
+            const previousValue      = subcategorySelect.value;
+
+            // Remove all options except re-build from snapshot
+            subcategorySelect.innerHTML = '';
+
+            if (!selectedCategoryId) {
+                subcategorySelect.add(new Option('-- Select a category first --', ''));
+                return;
+            }
+
+            subcategorySelect.add(new Option('Choose Product Subcategory', ''));
+
+            let matched = false;
+            allOptions.forEach(function (opt) {
+                if (!opt.value) return; // skip the placeholder
+                if (opt.dataset.category === selectedCategoryId) {
+                    const newOpt = new Option(opt.text, opt.value);
+                    if (opt.value === previousValue) {
+                        newOpt.selected = true;
+                        matched = true;
+                    }
+                    subcategorySelect.add(newOpt);
+                }
+            });
+
+            if (!matched) subcategorySelect.value = '';
+        }
+
+        categorySelect.addEventListener('change', filterSubcategories);
+
+        // Run on page load so the edit form shows only the relevant subcategories
+        filterSubcategories();
+    }());
+    // ─────────────────────────────────────────────────────────────────────────
+    // ── Mobile / Accessories toggle ──────────────────────────────────────────
+    (function () {
+        const mobileRadio = document.getElementById('cat_type_mobile');
+        const accessoriesRadio = document.getElementById('cat_type_accessories');
+        const mobileFields = document.querySelectorAll('.mobile-extra-fields');
+
+        function toggleMobileFields() {
+            const isMobile = mobileRadio && mobileRadio.checked;
+            mobileFields.forEach(function (fieldGroup) {
+                if (isMobile) {
+                    fieldGroup.style.display = '';
+                    const inputs = fieldGroup.querySelectorAll('input, select, textarea');
+                    inputs.forEach(function(input) { input.disabled = false; });
+                } else {
+                    fieldGroup.style.display = 'none';
+                    const inputs = fieldGroup.querySelectorAll('input, select, textarea');
+                    inputs.forEach(function(input) { input.disabled = true; });
+                }
+            });
+        }
+
+        if (mobileRadio && accessoriesRadio) {
+            mobileRadio.addEventListener('change', toggleMobileFields);
+            accessoriesRadio.addEventListener('change', toggleMobileFields);
+            toggleMobileFields();
+        }
+    }());
+    // ─────────────────────────────────────────────────────────────────────────
     (function() {
         const page = document.querySelector('.product-form-page');
         const form = page.querySelector('form');
