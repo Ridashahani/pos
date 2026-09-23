@@ -92,10 +92,8 @@
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
                                     <tr class="ligth ligth-data">
-                                        @if ($type !== 'stock-in')
-                                            <th>Date</th>
-                                            <th>Reference</th>
-                                        @endif
+                                        <th>Date</th>
+                                        <th>Reference</th>
                                         @if ($type === 'stock-in')
                                             <th>Photo</th>
                                         @endif
@@ -103,6 +101,7 @@
                                         <th>Quantity</th>
                                         @if ($type === 'stock-in')
                                             <th>Unit Cost</th>
+                                            <th>Supplier</th>
                                             <th>Category</th>
                                         @elseif ($type === 'stock-out')
                                             <th>Unit Buying Price</th>
@@ -124,10 +123,8 @@
                                 <tbody class="ligth-body">
                                     @forelse ($rows as $row)
                                         <tr>
-                                            @if ($type !== 'stock-in')
-                                                <td>{{ $row['date'] }}</td>
-                                                <td><span class="font-weight-bold">{{ $row['reference'] }}</span></td>
-                                            @endif
+                                            <td>{{ $row['date'] }}</td>
+                                            <td><span class="font-weight-bold">{{ $row['reference'] }}</span></td>
                                             @if ($type === 'stock-in')
                                                 <td>
                                                     <img class="avatar-60 rounded"
@@ -139,6 +136,7 @@
                                             <td>{{ number_format($row['quantity']) }}</td>
                                             @if ($type === 'stock-in')
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_cost'], 2) }}</td>
+                                                <td>{{ $row['supplier'] }}</td>
                                                 <td>{{ $row['category'] }}</td>
                                             @elseif ($type === 'stock-out')
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_buying_price'], 2) }}</td>
@@ -156,7 +154,7 @@
                                             @endif
                                             @if ($type === 'stock-in')
                                                 <td>
-                                                    <a href="{{ route('stock.in.details', $row['product_id']) }}"
+                                                    <a href="{{ route('stock.in.details', $row['purchase_item_id']) }}"
                                                         class="btn btn-info" data-toggle="tooltip" data-placement="top"
                                                         title="View details" aria-label="View details">
                                                         <x-heroicon-o-eye class="w-5 h-5" />

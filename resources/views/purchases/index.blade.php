@@ -77,18 +77,17 @@
                                     @foreach ($purchases as $purchase)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $purchase['number'] }}</td>
-                                            <td>{{ $purchase['supplier'] }}</td>
-                                            <td>{{ $purchase['date'] }}</td>
-                                            <td>{{ $purchase['items'] }}</td>
-                                            <td>{{ $purchase['total'] }}</td>
-                                            <td>{{ $purchase['payment'] }}</td>
+                                            <td>{{ $purchase->purchase_number }}</td>
+                                            <td>{{ $purchase->supplier?->name ?: 'N/A' }}</td>
+                                            <td>{{ $purchase->purchase_date->format('Y-m-d') }}</td>
+                                            <td>{{ $purchase->items->sum('quantity') }}</td>
+                                            <td>PKR {{ number_format($purchase->total_amount, 2) }}</td>
+                                            <td>{{ $purchase->amount_paid >= $purchase->total_amount ? 'Paid' : 'Due' }}</td>
                                             <td>
-                                                <span
-                                                    class="badge {{ $purchase['status'] === 'Paid' ? 'badge-success' : 'badge-warning' }}">{{ $purchase['status'] }}</span>
+                                                <span class="badge {{ $purchase->payment_status === 'Paid' ? 'badge-success' : 'badge-warning' }}">{{ $purchase->payment_status }}</span>
                                             </td>
                                             <td>
-                                                <a href="{{ route('purchases.return.create', $purchase['number']) }}"
+                                                <a href="{{ route('purchases.return.create', $purchase->purchase_number) }}"
                                                     class="btn btn-sm btn-outline-danger ml-2">Return</a>
                                             </td>
                                         </tr>
@@ -96,8 +95,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <p class="text-muted mb-0">Showing sample purchase records. This page currently uses static data.
-                        </p>
+                        <p class="text-muted mb-0">Purchases are added to stock-in when they are saved.</p>
                     </div>
                 </div>
             </div>

@@ -31,7 +31,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
-        Route::get('/in/details/{product}', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/in/details/{purchaseItem}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
@@ -107,6 +107,7 @@ Route::middleware(['permission:access.sales'])->group(function () {
 
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
     Route::get('/purchases/returns', [PurchaseController::class, 'returns'])->name('purchases.returns');
     Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
 

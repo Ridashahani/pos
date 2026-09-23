@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\SaleDetails;
 use App\Models\Product;
+use App\Models\PurchaseItem;
 use App\Models\StockTransfer;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -14,51 +15,47 @@ use Illuminate\Support\Str;
 
 class StockController extends Controller
 {
-    private array $stockIn = [
-        ['date' => '15 Sep 2026', 'reference' => 'SIN-1001', 'product' => 'Wireless Barcode Scanner', 'quantity' => 25, 'unit_cost' => 65.00, 'supplier' => 'Tech Supplies'],
-        ['date' => '13 Sep 2026', 'reference' => 'SIN-1000', 'product' => 'Thermal Receipt Paper', 'quantity' => 100, 'unit_cost' => 3.50, 'supplier' => 'Office Mart'],
-        ['date' => '10 Sep 2026', 'reference' => 'SIN-0999', 'product' => 'Cash Drawer', 'quantity' => 8, 'unit_cost' => 85.00, 'supplier' => 'Retail Equip'],
-        ['date' => '08 Sep 2026', 'reference' => 'SIN-0998', 'product' => 'USB-C Charging Cable', 'quantity' => 50, 'unit_cost' => 7.25, 'supplier' => 'Tech Supplies'],
-    ];
-
     public function in(Request $request)
     {
-        $products = Product::with('category')
-            ->where('stock', '>', 0)
+        $purchaseItems = PurchaseItem::with(['product.category', 'purchase.supplier'])
             ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('name', 'like', '%' . $request->string('search') . '%');
+                $query->whereHas('product', function ($productQuery) use ($request) {
+                    $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
+                });
             })
-            ->orderBy('id')
+            ->latest()
             ->paginate(10);
-        $products->appends($request->query());
+        $purchaseItems->appends($request->query());
 
-        $rows = collect($products->items())->map(function (Product $product): array {
+        $rows = collect($purchaseItems->items())->map(function (PurchaseItem $item): array {
+            $product = $item->product;
             return [
-                'product_id' => $product->id,
+                'purchase_item_id' => $item->id,
                 'image' => $product->image,
-                'date' => $product->buying_date ?: $product->created_at->format('d M Y'),
-                'reference' => $product->code,
+                'date' => $item->purchase->purchase_date->format('d M Y'),
+                'reference' => $item->purchase->purchase_number,
                 'product' => $product->name,
                 'brand' => $product->brand,
                 'model' => $product->model,
                 'imei' => $product->imei,
-                'quantity' => $product->stock,
-                'unit_cost' => $product->buying_price,
+                'quantity' => $item->quantity,
+                'unit_cost' => $item->unit_cost,
                 'currency' => $product->currency ?: 'PKR',
-                'category' => $product->category->name,
+                'category' => $product->category?->name ?: 'Uncategorized',
+                'supplier' => $item->purchase->supplier?->name ?: 'N/A',
             ];
         })->all();
 
         return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
-            'pagination' => $products,
-            'total_products' => $products->total(),
+            'pagination' => $purchaseItems,
+            'total_products' => $purchaseItems->total(),
         ]));
     }
 
-    public function inDetails(Product $product)
+    public function inDetails(PurchaseItem $purchaseItem)
     {
         return view('stock.details', [
-            'product' => $product->load('category'),
+            'purchaseItem' => $purchaseItem->load(['product.category', 'purchase.supplier']),
         ]);
     }
 
