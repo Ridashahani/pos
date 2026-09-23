@@ -1,4 +1,4 @@
-@charset "UTF-8";
+ @charset "UTF-8";
 /*!
 *
 * Template: POSDash - Responsive Bootstrap 4 Admin Dashboard Template
@@ -4845,7 +4845,7 @@ a.badge-secondary.focus {
 a.badge-success:hover,
 a.badge-success:focus {
   color: #fff;
-  background-color: #55b075;
+  background-color: #09e757;
 }
 
 a.badge-success:focus,
@@ -15914,8 +15914,8 @@ button.badge-secondary:focus {
 }
 
 .bg-success {
-  color: #fff !important;
-  background-color: #78C091 !important;
+  color: white !important;
+  background-color:#339933 !important;
 }
 
 a.bg-success:hover,
@@ -16670,6 +16670,7 @@ a.text-cyan:focus {
 }
 
 .text-white {
+  font-weight: 700 !important;
   color: #fff !important;
 }
 

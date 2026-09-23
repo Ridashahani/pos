@@ -17,11 +17,11 @@ class SupplierFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'name' => fake()->randomElement(['Madina Mobile Traders', 'Al-Huda Accessories', 'Raza Mobile Wholesale', 'Bilal Telecom Supplies']),
             'email' => fake()->unique()->safeEmail(),
-            'phone' => fake()->unique()->phoneNumber(),
-            'address' => fake()->address(),
-            'city' => fake()->city(),
+            'phone' => '03' . fake()->numerify('#########'),
+            'address' => fake()->randomElement(['Hall Road, Lahore', 'Saddar Mobile Market, Karachi', 'Blue Area, Islamabad', 'Raja Bazaar, Rawalpindi']),
+            'city' => fake()->randomElement(['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi']),
         ];
     }
 }

@@ -14,28 +14,28 @@ class CustomerSeeder extends Seeder
     {
         $customers = [
             [
-                'name' => 'Jane Doe',
-                'email' => 'jane.doe@example.com',
-                'phone' => '1234567890',
-                'address' => '123 Main St, New York, NY, USA'
+                 'name' => 'Muhammad Usman',
+                 'email' => 'muhammad.usman@example.com',
+                 'phone' => '03001234567',
+                 'address' => 'Gulshan-e-Iqbal, Karachi, Pakistan'
             ],
             [
-                'name' => 'John Smith',
-                'email' => 'john.smith@example.com',
-                'phone' => '0987654321',
-                'address' => '456 Elm St, Los Angeles, CA, USA'
+                 'name' => 'Ayesha Khan',
+                 'email' => 'ayesha.khan@example.com',
+                 'phone' => '03111234567',
+                 'address' => 'Johar Town, Lahore, Pakistan'
             ],
             [
-                'name' => 'Emily Johnson',
-                'email' => 'emily.j@example.com',
-                'phone' => '1122334455',
-                'address' => '789 Oak Ave, Chicago, IL, USA'
+                 'name' => 'Hassan Raza',
+                 'email' => 'hassan.raza@example.com',
+                 'phone' => '03221234567',
+                 'address' => 'Saddar, Rawalpindi, Pakistan'
             ],
             [
-                'name' => 'Walk-in Customer',
-                'email' => 'walkin@store.com',
-                'phone' => '0000000000',
-                'address' => 'Store Location'
+                 'name' => 'Bilal Ahmed',
+                 'email' => 'bilal.ahmed@example.com',
+                 'phone' => '03331234567',
+                 'address' => 'University Road, Peshawar, Pakistan'
             ],
         ];
 

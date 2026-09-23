@@ -18,7 +18,12 @@
                         <div class=" row align-items-center">
                             <div class="form-group col-md-6">
                                 <label for="name">Role Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required autocomplete="off">
+                                <select class="form-control @error('name') is-invalid @enderror" id="name"
+                                    name="name" required>
+                                    <option value="">Select role</option>
+                                    <option value="Admin" @selected(old('name')==='Admin' )>Admin</option>
+                                    <option value="Staff" @selected(old('name')==='Staff' )>Staff</option>
+                                </select>
                                 @error('name')
                                 <div class="invalid-feedback">
                                     {{ $message }}
@@ -26,20 +31,21 @@
                                 @enderror
                             </div>
                         </div>
-                        <!-- end: Input Data -->
-                        <div class="mt-2">
-                            <button type="submit" class="btn btn-save mr-2">
-                                <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
-                            </button>
-                            <a class="btn btn-cancel" href="{{ route('role.index') }}">
-                                <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
-                            </a>
-                        </div>
-                    </form>
                 </div>
+                <!-- end: Input Data -->
+                <div class="mt-2">
+                    <button type="submit" class="btn btn-primary mr-2">
+                        <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
+                    </button>
+                    <a class="btn btn-orange" href="{{ route('role.index') }}">
+                        <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
+                    </a>
+                </div>
+                </form>
             </div>
         </div>
     </div>
-    <!-- Page end  -->
+</div>
+<!-- Page end  -->
 </div>
 @endsection

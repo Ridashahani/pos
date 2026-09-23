@@ -30,6 +30,7 @@ class PosController extends Controller
             'categories' => Category::orderBy('name')->get(),
             'productItem' => Cart::content(),
             'products' => QueryBuilder::for(Product::class)
+                ->where('stock', '>', 0)
                 ->where('expire_date', '>', $todayDate)
                 ->allowedSorts(['name', 'selling_price'])
                 ->allowedFilters(['name', 'category_id'])
@@ -44,19 +45,56 @@ class PosController extends Controller
      */
     public function addCart(Request $request)
     {
+
+        if($request->boolean('is_manual')){
+        $validatedData = $request->validate([
+            'name' => 'required|string',
+            'price' => 'required|numeric',
+            'tax'=> 'nullable|numeric|min:0',
+            'discount'=> 'nullable|numeric|min:0'
+        ]);
+
+        $finalPrice = $validatedData['price']+($validatedData['tax']?? 0)-($validatedData['discount']?? 0);
+
+        Cart::add([
+            'id' => $validatedData['id'],
+            'name' => $validatedData['name'],
+            'qty' => 1,
+            'price' => max($finalPrice. 0),
+                'options' => [
+                    'size' => 'large',
+                    'manual' => true,
+                    'code' => 'MANUAL',
+                    'image' => null,
+                        'original_price' => $validatedData['price'],
+                    'tax' => $validatedData['tax'] ?? 0,
+                    'discount' => $validatedData['discount'] ?? 0,
+                ]
+        ]);
+        }else{
         $validatedData = $request->validate([
             'id' => 'required|numeric',
             'name' => 'required|string',
             'price' => 'required|numeric',
         ]);
+        $product = Product::findOrFail($validatedData['id']);
 
         Cart::add([
             'id' => $validatedData['id'],
             'name' => $validatedData['name'],
             'qty' => 1,
             'price' => $validatedData['price'],
-            'options' => ['size' => 'large']
+            'options' => [
+                'size' => 'large',
+                'code' => $request->input('code', 'PRD-' . str_pad($validatedData['id'], 6, '0', STR_PAD_LEFT)),
+                'image' => $request->input('image'),
+                'tax' => $request->input('tax', 0),
+                'discount' => $request->input('discount', 0),
+                'original_price' => $validatedData['price'],
+                'currency' => $product->currency ?: 'PKR',
+            ]
         ]);
+    }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -95,6 +133,30 @@ class PosController extends Controller
         }
 
         return Redirect::back()->with('success', 'Cart has been updated!');
+    }
+
+    public function updateDiscount(Request $request, string $rowId)
+    {
+        $discount = max(0, (float) $request->input('discount', 0));
+        $item = Cart::get($rowId);
+
+        abort_if(!$item, 404);
+
+        $options = $item->options->toArray();
+        $originalPrice = (float) ($options['original_price'] ?? $item->price);
+        $tax = (float) ($options['tax'] ?? 0);
+        $options['discount'] = $discount;
+
+        Cart::update($rowId, [
+            'price' => max(0, $originalPrice + $tax - $discount),
+            'options' => $options,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'cart_html' => view('pos.cart-sidebar', ['productItem' => Cart::content()])->render(),
+            'cart_count' => Cart::count(),
+        ]);
     }
 
     /**

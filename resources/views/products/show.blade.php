@@ -41,7 +41,7 @@
                                 <div class="profile-img-edit">
                                     <div class="crm-profile-img-edit">
                                         <img class="crm-profile-pic rounded-circle avatar-100"
-                                            src="{{ $product->image ? asset('storage/products/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                                            src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
                                             alt="profile-pic">
                                     </div>
                                 </div>
@@ -96,7 +96,7 @@
                         <!-- end: Show Data -->
 
                         <div class="mt-2 text-center">
-                            <a class="btn btn-warning mr-2" href="{{ route('products.edit', $product->id) }}">
+                            <a class="btn btn-primary mr-2" href="{{ route('products.edit', $product->id) }}">
                                 <x-heroicon-o-pencil class="w-5 h-5 mr-1"
                                     style="display:inline-block; vertical-align:middle;" /> Edit
                             </a>

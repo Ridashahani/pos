@@ -2,32 +2,32 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Models\Order;
+use App\Http\Controllers\Controller;
+use App\Models\Sale;
 use App\Models\Product;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         // 1. Key Metrics
-        $total_paid = Order::sum('pay_amount');
-        $total_due = Order::sum('due_amount');
-        $complete_orders = Order::where('order_status', 'complete')->count();
-        $pending_orders = Order::where('order_status', 'pending')->count();
+        $total_paid = Sale::sum('pay_amount');
+        $total_due = Sale::sum('due_amount');
+        $complete_sales = Sale::where('sale_status', 'complete')->count();
+        $pending_sales = Sale::where('sale_status', 'pending')->count();
 
         // 2. Today's Snapshot
-        $today_sales = Order::whereDate('created_at', \Carbon\Carbon::today())->sum('total');
+        $today_sales = Sale::whereDate('created_at', \Carbon\Carbon::today())->sum('total');
 
-        // 3. Top 5 Best Selling Products (by Quantity Sold)
-        $top_products = \Illuminate\Support\Facades\DB::table('order_details')
-            ->join('products', 'order_details.product_id', '=', 'products.id')
+        $top_products = DB::table('sale_details')
+            ->join('products', 'sale_details.product_id', '=', 'products.id')
             ->select(
                 'products.name as product_name',
                 'products.image as product_image',
                 'products.code as product_code',
-                \Illuminate\Support\Facades\DB::raw('SUM(order_details.quantity) as total_sold')
+                DB::raw('SUM(sale_details.quantity) as total_sold')
             )
             ->groupBy('products.id', 'products.name', 'products.image', 'products.code')
             ->orderByDesc('total_sold')
@@ -35,9 +35,9 @@ class DashboardController extends Controller
             ->get();
 
         // 4. Monthly Sales Data for Chart (Current Year)
-        $monthly_sales = Order::select(
-            \Illuminate\Support\Facades\DB::raw('SUM(total) as total_amount'),
-            \Illuminate\Support\Facades\DB::raw('MONTH(created_at) as month')
+        $monthly_sales = Sale::select(
+            DB::raw('SUM(total) as total_amount'),
+            DB::raw('MONTH(created_at) as month')
         )
             ->whereYear('created_at', date('Y'))
             ->groupBy('month')
@@ -52,7 +52,7 @@ class DashboardController extends Controller
         }
 
         // 5. Recent Transactions
-        $recent_orders = Order::with('customer')
+        $recent_sales = Sale::with('customer')
             ->latest()
             ->take(5)
             ->get();
@@ -60,12 +60,12 @@ class DashboardController extends Controller
         return view('dashboard.index', [
             'total_paid' => $total_paid,
             'total_due' => $total_due,
-            'complete_orders' => $complete_orders,
-            'pending_orders' => $pending_orders,
+            'complete_sales' => $complete_sales,
+            'pending_sales' => $pending_sales,
             'today_sales' => $today_sales,
             'top_products' => $top_products,
             'chart_data' => json_encode($chart_data),
-            'recent_orders' => $recent_orders,
+            'recent_sales' => $recent_sales,
         ]);
     }
 }

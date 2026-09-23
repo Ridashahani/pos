@@ -48,7 +48,8 @@
                                 </tbody>
                             </table>
                         </div>
-                        <p class="text-muted mb-0">These are the same static purchase records shown in the purchase list.</p>
+                        <p class="text-muted mb-0">These are the same static purchase records shown in the purchase list.
+                        </p>
                     </div>
                 </div>
             </div>

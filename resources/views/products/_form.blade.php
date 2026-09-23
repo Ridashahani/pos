@@ -25,13 +25,13 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                 <div class="row">
                     <div class="form-group col-md-12 mb-3">
                         <label class="font-weight-bold d-block mb-2">Category Type</label>
-                        <div class="custom-control custom-radio custom-control-inline mr-4">
-                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'mobile')>
-                            <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
-                        </div>
                         <div class="custom-control custom-radio custom-control-inline">
                             <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'accessories')>
                             <label class="custom-control-label" for="cat_type_accessories" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Accessories</label>
+                        </div>
+                        <div class="custom-control custom-radio custom-control-inline mr-4">
+                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'mobile')>
+                            <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
                         </div>
                     </div>
                     <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" id="category_id" class="form-control" required>
@@ -43,14 +43,13 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                         </select>
                     </div>
                     <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
-                    <!-- <div class="form-group col-md-4"><label>Product Code / SKU/Barcode <span class="text-danger">*</span></label><input name="code" id="code" value="{{ $field('code') }}" class="form-control" placeholder="Enter Code"></div> -->
                     <div class="form-group col-md-4"><label>Brand</label><select name="brand" class="form-control">
                             <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand }}" @selected($field('brand') === $brand)>{{ $brand }}</option>@endforeach
                         </select>
                     </div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
-                    <div class="form-group col-md-4"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file pt-2"></div>
+                    <div class="form-group col-md-4"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
                     {{-- Barcode Scanner is temporarily hidden until the scanner workflow is finalized. --}}
                     <!-- Barcode Scanner: <input id="barcode_scanner" disabled> -->
                     
@@ -102,24 +101,30 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                     <div class="form-group col-md-3"><label>Product Price <span class="text-danger">*</span></label><input name="product_price" value="{{ $field('product_price', $field('selling_price')) }}" type="number" step="0.01" class="form-control variation-input"></div>
                 </div>
                 <div class="pricing-fields row">
+                    <div class="form-group col-md-3"><label>Currency <span class="text-danger">*</span></label>
+                        <select name="currency" class="form-control" required>
+                            <option value="PKR" @selected($field('currency', 'PKR') === 'PKR')>PKR</option>
+                            <option value="USD" @selected($field('currency') === 'USD')>USD</option>
+                        </select>
+                    </div>
                     <div class="single-pricing-field form-group col-md-3"><label>Product Cost <span class="text-danger">*</span></label>
                         <div class="input-group"><input name="single_product_cost" value="{{ $field('product_cost', $field('buying_price')) }}" type="number" step="0.01" class="form-control single-input">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div>
                     <div class="single-pricing-field form-group col-md-3"><label><span class="single-label">Product Retail Price</span><span class="variation-label">Product Price</span> <span class="text-danger">*</span></label>
                         <div class="input-group"><input name="single_product_price" value="{{ $field('product_price', $field('selling_price')) }}" type="number" step="0.01" class="form-control single-input">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div>
                     <!-- <div class="form-group col-md-3"><label>Product Wholesale Price</label>
                         <div class="input-group"><input name="wholesale_price" value="{{ $field('wholesale_price') }}" type="number" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div> -->
                     <!-- <div class="form-group col-md-3"><label>Product Special/Offer Price</label>
                         <div class="input-group"><input name="special_price" value="{{ $field('special_price') }}" type="number" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text">$</span></div>
+                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
                         </div>
                     </div> -->
                     <!-- <div class="form-group col-md-3"><label>Stock Alert</label><input name="stock_alert" value="{{ $field('stock_alert', 0) }}" type="number" min="0" class="form-control"></div> -->
@@ -198,12 +203,37 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     .product-form-page .form-control-file {
         width: 100%;
         height: 42px;
-        padding: 9px 10px;
+        padding: 5px 8px;
         border: 1px solid #d9e0ea;
         border-radius: 6px;
         color: #6d7b8f;
         background: #fff;
         font-size: .78rem;
+        /* line-height: 1; */
+        display: flex;
+        align-items: center;
+    }
+
+    .product-form-page .form-control-file::file-selector-button,
+    .product-form-page .form-control-file::-webkit-file-upload-button {
+        height: 26px;
+        padding: 0 10px;
+        margin-right: 10px;
+        border: 1px solid #cdd5e0;
+        border-radius: 4px;
+        background: #f1f3f8;
+        color: #34435b;
+        font-weight: 600;
+        font-size: .72rem;
+        line-height: 24px;
+        cursor: pointer;
+        transition: background .15s ease, border-color .15s ease;
+    }
+
+    .product-form-page .form-control-file::file-selector-button:hover,
+    .product-form-page .form-control-file::-webkit-file-upload-button:hover {
+        background: #e2e7f0;
+        border-color: #bdc7d5;
     }
 
     .product-form-page .form-control:focus {
@@ -488,6 +518,12 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         const selectedTypes = @json(is_array($variationTypes) ? $variationTypes : [$variationTypes]);
         const variationFields = page.querySelectorAll('.variation-only input:not(.picker-values), .variation-only select:not(.picker-values)');
         const singleFields = page.querySelectorAll('.single-input');
+        const currencySelect = page.querySelector('[name="currency"]');
+        const currencyLabels = page.querySelectorAll('.currency-label');
+
+        function syncCurrencyLabels() {
+            currencyLabels.forEach((label) => label.textContent = currencySelect.value);
+        }
 
         function setMode() {
             const isVariation = type.value === 'variation';
@@ -545,6 +581,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         }
 
         type.addEventListener('change', setMode);
+        currencySelect.addEventListener('change', syncCurrencyLabels);
         variationPicker.addEventListener('change', function() {
             syncVariationPicker();
             loadVariationTypes();
@@ -567,6 +604,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         syncVariationPicker();
         loadVariationTypes();
         setMode();
+        syncCurrencyLabels();
         form.addEventListener('submit', function() {
             const isVariation = type.value === 'variation';
             const cost = page.querySelector(isVariation ? '[name="product_cost"]' : '[name="single_product_cost"]');

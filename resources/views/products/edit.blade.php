@@ -22,7 +22,6 @@
                 <div class="card-body">
                     <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
 @csrf
-<!-- begin: Input Image -->
 <div class="form-group row align-items-center">
     <div class="col-md-12">
         <div class="profile-img-edit">
@@ -48,9 +47,7 @@
         @enderror
     </div>
 </div>
-<!-- end: Input Image -->
 
-<!-- begin: Input Data -->
 <div class="row align-items-center">
     <div class="form-group col-md-12">
         <label for="name">Product Name <span class="text-danger">*</span></label>
@@ -175,7 +172,6 @@
         @enderror
     </div>
 </div>
-<!-- end: Input Data -->
 
 <div class="mt-2">
     <button type="submit" class="btn btn-save mr-2">
@@ -190,7 +186,6 @@
 </div>
 </div>
 </div>
-<!-- Page end  -->
 </div>
 
 <script>
