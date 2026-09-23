@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\Dashboard\CategoryController;
+use App\Http\Controllers\Dashboard\SubcategoryController;
 use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
@@ -72,6 +73,7 @@ Route::middleware(['permission:access.products'])->group(function () {
 // ====== CATEGORY PRODUCTS ======
 Route::middleware(['permission:access.categories'])->group(function () {
     Route::resource('/categories', CategoryController::class);
+    Route::resource('/subcategories', SubcategoryController::class)->except(['show']);
 });
 
 // ====== POS ======
