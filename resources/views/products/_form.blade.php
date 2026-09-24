@@ -26,22 +26,15 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                     <div class="form-group col-md-12 mb-3">
                         <label class="font-weight-bold d-block mb-2">Category Type</label>
                         <div class="custom-control custom-radio custom-control-inline">
-                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'accessories')>
+                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model || $product->mobile_type)) ? 'mobile' : 'accessories') === 'accessories')>
                             <label class="custom-control-label" for="cat_type_accessories" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Accessories</label>
                         </div>
                         <div class="custom-control custom-radio custom-control-inline mr-4">
-                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'mobile')>
+                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model || $product->mobile_type)) ? 'mobile' : 'accessories') === 'mobile')>
                             <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
                         </div>
                     </div>
-                    <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" id="category_id" class="form-control" required>
-                            <option value="">Choose Product Category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected($field('category_id')==$category->id)>{{ $category->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4"><label>Product Subcategory</label><select name="subcategory_id" id="subcategory_id" class="form-control">
-                            <option value="">-- Select a category first --</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category="{{ $subcategory->category_id }}" @selected($field('subcategory_id')==$subcategory->id)>{{ $subcategory->name }}</option>@endforeach
-                        </select>
-                    </div>
+
                     <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
                     <div class="form-group col-md-4"><label>Brand</label><select name="brand" class="form-control">
                             <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand }}" @selected($field('brand') === $brand)>{{ $brand }}</option>@endforeach
@@ -49,6 +42,12 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                     </div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
+                    <div class="mobile-extra-fields form-group col-md-4"><label>Mobile Type</label><select name="mobile_type" class="form-control">
+                            <option value="">Choose Mobile Type</option>
+                            <option value="new" @selected($field('mobile_type')==='new')>New</option>
+                            <option value="used" @selected($field('mobile_type')==='used')>Used</option>
+                        </select>
+                    </div>
                     <div class="form-group col-md-4"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
                     {{-- Barcode Scanner is temporarily hidden until the scanner workflow is finalized. --}}
                     <!-- Barcode Scanner: <input id="barcode_scanner" disabled> -->
@@ -297,6 +296,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         font-size: .76rem;
     }
 
+    .mobile-extra-fields,
     .variation-only,
     .pricing-fields,
     .pricing-section-heading {
@@ -436,48 +436,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     }
 </style>
 <script>
-    // ── Subcategory filtering ─────────────────────────────────────────────────
-    (function () {
-        const categorySelect    = document.getElementById('category_id');
-        const subcategorySelect = document.getElementById('subcategory_id');
-        const allOptions        = Array.from(subcategorySelect.options); // snapshot
 
-        function filterSubcategories() {
-            const selectedCategoryId = categorySelect.value;
-            const previousValue      = subcategorySelect.value;
-
-            // Remove all options except re-build from snapshot
-            subcategorySelect.innerHTML = '';
-
-            if (!selectedCategoryId) {
-                subcategorySelect.add(new Option('-- Select a category first --', ''));
-                return;
-            }
-
-            subcategorySelect.add(new Option('Choose Product Subcategory', ''));
-
-            let matched = false;
-            allOptions.forEach(function (opt) {
-                if (!opt.value) return; // skip the placeholder
-                if (opt.dataset.category === selectedCategoryId) {
-                    const newOpt = new Option(opt.text, opt.value);
-                    if (opt.value === previousValue) {
-                        newOpt.selected = true;
-                        matched = true;
-                    }
-                    subcategorySelect.add(newOpt);
-                }
-            });
-
-            if (!matched) subcategorySelect.value = '';
-        }
-
-        categorySelect.addEventListener('change', filterSubcategories);
-
-        // Run on page load so the edit form shows only the relevant subcategories
-        filterSubcategories();
-    }());
-    // ─────────────────────────────────────────────────────────────────────────
     // ── Mobile / Accessories toggle ──────────────────────────────────────────
     (function () {
         const mobileRadio = document.getElementById('cat_type_mobile');
@@ -488,7 +447,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
             const isMobile = mobileRadio && mobileRadio.checked;
             mobileFields.forEach(function (fieldGroup) {
                 if (isMobile) {
-                    fieldGroup.style.display = '';
+                    fieldGroup.style.display = 'block';
                     const inputs = fieldGroup.querySelectorAll('input, select, textarea');
                     inputs.forEach(function(input) { input.disabled = false; });
                 } else {
@@ -499,11 +458,14 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
             });
         }
 
-        if (mobileRadio && accessoriesRadio) {
-            mobileRadio.addEventListener('change', toggleMobileFields);
-            accessoriesRadio.addEventListener('change', toggleMobileFields);
-            toggleMobileFields();
-        }
+        const categoryTypeRadios = document.querySelectorAll('input[name="product_category_type"]');
+        categoryTypeRadios.forEach(function(radio) {
+            radio.addEventListener('change', toggleMobileFields);
+            radio.addEventListener('click', toggleMobileFields);
+        });
+
+        toggleMobileFields();
+        document.addEventListener('DOMContentLoaded', toggleMobileFields);
     }());
     // ─────────────────────────────────────────────────────────────────────────
     (function() {

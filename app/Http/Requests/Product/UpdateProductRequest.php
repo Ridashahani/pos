@@ -39,7 +39,7 @@ class UpdateProductRequest extends FormRequest
             'model' => 'nullable|string|max:100',
             'imei' => 'nullable|string|max:100',
             'code' => 'nullable|string|unique:products,code,' . $product->id . '|max:50',
-            'category_id' => 'required|integer|exists:categories,id',
+            'category_id' => 'nullable|integer|exists:categories,id',
             'subcategory_id' => 'nullable|integer|exists:subcategories,id',
             'branch_id' => 'nullable|integer|exists:branches,id',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
