@@ -30,7 +30,7 @@ class PosController extends Controller
             'categories' => Category::orderBy('name')->get(),
             'productItem' => Cart::content(),
             'products' => QueryBuilder::for(Product::class)
-                ->where('stock', '>', 0)
+                ->whereHas('stockIns', fn ($query) => $query->where('remaining_qty', '>', 0))
                 ->where('expire_date', '>', $todayDate)
                 ->allowedSorts(['name', 'selling_price'])
                 ->allowedFilters(['name', 'category_id'])

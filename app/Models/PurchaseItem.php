@@ -9,6 +9,24 @@ class PurchaseItem extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::created(function (PurchaseItem $item): void {
+            $item->loadMissing(['product']);
+
+            StockIn::create([
+                'purchase_id' => $item->purchase_id,
+                'product_id' => $item->product_id,
+                'imei' => $item->product?->imei,
+                'condition' => 'new',
+                'quantity' => $item->quantity,
+                'remaining_qty' => $item->quantity,
+                'cost_price' => $item->unit_cost,
+                'sale_price' => $item->product?->selling_price ?? 0,
+            ]);
+        });
+    }
+
     protected $fillable = [
         'purchase_id',
         'product_id',
@@ -32,4 +50,5 @@ class PurchaseItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
 }

@@ -79,7 +79,7 @@
                             <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary">
                                 <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
                             </a>
-                        @elseif (in_array($type, ['stock-in', 'stock-out']))
+                        @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                             <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center">
                                 <input type="search" name="search" value="{{ request('search') }}"
                                     class="form-control mr-2" placeholder="Search product" aria-label="Search product">
@@ -103,11 +103,16 @@
                                             <th>Unit Cost</th>
                                             <th>Supplier</th>
                                             <th>Category</th>
-                                        @elseif ($type === 'stock-out')
+                                        @elseif (in_array($type, ['stock-out', 'sold-items']))
                                             <th>Unit Buying Price</th>
                                             <th>Unit Sold Price</th>
                                             <th>Net Sold Price</th>
                                             <th>Destination</th>
+                                            @if ($type === 'sold-items')
+                                                <th>Status</th>
+                                            @endif
+                                        @elseif ($type === 'out-of-stock')
+                                            <th>Action</th>
                                         @else
                                             <th>From</th>
                                             <th>To</th>
@@ -138,11 +143,19 @@
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_cost'], 2) }}</td>
                                                 <td>{{ $row['supplier'] }}</td>
                                                 <td>{{ $row['category'] }}</td>
-                                            @elseif ($type === 'stock-out')
+                                            @elseif (in_array($type, ['stock-out', 'sold-items']))
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_buying_price'], 2) }}</td>
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_price'], 2) }}</td>
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['net_sold_price'], 2) }}</td>
                                                 <td>{{ $row['destination'] }}</td>
+                                                @if ($type === 'sold-items')
+                                                    <td><span class="badge {{ $row['status'] === 'returned' ? 'bg-warning' : 'bg-success' }}">{{ ucfirst($row['status']) }}</span></td>
+                                                @endif
+                                            @elseif ($type === 'out-of-stock')
+                                                <td>
+                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
+                                                        class="btn btn-primary btn-sm">Purchase again</a>
+                                                </td>
                                             @else
                                                 <td>{{ $row['from'] }}</td>
                                                 <td>{{ $row['to'] }}</td>
@@ -154,7 +167,7 @@
                                             @endif
                                             @if ($type === 'stock-in')
                                                 <td>
-                                                    <a href="{{ route('stock.in.details', $row['purchase_item_id']) }}"
+                                                    <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
                                                         class="btn btn-info" data-toggle="tooltip" data-placement="top"
                                                         title="View details" aria-label="View details">
                                                         <x-heroicon-o-eye class="w-5 h-5" />
@@ -189,7 +202,7 @@
                             </table>
                         </div>
                     </div>
-                    @if (in_array($type, ['stock-in', 'stock-out']))
+                    @if (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                         <div class="card-footer d-flex justify-content-between align-items-center">
                             <span class="text-muted small">{{ $total_products }} matching records</span>
                             {{ $pagination->links() }}

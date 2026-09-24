@@ -44,11 +44,11 @@
                                 <td>{{ $purchaseItem->product->code }}</td>
                                 <td>{{ $purchaseItem->product->brand ?: 'Not provided' }}</td>
                                 <td>{{ $purchaseItem->product->model ?: 'Not provided' }}</td>
-                                <td>{{ $purchaseItem->product->imei ?: 'Not provided' }}</td>
+                                <td>{{ $purchaseItem->imei ?: 'Not provided' }}</td>
                                 <td>{{ $purchaseItem->product->category?->name ?: 'Uncategorized' }}</td>
-                                <td>{{ number_format($purchaseItem->quantity) }}</td>
-                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->unit_cost, 2) }}</td>
-                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->product->selling_price, 2) }}</td>
+                                <td>{{ number_format($purchaseItem->remaining_qty) }}</td>
+                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->cost_price, 2) }}</td>
+                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->sale_price, 2) }}</td>
                                 <td>{{ $purchaseItem->purchase->purchase_date->format('d M Y') }}</td>
                                 <td>{{ $purchaseItem->purchase->supplier?->name ?: 'N/A' }}</td>
                             </tr>

@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\SaleDetails;
 use App\Models\Product;
-use App\Models\PurchaseItem;
+use App\Models\SoldItem;
+use App\Models\StockIn;
 use App\Models\StockTransfer;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,7 +16,8 @@ class StockController extends Controller
 {
     public function in(Request $request)
     {
-        $purchaseItems = PurchaseItem::with(['product.category', 'purchase.supplier'])
+        $stockIns = StockIn::with(['product.category', 'purchase.supplier'])
+            ->where('remaining_qty', '>', 0)
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->whereHas('product', function ($productQuery) use ($request) {
                     $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
@@ -25,44 +25,48 @@ class StockController extends Controller
             })
             ->latest()
             ->paginate(10);
-        $purchaseItems->appends($request->query());
+        $stockIns->appends($request->query());
 
-        $rows = collect($purchaseItems->items())->map(function (PurchaseItem $item): array {
-            $product = $item->product;
+        $rows = collect($stockIns->items())->map(function (StockIn $stock): array {
+            $product = $stock->product;
             return [
-                'purchase_item_id' => $item->id,
+                'stock_in_id' => $stock->id,
                 'image' => $product->image,
-                'date' => $item->purchase->purchase_date->format('d M Y'),
-                'reference' => $item->purchase->purchase_number,
+                'date' => $stock->purchase->purchase_date->format('d M Y'),
+                'reference' => $stock->purchase->purchase_number,
                 'product' => $product->name,
                 'brand' => $product->brand,
                 'model' => $product->model,
-                'imei' => $product->imei,
-                'quantity' => $item->quantity,
-                'unit_cost' => $item->unit_cost,
+                'imei' => $stock->imei,
+                'quantity' => $stock->remaining_qty,
+                'unit_cost' => $stock->cost_price,
                 'currency' => $product->currency ?: 'PKR',
                 'category' => $product->category?->name ?: 'Uncategorized',
-                'supplier' => $item->purchase->supplier?->name ?: 'N/A',
+                'supplier' => $stock->purchase->supplier?->name ?: 'N/A',
             ];
         })->all();
 
         return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
-            'pagination' => $purchaseItems,
-            'total_products' => $purchaseItems->total(),
+            'pagination' => $stockIns,
+            'total_products' => $stockIns->total(),
         ]));
     }
 
-    public function inDetails(PurchaseItem $purchaseItem)
+    public function inDetails(StockIn $stockIn)
     {
         return view('stock.details', [
-            'purchaseItem' => $purchaseItem->load(['product.category', 'purchase.supplier']),
+            'purchaseItem' => $stockIn->load(['product.category', 'purchase.supplier']),
         ]);
     }
 
     public function out(Request $request)
     {
-        $sales = SaleDetails::query()
-            ->whereHas('sale', fn ($query) => $query->where('sale_status', 'complete'))
+        return redirect()->route('stock.sold-items', $request->query());
+    }
+
+    public function soldItems(Request $request)
+    {
+        $soldItems = SoldItem::query()
             ->with(['product', 'sale'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->whereHas('product', function ($productQuery) use ($request) {
@@ -70,63 +74,55 @@ class StockController extends Controller
                 });
             })
             ->latest()
-            ->get()
-            ->map(function (SaleDetails $detail): array {
-            $sale = $detail->sale;
-            return [
-                'date_sort' => $detail->order->order_date,
-                'date' => $detail->order->order_date->format('d M Y'),
-                'reference' => $detail->order->invoice_no,
-                'date' => $sale->sale_date->format('d M Y'),
-                'reference' => $sale->invoice_no,
-                'product' => $detail->product->name,
-                'quantity' => $detail->quantity,
-                'unit_buying_price' => $detail->product->buying_price,
-                'unit_price' => $detail->unit_price,
-                'net_sold_price' => $detail->total,
-                'currency' => $detail->currency ?: ($detail->product->currency ?: 'PKR'),
-                'destination' => 'POS Counter',
-            ];
-        });
+            ->paginate(10);
+        $soldItems->appends($request->query());
 
-        $transfers = StockTransfer::with(['product', 'toBranch'])
+        $rows = collect($soldItems->items())->map(function (SoldItem $item): array {
+            return [
+                'date' => $item->created_at->format('d M Y'),
+                'reference' => $item->sale->invoice_no,
+                'product' => $item->product->name,
+                'quantity' => $item->quantity,
+                'unit_buying_price' => $item->cost_price,
+                'unit_price' => $item->sale_price,
+                'net_sold_price' => ($item->sale_price * $item->quantity) - $item->discount,
+                'currency' => $item->product->currency ?: 'PKR',
+                'destination' => 'POS Counter',
+                'status' => $item->status,
+            ];
+        })->all();
+
+        return view('stock.index', array_merge($this->pageData('Sold Items', 'sold-items', $rows), [
+            'pagination' => $soldItems,
+            'total_products' => $soldItems->total(),
+        ]));
+    }
+
+    public function outOfStock(Request $request)
+    {
+        $products = Product::query()
+            ->whereDoesntHave('stockIns', fn ($query) => $query->where('remaining_qty', '>', 0))
             ->when($request->filled('search'), function ($query) use ($request) {
-                $query->whereHas('product', function ($productQuery) use ($request) {
-                    $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
-                });
+                $query->where('name', 'like', '%' . $request->string('search') . '%');
             })
             ->latest()
-            ->get()
-            ->map(function (StockTransfer $transfer): array {
+            ->paginate(10);
+        $products->appends($request->query());
+
+        $rows = collect($products->items())->map(function (Product $product): array {
                 return [
-                    'date_sort' => $transfer->created_at,
-                    'date' => $transfer->created_at->format('d M Y'),
-                    'reference' => $transfer->reference,
-                    'product' => $transfer->product->name,
-                    'quantity' => $transfer->quantity,
-                    'unit_buying_price' => $transfer->product->buying_price,
-                    'unit_price' => 0,
-                    'net_sold_price' => 0,
-                    'currency' => $transfer->product->currency ?: 'PKR',
-                    'destination' => 'Transferred to ' . $transfer->toBranch->name,
+                    'date' => $product->updated_at->format('d M Y'),
+                    'reference' => $product->code ?: 'PRD-' . $product->id,
+                    'product' => $product->name,
+                    'quantity' => 0,
+                    'currency' => $product->currency ?: 'PKR',
+                    'product_id' => $product->id,
                 ];
-            });
+            })->all();
 
-        $allRows = $sales->concat($transfers)->sortByDesc('date_sort')->values();
-        $page = LengthAwarePaginator::resolveCurrentPage();
-        $sales = new LengthAwarePaginator(
-            $allRows->forPage($page, 10)->values(),
-            $allRows->count(),
-            10,
-            $page,
-            ['path' => LengthAwarePaginator::resolveCurrentPath()]
-        );
-        $sales->appends($request->query());
-        $rows = $sales->items();
-
-        return view('stock.index', array_merge($this->pageData('Stock-out', 'stock-out', $rows), [
-            'pagination' => $sales,
-            'total_products' => $sales->total(),
+        return view('stock.index', array_merge($this->pageData('Out of Stock', 'out-of-stock', $rows), [
+            'pagination' => $products,
+            'total_products' => $products->total(),
         ]));
     }
 
