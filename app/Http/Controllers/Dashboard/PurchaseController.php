@@ -3,13 +3,19 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\Supplier;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PurchaseController extends Controller
 {
     public function index()
     {
-        return view('purchases.index', ['purchases' => $this->purchaseRecords()]);
+        return view('purchases.index', ['purchases' => Purchase::with(['supplier', 'items'])->latest('purchase_date')->get()]);
     }
 
     public function create()
@@ -40,7 +46,55 @@ class PurchaseController extends Controller
                 ];
             });
 
-        return view('purchases.create', ['products' => $products]);
+        return view('purchases.create', [
+            'products' => $products,
+            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
+            'branches' => Branch::where('status', 'Active')->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'supplier_id' => ['required', 'exists:suppliers,id'],
+            'branch_id' => ['required', 'exists:branches,id'],
+            'purchase_date' => ['required', 'date'],
+            'payment_status' => ['required', 'in:Paid,Partial,Due'],
+            'amount_paid' => ['nullable', 'numeric', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.variant' => ['nullable', 'string', 'max:255'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.unit_cost' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($validated): void {
+            $total = collect($validated['items'])->sum(fn (array $item): float => $item['quantity'] * $item['unit_cost']);
+            $amountPaid = min((float) ($validated['amount_paid'] ?? 0), $total);
+            $purchase = Purchase::create([
+                'purchase_number' => 'PUR-' . Str::upper(Str::random(8)),
+                'supplier_id' => $validated['supplier_id'],
+                'branch_id' => $validated['branch_id'],
+                'purchase_date' => $validated['purchase_date'],
+                'total_amount' => $total,
+                'amount_paid' => $amountPaid,
+                'payment_status' => $validated['payment_status'],
+            ]);
+
+            foreach ($validated['items'] as $item) {
+                $purchase->items()->create([
+                    'product_id' => $item['product_id'],
+                    'variant' => $item['variant'] ?? null,
+                    'quantity' => $item['quantity'],
+                    'unit_cost' => $item['unit_cost'],
+                    'total_amount' => $item['quantity'] * $item['unit_cost'],
+                ]);
+
+                Product::whereKey($item['product_id'])->lockForUpdate()->increment('stock', $item['quantity']);
+            }
+        });
+
+        return redirect()->route('purchases.index')->with('success', 'Purchase saved and added to stock-in.');
     }
 
     public function returns()
@@ -51,6 +105,16 @@ class PurchaseController extends Controller
     public function returnCreate(string $purchaseNo)
     {
         $purchase = collect($this->purchaseRecords())->firstWhere('number', $purchaseNo);
+
+        if (!$purchase) {
+            $savedPurchase = Purchase::with(['supplier', 'items'])->where('purchase_number', $purchaseNo)->first();
+            $purchase = $savedPurchase ? [
+                'number' => $savedPurchase->purchase_number,
+                'supplier' => $savedPurchase->supplier?->name ?: 'N/A',
+                'date' => $savedPurchase->purchase_date->format('Y-m-d'),
+                'items' => $savedPurchase->items->sum('quantity'),
+            ] : null;
+        }
 
         abort_if(!$purchase, 404);
 

@@ -143,9 +143,14 @@
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-In</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('stock/out') ? 'active' : '' }}">
-                            <a href="{{ route('stock.out') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-out</span>
+                        <li class="{{ Request::is('stock/sold-items') || Request::is('stock/out') ? 'active' : '' }}">
+                            <a href="{{ route('stock.sold-items') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Sold Items</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('stock/out-of-stock') ? 'active' : '' }}">
+                            <a href="{{ route('stock.out-of-stock') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Out of Stock</span>
                             </a>
                         </li>
                         <li class="{{ Request::is('stock/transfer') ? 'active' : '' }}">

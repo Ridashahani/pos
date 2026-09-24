@@ -69,6 +69,11 @@ class Product extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function stockIns()
+    {
+        return $this->hasMany(StockIn::class);
+    }
+
     public function variationDefinition()
     {
         return $this->belongsTo(Variation::class, 'variation_id');

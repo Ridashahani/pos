@@ -193,6 +193,8 @@
     <div class="container-fluid">
         <div class="purchase-create-page">
             <div class="row">
+                <form id="purchase-form" method="POST" action="{{ route('purchases.store') }}" class="w-100">
+                    @csrf
                 <div class="col-lg-12">
                     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                         <div>
@@ -209,7 +211,6 @@
                 <div class="col-xl-8 mb-4 mb-xl-0">
                     <div class="card purchase-card h-100">
                         <div class="card-body">
-                            <form>
                                 <div class="product-picker">
                                     <div class="row">
                                         <div class="col-md-6 form-group mb-2 mb-md-0">
@@ -254,7 +255,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -264,31 +264,33 @@
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div class="side-card-title mb-0">Purchase Details</div>
-                                <button type="button" id="open-supplier-modal" class="btn btn-primary btn-sm p-1"
-                                    aria-label="Add supplier">+</button>
+                                <a href="{{ route('suppliers.create') }}" class="btn btn-primary btn-sm p-1"
+                                    aria-label="Add supplier">+</a>
                             </div>
                             <div class="form-group mb-3">
                                 <label class="field-label" for="supplier">Supplier <span
                                         class="text-danger">*</span></label>
-                                <select id="supplier" class="form-control">
-                                    <option>Select a supplier</option>
-                                    <option>Metro Wholesale</option>
-                                    <option>Fresh Foods Ltd.</option>
-                                    <option>City Distributors</option>
+                                <select id="supplier" name="supplier_id" class="form-control" required>
+                                    <option value="">Select a supplier</option>
+                                    @foreach ($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group mb-3">
                                 <label class="field-label" for="branch">Branch <span class="text-danger">*</span></label>
-                                <select id="branch" class="form-control">
-                                    <option>Select a branch</option>
-                                    <option>Main Branch</option>
-                                    <option>North Branch</option>
+                                <select id="branch" name="branch_id" class="form-control" required>
+                                    <option value="">Select a branch</option>
+                                    @foreach ($branches as $branch)
+                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group mb-0">
                                 <label class="field-label" for="purchase-date">Date <span
                                         class="text-danger">*</span></label>
-                                <input id="purchase-date" type="date" class="form-control" value="2026-09-15">
+                                <input id="purchase-date" name="purchase_date" type="date" class="form-control"
+                                    value="{{ now()->format('Y-m-d') }}" required>
                             </div>
                         </div>
                     </div>
@@ -302,7 +304,7 @@
                             <div class="form-group mb-3">
                                 <label class="field-label" for="payment-status">Payment Status <span
                                         class="text-danger">*</span></label>
-                                <select id="payment-status" class="form-control">
+                                <select id="payment-status" name="payment_status" class="form-control" required>
                                     <option>Paid</option>
                                     <option>Partial</option>
                                     <option>Due</option>
@@ -310,7 +312,7 @@
                             </div>
                             <div class="form-group mb-3">
                                 <label class="field-label" for="amount-paid">Amount Paid</label>
-                                <input id="amount-paid" type="number" class="form-control" value="0" min="0"
+                                <input id="amount-paid" name="amount_paid" type="number" class="form-control" value="0" min="0"
                                     step="0.01">
                             </div>
                             <div class="d-flex justify-content-between summary-total">
@@ -319,8 +321,9 @@
                         </div>
                     </div>
                     <button type="button" class="btn btn-primary btn-block mt-3"
-                        onclick="alert('Purchase saved successfully. Static data was not stored.')">Save Purchase</button>
+                        onclick="document.getElementById('purchase-form').requestSubmit()">Save Purchase</button>
                 </div>
+                </form>
             </div>
         </div>
     </div>
@@ -363,6 +366,7 @@
             const saveSupplier = document.getElementById('save-supplier');
             const pickerProduct = document.getElementById('picker-product');
             const pickerVariant = document.getElementById('picker-variant');
+            let rowCounter = 0;
 
             const PRODUCTS = @json($products);
 
@@ -405,11 +409,13 @@
                 if (existing) {
                     const qtyInput = existing.querySelector('.quantity-input');
                     qtyInput.value = Number(qtyInput.value) + 1;
+                    existing.querySelector('.quantity-hidden').value = qtyInput.value;
                 } else {
                     const emptyRow = items.querySelector('.empty-row');
                     if (emptyRow) emptyRow.remove();
 
                     const label = `${product.name} — ${variant.name}`;
+                    const rowKey = rowCounter++;
                     const row = document.createElement('tr');
                     row.className = 'purchase-item';
                     row.dataset.variantId = variant.id;
@@ -417,8 +423,11 @@
                         `
                         <td></td>
                         <td class="truncate" title="${label}">${label}</td>
-                        <td><input type="number" class="form-control quantity-input" value="1" min="1"></td>
-                        <td><input type="number" class="form-control cost-input" value="${Number(variant.purchasePrice).toFixed(2)}" min="0" step="0.01"></td>
+                        <td><input type="number" class="form-control quantity-input" value="1" min="1">
+                            <input type="hidden" class="quantity-hidden" name="items[${rowKey}][quantity]" value="1"></td>
+                        <td><input type="number" class="form-control cost-input" name="items[${rowKey}][unit_cost]" value="${Number(variant.purchasePrice).toFixed(2)}" min="0" step="0.01">
+                            <input type="hidden" name="items[${rowKey}][product_id]" value="${product.id}">
+                            <input type="hidden" name="items[${rowKey}][variant]" value="${variant.name}"></td>
                         <td class="amount-cell">PKR 0.00</td>
                         <td><button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button></td>`;
                     items.appendChild(row);
@@ -458,6 +467,9 @@
             items.addEventListener('input', function(e) {
                 if (e.target.classList.contains('quantity-input') || e.target.classList.contains(
                         'cost-input')) {
+                    if (e.target.classList.contains('quantity-input')) {
+                        e.target.closest('.purchase-item').querySelector('.quantity-hidden').value = e.target.value;
+                    }
                     updateTotals();
                 }
             });

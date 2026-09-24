@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Dashboard;
 use App\Models\Sale;
 use App\Models\Product;
 use App\Models\SaleDetails;
+use App\Models\SoldItem;
+use App\Models\StockIn;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 use App\Http\Controllers\Controller;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -170,17 +172,12 @@ class SaleController extends Controller
             $sale = Sale::whereKey($sale_id)->lockForUpdate()->firstOrFail();
 
             if ($sale->sale_status !== 'complete') {
-                $products = SaleDetails::where('sale_id', $sale_id)->get();
+                $products = SaleDetails::where('sale_id', $sale_id)->with('product')->get();
 
                 foreach ($products as $detail) {
                     $product = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
 
-                    if ($product->stock < $detail->quantity) {
-                        throw ValidationException::withMessages([
-                            'stock' => "Insufficient stock for {$product->name}.",
-                        ]);
-                    }
-
+                    app(InventoryService::class)->sell($sale, $detail);
                     $product->decrement('stock', $detail->quantity);
                 }
 
@@ -189,6 +186,34 @@ class SaleController extends Controller
         });
 
         return Redirect::route('sale.pendingSales')->with('success', 'Sale has been completed!');
+    }
+
+    public function returnSale(Sale $sale)
+    {
+        DB::transaction(function () use ($sale): void {
+            Sale::whereKey($sale->id)->lockForUpdate()->firstOrFail();
+
+            $items = SoldItem::where('sale_id', $sale->id)
+                ->where('status', 'sold')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($items as $item) {
+                StockIn::whereKey($item->stock_in_id)
+                    ->lockForUpdate()
+                    ->firstOrFail()
+                    ->increment('remaining_qty', $item->quantity);
+
+                Product::whereKey($item->product_id)
+                    ->lockForUpdate()
+                    ->firstOrFail()
+                    ->increment('stock', $item->quantity);
+
+                $item->update(['status' => 'returned']);
+            }
+        });
+
+        return Redirect::route('sale.saleDetails', $sale->id)->with('success', 'Sale items returned to stock.');
     }
 
     public function invoiceDownload(int $sale_id)

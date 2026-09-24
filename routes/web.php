@@ -31,11 +31,16 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
-        Route::get('/in/details/{product}', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/in/details/{stockIn}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
+        Route::get('/sold-items', [StockController::class, 'soldItems'])->name('sold-items');
+        Route::get('/out-of-stock', [StockController::class, 'outOfStock'])->name('out-of-stock');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
         Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
+        Route::get('/transfer/{transfer}/edit', [StockController::class, 'editTransfer'])->name('transfer.edit');
+        Route::put('/transfer/{transfer}', [StockController::class, 'updateTransfer'])->name('transfer.update');
+        Route::delete('/transfer/{transfer}', [StockController::class, 'destroyTransfer'])->name('transfer.destroy');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -99,11 +104,13 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/sales/complete', [SaleController::class, 'completeSales'])->name('sale.completeSales');
     Route::get('/sales/details/{sale_id}', [SaleController::class, 'saleDetails'])->name('sale.saleDetails');
     Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');
+    Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->name('sale.return');
     Route::get('/sales/invoice/download/{sale_id}', [SaleController::class, 'invoiceDownload'])->name('sale.invoiceDownload');
     Route::get('/sales/receipt/print/{sale_id}', [SaleController::class, 'printReceipt'])->name('sale.printReceipt');
 
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
     Route::get('/purchases/returns', [PurchaseController::class, 'returns'])->name('purchases.returns');
     Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
 
