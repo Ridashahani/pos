@@ -17,7 +17,6 @@ class StoreProductRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'status' => $this->input('status', 'received'),
             'product_type' => $this->input('product_type', 'single'),
         ]);
     }
@@ -39,15 +38,9 @@ class StoreProductRequest extends FormRequest
             'imei' => 'nullable|string|max:100',
             'code' => 'nullable|string|unique:products,code|max:50',
             'category_id' => 'required|integer|exists:categories,id',
-            'brand' => 'nullable|string|max:100',
-            'barcode_symbology' => 'nullable|string|max:50',
-            'product_unit' => 'nullable|string|max:50',
-            'sale_unit' => 'nullable|string|max:50',
-            'purchase_unit' => 'nullable|string|max:50',
-            'quantity_limit' => 'nullable|integer|min:0',
+            'subcategory_id' => 'nullable|integer|exists:subcategories,id',
+            'branch_id' => 'nullable|integer|exists:branches,id',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
-            'warehouse' => 'nullable|string|max:100',
-            'status' => 'required|string|in:received,pending,ordered',
             'note' => 'nullable|string|max:5000',
             'product_type' => 'required|string|in:single,variation',
             'variation_id' => 'nullable|integer|exists:variations,id',
