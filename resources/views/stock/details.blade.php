@@ -34,7 +34,6 @@
                                 <th>Buying Price</th>
                                 <th>Selling Price</th>
                                 <th>Buying Date</th>
-                                <th>Expire Date</th>
                             </tr>
                         </thead>
                         <tbody class="ligth-body">
@@ -50,7 +49,6 @@
                                     <td>{{ $product->currency ?: 'PKR' }} {{ number_format($product->buying_price, 2) }}</td>
                                     <td>{{ $product->currency ?: 'PKR' }} {{ number_format($product->selling_price, 2) }}</td>
                                 <td>{{ $product->buying_date ?: $product->created_at->format('d M Y') }}</td>
-                                <td>{{ $product->expire_date ?: 'Not provided' }}</td>
                             </tr>
                         </tbody>
                     </table>

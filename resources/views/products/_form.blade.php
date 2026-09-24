@@ -57,11 +57,6 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                             <option value="">Choose Branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}" @selected($field('branch_id')==$branch->id)>{{ $branch->name }}</option>@endforeach
                         </select>
                     </div> -->
-                    <!-- <div class="form-group col-md-4"><label>Supplier</label><select name="supplier_id" class="form-control">
-                            <option value="">Choose Supplier</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}" @selected($field('supplier_id')==$supplier->id)>{{ $supplier->name }}</option>@endforeach
-                        </select>
-                    </div> -->
-                    <div class="form-group col-md-4"><label>Expiry Date</label><input name="expire_date" type="date" value="{{ $field('expire_date') }}" class="form-control"></div>
                     <div class="form-group col-md-4"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
                 </div>
                 <div class="form-section-heading section-divider"><span class="form-section-number">02</span>
