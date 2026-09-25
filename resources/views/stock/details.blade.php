@@ -5,7 +5,7 @@
         <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
             <div>
                 <h4 class="mb-2">Stock-In Product Details</h4>
-                <p class="mb-0 text-muted">Complete details for {{ $product->name }}.</p>
+                <p class="mb-0 text-muted">Complete details for {{ $purchaseItem->product->name }}.</p>
             </div>
             <a href="{{ route('stock.in') }}" class="btn btn-secondary d-flex align-items-center mt-3 mt-md-0">
                 <x-heroicon-o-arrow-left class="w-5 h-5 mr-2" />
@@ -15,8 +15,8 @@
 
         <div class="card card-block card-stretch">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h4 class="card-title mb-0">Product Details</h4>
-                <span class="text-muted small">Product #{{ $product->id }}</span>
+                <h4 class="card-title mb-0">Purchase Details</h4>
+                <span class="text-muted small">{{ $purchaseItem->purchase->purchase_number }}</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -34,21 +34,23 @@
                                 <th>Buying Price</th>
                                 <th>Selling Price</th>
                                 <th>Buying Date</th>
+                                <th>Supplier</th>
                             </tr>
                         </thead>
                         <tbody class="ligth-body">
                             <tr>
                                 <td>1</td>
-                                <td class="font-weight-bold">{{ $product->name }}</td>
-                                <td>{{ $product->code }}</td>
-                                <td>{{ $product->brand ?: 'Not provided' }}</td>
-                                <td>{{ $product->model ?: 'Not provided' }}</td>
-                                <td>{{ $product->imei ?: 'Not provided' }}</td>
-                                <td>{{ $product->category->name }}</td>
-                                <td>{{ number_format($product->stock) }}</td>
-                                    <td>{{ $product->currency ?: 'PKR' }} {{ number_format($product->buying_price, 2) }}</td>
-                                    <td>{{ $product->currency ?: 'PKR' }} {{ number_format($product->selling_price, 2) }}</td>
-                                <td>{{ $product->buying_date ?: $product->created_at->format('d M Y') }}</td>
+                                <td class="font-weight-bold">{{ $purchaseItem->product->name }}</td>
+                                <td>{{ $purchaseItem->product->code }}</td>
+                                <td>{{ $purchaseItem->product->brand ?: 'Not provided' }}</td>
+                                <td>{{ $purchaseItem->product->model ?: 'Not provided' }}</td>
+                                <td>{{ $purchaseItem->imei ?: 'Not provided' }}</td>
+                                <td>{{ $purchaseItem->product->category?->name ?: 'Uncategorized' }}</td>
+                                <td>{{ number_format($purchaseItem->remaining_qty) }}</td>
+                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->cost_price, 2) }}</td>
+                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->sale_price, 2) }}</td>
+                                <td>{{ $purchaseItem->purchase->purchase_date->format('d M Y') }}</td>
+                                <td>{{ $purchaseItem->purchase->supplier?->name ?: 'N/A' }}</td>
                             </tr>
                         </tbody>
                     </table>

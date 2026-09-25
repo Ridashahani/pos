@@ -4,72 +4,69 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
-use App\Models\SaleDetails;
 use App\Models\Product;
+use App\Models\SoldItem;
+use App\Models\StockIn;
 use App\Models\StockTransfer;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class StockController extends Controller
 {
-    private array $stockIn = [
-        ['date' => '15 Sep 2026', 'reference' => 'SIN-1001', 'product' => 'Wireless Barcode Scanner', 'quantity' => 25, 'unit_cost' => 65.00, 'supplier' => 'Tech Supplies'],
-        ['date' => '13 Sep 2026', 'reference' => 'SIN-1000', 'product' => 'Thermal Receipt Paper', 'quantity' => 100, 'unit_cost' => 3.50, 'supplier' => 'Office Mart'],
-        ['date' => '10 Sep 2026', 'reference' => 'SIN-0999', 'product' => 'Cash Drawer', 'quantity' => 8, 'unit_cost' => 85.00, 'supplier' => 'Retail Equip'],
-        ['date' => '08 Sep 2026', 'reference' => 'SIN-0998', 'product' => 'USB-C Charging Cable', 'quantity' => 50, 'unit_cost' => 7.25, 'supplier' => 'Tech Supplies'],
-    ];
-
-    private array $stockTransfers = [
-        ['date' => '15 Sep 2026', 'reference' => 'TRF-3012', 'product' => 'Wireless Barcode Scanner', 'quantity' => 4, 'from_branch_index' => 0, 'to_branch_index' => 1, 'status' => 'In Transit'],
-        ['date' => '13 Sep 2026', 'reference' => 'TRF-3011', 'product' => 'Thermal Receipt Paper', 'quantity' => 20, 'from_branch_index' => 1, 'to_branch_index' => 0, 'status' => 'Completed'],
-        ['date' => '11 Sep 2026', 'reference' => 'TRF-3010', 'product' => 'USB-C Charging Cable', 'quantity' => 10, 'from_branch_index' => 0, 'to_branch_index' => 2, 'status' => 'Completed'],
-        ['date' => '07 Sep 2026', 'reference' => 'TRF-3009', 'product' => 'Cash Drawer', 'quantity' => 2, 'from_branch_index' => 2, 'to_branch_index' => 0, 'status' => 'Pending'],
-    ];
-
     public function in(Request $request)
     {
-        $products = Product::with('category')
-            ->where('stock', '>', 0)
+        $stockIns = StockIn::with(['product.category', 'purchase.supplier'])
+            ->where('remaining_qty', '>', 0)
             ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where('name', 'like', '%' . $request->string('search') . '%');
+                $query->whereHas('product', function ($productQuery) use ($request) {
+                    $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
+                });
             })
-            ->orderBy('id')
+            ->latest()
             ->paginate(10);
-        $products->appends($request->query());
+        $stockIns->appends($request->query());
 
-        $rows = collect($products->items())->map(function (Product $product): array {
+        $rows = collect($stockIns->items())->map(function (StockIn $stock): array {
+            $product = $stock->product;
             return [
-                'product_id' => $product->id,
-                'date' => $product->buying_date ?: $product->created_at->format('d M Y'),
-                'reference' => $product->code,
+                'stock_in_id' => $stock->id,
+                'image' => $product->image,
+                'date' => $stock->purchase->purchase_date->format('d M Y'),
+                'reference' => $stock->purchase->purchase_number,
                 'product' => $product->name,
                 'brand' => $product->brand,
                 'model' => $product->model,
-                'imei' => $product->imei,
-                'quantity' => $product->stock,
-                'unit_cost' => $product->buying_price,
+                'imei' => $stock->imei,
+                'quantity' => $stock->remaining_qty,
+                'unit_cost' => $stock->cost_price,
                 'currency' => $product->currency ?: 'PKR',
-                'category' => $product->category->name,
+                'category' => $product->category?->name ?: 'Uncategorized',
+                'supplier' => $stock->purchase->supplier?->name ?: 'N/A',
             ];
         })->all();
 
         return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
-            'pagination' => $products,
-            'total_products' => $products->total(),
+            'pagination' => $stockIns,
+            'total_products' => $stockIns->total(),
         ]));
     }
 
-    public function inDetails(Product $product)
+    public function inDetails(StockIn $stockIn)
     {
         return view('stock.details', [
-            'product' => $product->load('category'),
+            'purchaseItem' => $stockIn->load(['product.category', 'purchase.supplier']),
         ]);
     }
 
     public function out(Request $request)
     {
-        $sales = SaleDetails::query()
-            ->whereHas('sale', fn ($query) => $query->where('sale_status', 'complete'))
+        return redirect()->route('stock.sold-items', $request->query());
+    }
+
+    public function soldItems(Request $request)
+    {
+        $soldItems = SoldItem::query()
             ->with(['product', 'sale'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->whereHas('product', function ($productQuery) use ($request) {
@@ -78,45 +75,65 @@ class StockController extends Controller
             })
             ->latest()
             ->paginate(10);
-        $sales->appends($request->query());
+        $soldItems->appends($request->query());
 
-        $rows = collect($sales->items())->map(function (SaleDetails $detail): array {
-            $sale = $detail->sale;
+        $rows = collect($soldItems->items())->map(function (SoldItem $item): array {
             return [
-                'date' => $sale->sale_date->format('d M Y'),
-                'reference' => $sale->invoice_no,
-                'product' => $detail->product->name,
-                'quantity' => $detail->quantity,
-                'unit_buying_price' => $detail->product->buying_price,
-                'unit_price' => $detail->unit_price,
-                'net_sold_price' => $detail->total,
-                'currency' => $detail->currency ?: ($detail->product->currency ?: 'PKR'),
+                'date' => $item->created_at->format('d M Y'),
+                'reference' => $item->sale->invoice_no,
+                'product' => $item->product->name,
+                'quantity' => $item->quantity,
+                'unit_buying_price' => $item->cost_price,
+                'unit_price' => $item->sale_price,
+                'net_sold_price' => ($item->sale_price * $item->quantity) - $item->discount,
+                'currency' => $item->product->currency ?: 'PKR',
                 'destination' => 'POS Counter',
+                'status' => $item->status,
             ];
         })->all();
 
-        return view('stock.index', array_merge($this->pageData('Stock-out', 'stock-out', $rows), [
-            'pagination' => $sales,
-            'total_products' => $sales->total(),
+        return view('stock.index', array_merge($this->pageData('Sold Items', 'sold-items', $rows), [
+            'pagination' => $soldItems,
+            'total_products' => $soldItems->total(),
+        ]));
+    }
+
+    public function outOfStock(Request $request)
+    {
+        $products = Product::query()
+            ->whereDoesntHave('stockIns', fn ($query) => $query->where('remaining_qty', '>', 0))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->string('search') . '%');
+            })
+            ->latest()
+            ->paginate(10);
+        $products->appends($request->query());
+
+        $rows = collect($products->items())->map(function (Product $product): array {
+                return [
+                    'date' => $product->updated_at->format('d M Y'),
+                    'reference' => $product->code ?: 'PRD-' . $product->id,
+                    'product' => $product->name,
+                    'quantity' => 0,
+                    'currency' => $product->currency ?: 'PKR',
+                    'product_id' => $product->id,
+                ];
+            })->all();
+
+        return view('stock.index', array_merge($this->pageData('Out of Stock', 'out-of-stock', $rows), [
+            'pagination' => $products,
+            'total_products' => $products->total(),
         ]));
     }
 
     public function transfer()
     {
         $branches = Branch::where('status', 'Active')->orderBy('name')->get()->values();
-        $sampleRows = array_map(function (array $row) use ($branches): array {
-            $row['from_branch_id'] = $branches->get($row['from_branch_index'])?->id;
-            $row['to_branch_id'] = $branches->get($row['to_branch_index'])?->id;
-            $row['from'] = $branches->get($row['from_branch_index'])?->name ?? 'No branch assigned';
-            $row['to'] = $branches->get($row['to_branch_index'])?->name ?? 'No branch assigned';
-            unset($row['from_branch_index'], $row['to_branch_index']);
-
-            return $row;
-        }, $this->stockTransfers);
         $savedRows = StockTransfer::with(['product', 'fromBranch', 'toBranch'])
             ->latest()
             ->get()
             ->map(fn (StockTransfer $transfer): array => [
+                'id' => $transfer->id,
                 'date' => $transfer->created_at->format('d M Y'),
                 'reference' => $transfer->reference,
                 'product' => $transfer->product->name,
@@ -129,7 +146,7 @@ class StockController extends Controller
             ])
             ->all();
 
-        return view('stock.index', $this->pageData('Stock-Transfer', 'stock-transfer', array_merge($savedRows, $sampleRows)) + [
+        return view('stock.index', $this->pageData('Stock-Transfer', 'stock-transfer', $savedRows) + [
             'branches' => $branches,
         ]);
     }
@@ -138,6 +155,18 @@ class StockController extends Controller
     {
         return view('stock.transfer-create', [
             'products' => Product::where('stock', '>', 0)->orderBy('name')->get(),
+            'branches' => Branch::where('status', 'Active')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function editTransfer(StockTransfer $transfer)
+    {
+        return view('stock.transfer-create', [
+            'transfer' => $transfer,
+            'products' => Product::where('stock', '>', 0)
+                ->orWhere('id', $transfer->product_id)
+                ->orderBy('name')
+                ->get(),
             'branches' => Branch::where('status', 'Active')->orderBy('name')->get(),
         ]);
     }
@@ -158,13 +187,60 @@ class StockController extends Controller
             ]);
         }
 
-        StockTransfer::create([
-            ...$validated,
-            'reference' => 'TRF-' . Str::upper(Str::random(6)),
-            'status' => 'In Transit',
-        ]);
+        DB::transaction(function () use ($validated, $product): void {
+            $product->decrement('stock', $validated['quantity']);
+
+            StockTransfer::create([
+                ...$validated,
+                'reference' => 'TRF-' . Str::upper(Str::random(6)),
+                'status' => 'In Transit',
+            ]);
+        });
 
         return redirect()->route('stock.transfer')->with('success', 'Stock transfer added successfully.');
+    }
+
+    public function updateTransfer(Request $request, StockTransfer $transfer)
+    {
+        $validated = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'from_branch_id' => ['required', 'exists:branches,id'],
+            'to_branch_id' => ['required', 'exists:branches,id', 'different:from_branch_id'],
+        ]);
+        $available = DB::transaction(function () use ($validated, $transfer): ?int {
+            $oldProduct = Product::whereKey($transfer->product_id)->lockForUpdate()->firstOrFail();
+            $oldProduct->increment('stock', $transfer->quantity);
+
+            $newProduct = Product::whereKey($validated['product_id'])->lockForUpdate()->firstOrFail();
+            if ($validated['quantity'] > $newProduct->stock) {
+                $oldProduct->decrement('stock', $transfer->quantity);
+                return $newProduct->stock;
+            }
+
+            $newProduct->decrement('stock', $validated['quantity']);
+            $transfer->update($validated);
+
+            return null;
+        });
+
+        if ($available !== null) {
+            return back()->withInput()->withErrors([
+                'quantity' => "Only {$available} units of this product are available in stock.",
+            ]);
+        }
+
+        return redirect()->route('stock.transfer')->with('success', 'Stock transfer updated successfully.');
+    }
+
+    public function destroyTransfer(StockTransfer $transfer)
+    {
+        DB::transaction(function () use ($transfer): void {
+            Product::whereKey($transfer->product_id)->lockForUpdate()->firstOrFail()->increment('stock', $transfer->quantity);
+            $transfer->delete();
+        });
+
+        return redirect()->route('stock.transfer')->with('success', 'Stock transfer deleted successfully.');
     }
 
     private function pageData(string $title, string $type, iterable $rows): array
