@@ -27,20 +27,25 @@ Route::get('/', function () {
 });
 // DEFAULT DASHBOARD & PROFILE
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
         Route::get('/in/details/{stockIn}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/sold-items', [StockController::class, 'soldItems'])->name('sold-items');
+        Route::delete('/sold-items', [StockController::class, 'clearSoldItems'])->name('sold-items.clear');
+        Route::delete('/sold-items/{soldItem}', [StockController::class, 'destroySoldItem'])->name('sold-items.destroy');
         Route::get('/out-of-stock', [StockController::class, 'outOfStock'])->name('out-of-stock');
+        Route::delete('/out-of-stock', [StockController::class, 'clearOutOfStock'])->name('out-of-stock.clear');
+        Route::delete('/out-of-stock/{stockIn}', [StockController::class, 'destroyOutOfStock'])->name('out-of-stock.destroy');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
         Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
         Route::get('/transfer/{transfer}/edit', [StockController::class, 'editTransfer'])->name('transfer.edit');
         Route::put('/transfer/{transfer}', [StockController::class, 'updateTransfer'])->name('transfer.update');
         Route::delete('/transfer/{transfer}', [StockController::class, 'destroyTransfer'])->name('transfer.destroy');
+        Route::delete('/transfer', [StockController::class, 'clearTransfers'])->name('transfer.clear');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
