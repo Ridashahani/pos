@@ -88,9 +88,10 @@ Route::middleware(['permission:access.pos'])->group(function () {
 
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
 
+
+   
     // Create Sale
     Route::post('/pos/sale', [SaleController::class, 'storeSale'])->name('pos.storeSale');
-    Route::post('/pos/order', [SaleController::class, 'storeSale'])->name('pos.storeOrder');
 });
 
 // ====== SALES ======
@@ -102,11 +103,18 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/sales/invoice/download/{sale_id}', [SaleController::class, 'invoiceDownload'])->name('sale.invoiceDownload');
     Route::get('/sales/receipt/print/{sale_id}', [SaleController::class, 'printReceipt'])->name('sale.printReceipt');
 
-    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
-    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::get('/purchases/returns', [PurchaseController::class, 'returns'])->name('purchases.returns');
-    Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
+    // purchase
+Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+Route::get('/purchases/returns', [PurchaseController::class, 'returns'])->name('purchases.returns');
+Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
 
+Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
+
+Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
+Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
     // Pending Due
     Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');

@@ -23,28 +23,39 @@
                                 <thead class="bg-white text-uppercase">
                                     <tr class="ligth ligth-data">
                                         <th>No.</th>
+                                        <th>Return No</th>
                                         <th>Purchase No</th>
                                         <th>Supplier</th>
-                                        <th>Purchase Date</th>
-                                        <th>Items</th>
+                                        <th>Return Date</th>
+                                        <th>Qty</th>
                                         <th>Total</th>
                                         <th>Reason</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @foreach ($purchases as $purchase)
+                                    @forelse ($returns as $return)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $purchase['number'] }}</td>
-                                            <td>{{ $purchase['supplier'] }}</td>
-                                            <td>{{ $purchase['date'] }}</td>
-                                            <td>{{ $purchase['items'] }}</td>
-                                            <td>{{ $purchase['total'] }}</td>
-                                            <td>{{ $purchase['reason'] }}</td>
-                                            <td><span class="badge badge-success">Return</span></td>
+                                            <td>{{ $return->return_no }}</td>
+                                            <td>{{ $return->purchase->purchase_no ?? '-' }}</td>
+                                            <td>{{ $return->purchase->supplier->name ?? '-' }}</td>
+                                            <td>{{ $return->return_date->format('Y-m-d') }}</td>
+                                            <td>{{ $return->returned_qty }}</td>
+                                            <td>PKR {{ number_format($return->total_amount, 2) }}</td>
+                                            <td>{{ Str::limit($return->reason, 40) }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge badge-{{ $return->status === 'approved' ? 'success' : 'warning' }}">
+                                                    {{ ucfirst($return->status) }}
+                                                </span>
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-center text-muted py-4">No returns found.</td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
