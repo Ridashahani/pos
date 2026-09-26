@@ -80,7 +80,7 @@
         .return-page .return-table td {
             border-top: 0;
             color: #273142;
-            font-size:10px;
+            font-size: 10px;
             padding: .5rem .4rem;
             vertical-align: middle;
         }
@@ -115,7 +115,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('purchases.returnStore', $purchase) }}">
+            <form method="POST" action="{{ route('purchases.return.store', $purchase) }}">
                 @csrf
 
                 <div class="row">
@@ -124,9 +124,11 @@
                             <div>
                                 <div class="page-kicker">Purchase Return</div>
                                 <h4 class="page-title">Create Purchase Return</h4>
-                                <p class="page-subtitle mb-0">Record the reason and items being returned to the supplier.</p>
+                                <p class="page-subtitle mb-0">Record the reason and items being returned to the supplier.
+                                </p>
                             </div>
-                            <a href="{{ route('purchases.returns') }}" class="btn btn-light border d-flex align-items-center">
+                            <a href="{{ route('purchases.returns') }}"
+                                class="btn btn-light border d-flex align-items-center">
                                 <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
                             </a>
                         </div>
@@ -137,7 +139,8 @@
                             <div class="card-body">
                                 <div class="purchase-info mb-4">
                                     <div class="row">
-                                        <div class="col-md-4"><strong>Purchase No</strong><br>{{ $purchase->purchase_no }}</div>
+                                        <div class="col-md-4"><strong>Purchase No</strong><br>{{ $purchase->purchase_no }}
+                                        </div>
                                         <div class="col-md-4">
                                             <strong>Supplier</strong><br>{{ $purchase->supplier->name ?? '-' }}
                                         </div>
@@ -169,14 +172,12 @@
                                                     <td>{{ $item->quantity }}</td>
                                                     <td>{{ $already }}</td>
                                                     <td>
-                                                        <input type="number"
-                                                            name="return_qty[{{ $item->id }}]"
-                                                            class="form-control @if($available <= 0) qty-disabled @endif"
-                                                            value="{{ old("return_qty.{$item->id}", 0) }}"
-                                                            min="0"
+                                                        <input type="number" name="return_qty[{{ $item->id }}]"
+                                                            class="form-control @if ($available <= 0) qty-disabled @endif"
+                                                            value="{{ old("return_qty.{$item->id}", 0) }}" min="0"
                                                             max="{{ $available }}"
-                                                            @if($available <= 0) disabled @endif>
-                                                        @if($available <= 0)
+                                                            @if ($available <= 0) disabled @endif>
+                                                        @if ($available <= 0)
                                                             <small class="text-muted">Fully returned</small>
                                                         @else
                                                             <small class="text-muted">Max {{ $available }}</small>
@@ -204,14 +205,15 @@
                                 <div class="form-group">
                                     <label class="field-label" for="return-reason">Reason <span
                                             class="text-danger">*</span></label>
-                                    <textarea id="return-reason" name="reason" class="form-control"
-                                        placeholder="Enter return reason">{{ old('reason') }}</textarea>
+                                    <textarea id="return-reason" name="reason" class="form-control" placeholder="Enter return reason">{{ old('reason') }}</textarea>
                                 </div>
                                 <div class="form-group mb-0">
                                     <label class="field-label" for="return-status">Status</label>
                                     <select id="return-status" name="status" class="form-control">
-                                        <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="approved" {{ old('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                                        <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>Pending
+                                        </option>
+                                        <option value="approved" {{ old('status') == 'approved' ? 'selected' : '' }}>
+                                            Approved</option>
                                     </select>
                                 </div>
                             </div>

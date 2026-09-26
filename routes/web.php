@@ -2,24 +2,25 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\Dashboard\CategoryController;
-use App\Http\Controllers\Dashboard\SubcategoryController;
 use App\Http\Controllers\Dashboard\CustomerController;
-use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\HelpController;
-use App\Http\Controllers\Dashboard\SaleController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\PurchaseController;
+use App\Http\Controllers\Dashboard\PurchaseReturnController;
 use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\SaleController;
 use App\Http\Controllers\Dashboard\StockController;
+use App\Http\Controllers\Dashboard\SubcategoryController;
+use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentAccountController;
+use App\Http\Controllers\PaymentController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
@@ -31,11 +32,16 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
-        Route::get('/in/details/{product}', [StockController::class, 'inDetails'])->name('in.details');
+        Route::get('/in/details/{stockIn}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
+        Route::get('/sold-items', [StockController::class, 'soldItems'])->name('sold-items');
+        Route::get('/out-of-stock', [StockController::class, 'outOfStock'])->name('out-of-stock');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
         Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
+        Route::get('/transfer/{transfer}/edit', [StockController::class, 'editTransfer'])->name('transfer.edit');
+        Route::put('/transfer/{transfer}', [StockController::class, 'updateTransfer'])->name('transfer.update');
+        Route::delete('/transfer/{transfer}', [StockController::class, 'destroyTransfer'])->name('transfer.destroy');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -89,7 +95,7 @@ Route::middleware(['permission:access.pos'])->group(function () {
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
 
 
-   
+
     // Create Sale
     Route::post('/pos/sale', [SaleController::class, 'storeSale'])->name('pos.storeSale');
 });
@@ -100,21 +106,18 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/sales/complete', [SaleController::class, 'completeSales'])->name('sale.completeSales');
     Route::get('/sales/details/{sale_id}', [SaleController::class, 'saleDetails'])->name('sale.saleDetails');
     Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');
+    Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->name('sale.return');
     Route::get('/sales/invoice/download/{sale_id}', [SaleController::class, 'invoiceDownload'])->name('sale.invoiceDownload');
     Route::get('/sales/receipt/print/{sale_id}', [SaleController::class, 'printReceipt'])->name('sale.printReceipt');
 
-    // purchase
-Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
-Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-Route::get('/purchases/returns', [PurchaseController::class, 'returns'])->name('purchases.returns');
-Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+    //     Purchases return 
+    Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchases.returns');
+    Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
+    Route::post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
+    Route::get('/purchases/returns/{purchaseReturn}', [PurchaseReturnController::class, 'show'])->name('purchases.returns.show');
 
-Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
-
-Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
-Route::get('/purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
-Route::put('/purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
-Route::delete('/purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
+    // Purchases resource 
+    Route::resource('purchases', PurchaseController::class);
     // Pending Due
     Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');

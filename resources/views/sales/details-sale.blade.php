@@ -112,6 +112,13 @@ $saleDetails = $saleDetails;
                             <div class="alert alert-success text-center" role="alert">
                                 <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> This Sale is completed.
                             </div>
+                            <form action="{{ route('sale.return', $sale->id) }}" method="POST" class="text-right">
+                                @csrf
+                                <button type="submit" class="btn btn-warning"
+                                    onclick="return confirm('Return all items from this sale to stock?')">
+                                    Return Sale
+                                </button>
+                            </form>
                         </div>
                     </div>
                     @endif

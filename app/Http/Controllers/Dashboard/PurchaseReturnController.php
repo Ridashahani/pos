@@ -9,15 +9,30 @@ use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
 
 class PurchaseReturnController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $returns = PurchaseReturn::with('purchase.supplier')
-            ->withSum('items as returned_qty', 'quantity')
-            ->latest()
-            ->paginate(15);
+        $query = PurchaseReturn::with('purchase.supplier')
+            ->withSum('items as returned_qty', 'quantity');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('return_no', 'like', "%{$search}%")
+                    ->orWhereHas('purchase', fn($p) => $p->where('purchase_no', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+
+
+        $returns = $query->latest()->paginate(15)->withQueryString();
 
         $purchases = Purchase::orderByDesc('id')->get(['id', 'purchase_no']);
 
@@ -56,7 +71,7 @@ class PurchaseReturnController extends Controller
                 $available = $item->quantity - (int) ($returned[$item->id] ?? 0);
                 if ($qty > $available) {
                     throw ValidationException::withMessages([
-                        "return_qty.{$item->id}" => "Return qty {$available} se zyada nahi ho sakti.",
+                        "return_qty.{$item->id}" => "Return quantity cannot be greater than the available quantity ({$available}).",
                     ]);
                 }
 
@@ -71,7 +86,7 @@ class PurchaseReturnController extends Controller
 
             if (!$lines) {
                 throw ValidationException::withMessages([
-                    'return_qty' => 'Kam az kam ek item ki return quantity likhein.',
+                    'return_qty' => 'Please enter the return quantity for at least one item.',
                 ]);
             }
 
@@ -90,5 +105,12 @@ class PurchaseReturnController extends Controller
         });
 
         return redirect()->route('purchases.returns')->with('success', 'Purchase return saved.');
+    }
+
+    public function show(PurchaseReturn $purchaseReturn)
+    {
+        $purchaseReturn->load('purchase.supplier', 'items.product');
+
+        return view('purchases.return-show', compact('purchaseReturn'));
     }
 }

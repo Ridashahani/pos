@@ -11,14 +11,28 @@ use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\Variation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 class PurchaseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $purchases = Purchase::with(['supplier', 'branch', 'items'])
+        $purchases = Purchase::with(['supplier', 'branch', 'items.product'])
+            ->when($request->filled('search') && $request->filled('search_by'), function ($q) use ($request) {
+                $search = $request->search;
+                $searchBy = $request->search_by;
+
+                match ($searchBy) {
+                    'purchase_no' => $q->where('purchase_no', 'like', "%{$search}%"),
+                    'product' => $q->whereHas('items.product', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
+                    'supplier' => $q->whereHas('supplier', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
+                    'branch' => $q->whereHas('branch', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
+                    default => null,
+                };
+            })
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         $totalPurchases = Purchase::sum('total_amount');
         $itemsReceived = PurchaseItem::sum('quantity');
@@ -45,7 +59,6 @@ class PurchaseController extends Controller
             fn($item) => $item['quantity'] * $item['unit_price']
         );
         $paidAmount = $validated['paid_amount'] ?? 0;
-
 
         DB::transaction(function () use ($validated, $itemsTotal, $paidAmount) {
             $purchase = Purchase::create([
@@ -139,7 +152,6 @@ class PurchaseController extends Controller
 
         return redirect()->route('purchases.index')->with('success', 'Purchase deleted successfully.');
     }
-
 
     private function generatePurchaseNo(): string
     {
