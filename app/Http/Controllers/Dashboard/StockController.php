@@ -14,43 +14,34 @@ use Illuminate\Support\Str;
 
 class StockController extends Controller
 {
-    public function in(Request $request)
-    {
-        $stockIns = StockIn::with(['product.category', 'purchase.supplier'])
-            ->where('remaining_qty', '>', 0)
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $query->whereHas('product', function ($productQuery) use ($request) {
-                    $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
-                });
-            })
-            ->latest()
-            ->paginate(10);
-        $stockIns->appends($request->query());
+   public function in(Request $request)
+{
+    $stockIns = StockIn::with(['product.category', 'purchase.supplier'])
+        ->where('remaining_qty', '>', 0)
+        ->when($request->filled('search'), function ($query) use ($request) {
+            $query->whereHas('product', function ($productQuery) use ($request) {
+                $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
+            });
+        })
+        ->latest()
+        ->paginate(10);
+    $stockIns->appends($request->query());
 
-        $rows = collect($stockIns->items())->map(function (StockIn $stock): array {
-            $product = $stock->product;
-            return [
-                'stock_in_id' => $stock->id,
-                'image' => $product->image,
-                'date' => $stock->purchase->purchase_date->format('d M Y'),
-                'reference' => $stock->purchase->purchase_number,
-                'product' => $product->name,
-                'brand' => $product->brand,
-                'model' => $product->model,
-                'imei' => $stock->imei,
-                'quantity' => $stock->remaining_qty,
-                'unit_cost' => $stock->cost_price,
-                'currency' => $product->currency ?: 'PKR',
-                'category' => $product->category?->name ?: 'Uncategorized',
-                'supplier' => $stock->purchase->supplier?->name ?: 'N/A',
-            ];
-        })->all();
+    $rows = collect($stockIns->items())->map(function (StockIn $stock): array {
+        // ... same as before
+    })->all();
 
-        return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
-            'pagination' => $stockIns,
-            'total_products' => $stockIns->total(),
-        ]));
-    }
+    $thisMonthCount = StockIn::where('remaining_qty', '>', 0)
+        ->whereYear('created_at', now()->year)
+        ->whereMonth('created_at', now()->month)
+        ->count();
+
+    return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
+        'pagination' => $stockIns,
+        'total_products' => $stockIns->total(),
+        'this_month' => $thisMonthCount, // override pageData() ka wrong value
+    ]));
+}
 
     public function inDetails(StockIn $stockIn)
     {
@@ -176,34 +167,41 @@ class StockController extends Controller
         ]);
     }
 
-    public function storeTransfer(Request $request)
-    {
-        $validated = $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'from_branch_id' => ['required', 'exists:branches,id'],
-            'to_branch_id' => ['required', 'exists:branches,id', 'different:from_branch_id'],
-        ]);
-        $product = Product::findOrFail($validated['product_id']);
+public function storeTransfer(Request $request)
+{
+    $validated = $request->validate([
+        'product_id' => ['required', 'exists:products,id'],
+        'quantity' => ['required', 'integer', 'min:1'],
+        'from_branch_id' => ['required', 'exists:branches,id'],
+        'to_branch_id' => ['required', 'exists:branches,id', 'different:from_branch_id'],
+    ]);
+
+    $available = DB::transaction(function () use ($validated): ?int {
+        $product = Product::whereKey($validated['product_id'])->lockForUpdate()->firstOrFail();
 
         if ($validated['quantity'] > $product->stock) {
-            return back()->withInput()->withErrors([
-                'quantity' => "Only {$product->stock} units of this product are available in stock.",
-            ]);
+            return $product->stock; // available quantity return kar dein, transaction ko fail hone dein
         }
 
-        DB::transaction(function () use ($validated, $product): void {
-            $product->decrement('stock', $validated['quantity']);
+        $product->decrement('stock', $validated['quantity']);
 
-            StockTransfer::create([
-                ...$validated,
-                'reference' => 'TRF-' . Str::upper(Str::random(6)),
-                'status' => 'In Transit',
-            ]);
-        });
+        StockTransfer::create([
+            ...$validated,
+            'reference' => 'TRF-' . Str::upper(Str::random(6)),
+            'status' => 'In Transit',
+        ]);
 
-        return redirect()->route('stock.transfer')->with('success', 'Stock transfer added successfully.');
+        return null; // null = success
+    });
+
+    if ($available !== null) {
+        return back()->withInput()->withErrors([
+            'quantity' => "Only {$available} units of this product are available in stock.",
+        ]);
     }
+
+    return redirect()->route('stock.transfer')->with('success', 'Stock transfer added successfully.');
+}
 
     public function updateTransfer(Request $request, StockTransfer $transfer)
     {

@@ -140,7 +140,7 @@
                         data-parent="#iq-sidebar-toggle">
                         <li class="{{ Request::is('stock/in') ? 'active' : '' }}">
                             <a href="{{ route('stock.in') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Current Stock</span>
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock In</span>
                             </a>
                         </li>
                         <li class="{{ Request::is('stock/sold-items') || Request::is('stock/out') ? 'active' : '' }}">
