@@ -1,4 +1,4 @@
-﻿@extends('dashboard.body.main')
+@extends('dashboard.body.main')
 
 @section('container')
     <style>
@@ -38,14 +38,6 @@
             padding: 1rem 1.1rem;
         }
 
-        .purchase-create-page .purchase-table th {
-            border-top: 0;
-            border-bottom: 1px solid #364152;
-            color: #687386;
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 0.35rem 0.45rem;
-        }
 
         .purchase-create-page .purchase-table td {
             border-top: 0;
@@ -53,13 +45,6 @@
             font-size: 0.78rem;
             padding: 0.45rem;
             vertical-align: middle;
-        }
-
-        .purchase-create-page .purchase-table .quantity-input {
-            min-width: 50px;
-            text-align: center;
-            padding-left: 4px;
-            padding-right: 4px;
         }
 
         .purchase-create-page .form-control {
@@ -84,11 +69,6 @@
             margin-bottom: 0.7rem;
         }
 
-        .purchase-create-page .remove-product {
-            color: #ff6b6b;
-            font-size: 1.1rem;
-        }
-
         .purchase-create-page .summary-line {
             color: #8490a0;
             font-size: 0.75rem;
@@ -108,59 +88,13 @@
             font-weight: 700;
         }
 
-        .supplier-modal-backdrop {
-            align-items: center;
-            background: rgba(15, 23, 42, 0.45);
-            display: none;
-            inset: 0;
-            justify-content: center;
-            padding: 1rem;
-            position: fixed;
-            z-index: 1050;
-        }
-
-        .supplier-modal-backdrop.is-open {
-            display: flex;
-        }
-
-        .supplier-modal {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 15px 40px rgba(15, 23, 42, 0.2);
-            max-width: 460px;
-            width: 100%;
-        }
-
-        .supplier-modal-header {
-            border-bottom: 1px solid #e5eaf0;
-            color: #364152;
-            font-size: 0.95rem;
-            font-weight: 700;
-            padding: 1rem 1.1rem;
-        }
-
-        .supplier-modal-body {
-            padding: 1.1rem;
-        }
-
-        .supplier-modal-close {
-            background: transparent;
-            border: 0;
-            color: #8490a0;
-            font-size: 1.4rem;
-            line-height: 1;
-        }
-
-        @media (max-width: 767.98px) {
-            .purchase-create-page {
-                margin: -1rem;
-                padding: 1rem;
-            }
-        }
-
         .purchase-create-page .purchase-table {
-            table-layout: fixed;
             width: 100%;
+        }
+
+        .purchase-create-page .purchase-table th {
+            white-space: nowrap;
+            font-size: 0.78rem;
         }
 
         .purchase-create-page .purchase-table td.truncate {
@@ -175,6 +109,14 @@
             border-radius: 8px;
             margin-bottom: 1.2rem;
             padding: 0.9rem;
+        }
+
+        .purchase-list-table th {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.4rem 0.5rem;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .purchase-create-page .empty-row td {
@@ -198,14 +140,15 @@
                 </div>
             @endif
 
-            <form id="purchase-form" method="POST" action="{{ route('purchases.store') }}">
+            <form id="purchase-form" method="POST" action="{{ route('purchases.update', $purchase) }}">
                 @csrf
+                @method('PUT')
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <div>
-                        <div class="page-kicker">New Record</div>
-                        <h4 class="page-title">Add Purchase</h4>
-                        <p class="page-subtitle mb-0">Create a new purchase from supplier.</p>
+                        <div class="page-kicker">Edit Record</div>
+                        <h4 class="page-title">Edit Purchase — {{ $purchase->purchase_no }}</h4>
+                        <p class="page-subtitle mb-0">Update purchase details and items.</p>
                     </div>
                     <a href="{{ route('purchases.index') }}" class="btn btn-light border d-flex align-items-center">
                         <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
@@ -223,7 +166,9 @@
                                             <select id="picker-product" class="form-control">
                                                 <option value="">Select Product</option>
                                                 @foreach ($products as $product)
-                                                    <option value="{{ $product->id }}" data-price="{{ $product->buying_price }}">{{ $product->name }}</option>
+                                                    <option value="{{ $product->id }}"
+                                                        data-price="{{ $product->buying_price }}">{{ $product->name }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -233,7 +178,8 @@
                                                 <option value="">Select Variation</option>
                                                 @foreach ($variations as $variation)
                                                     <option value="{{ $variation->id }}" data-name="{{ $variation->name }}"
-                                                        data-types='@json($variation->types)'>{{ $variation->name }}</option>
+                                                        data-types='@json($variation->types)'>{{ $variation->name }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -249,7 +195,7 @@
                                 <div class="table-responsive rounded">
                                     <table class="table purchase-table mb-0">
                                         <thead class="bg-white text-uppercase">
-                                            <tr class="ligth ligth-data">
+                                            <tr>
                                                 <th>#</th>
                                                 <th>Product / Variation</th>
                                                 <th>Qty</th>
@@ -259,9 +205,6 @@
                                             </tr>
                                         </thead>
                                         <tbody id="purchase-items" class="ligth-body">
-                                            <tr class="empty-row">
-                                                <td colspan="6">Product, variation aur value select karein — row khud add ho jayegi.</td>
-                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -272,33 +215,34 @@
                     <div class="col-xl-4">
                         <div class="card purchase-card mb-3">
                             <div class="card-body">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="side-card-title mb-0">Purchase Details</div>
-                                    <button type="button" id="open-supplier-modal" class="btn btn-primary btn-sm p-1"
-                                        aria-label="Add supplier">+</button>
-                                </div>
+                                <div class="side-card-title mb-2">Purchase Details</div>
                                 <div class="form-group mb-3">
-                                    <label class="field-label" for="supplier">Supplier <span class="text-danger">*</span></label>
+                                    <label class="field-label" for="supplier">Supplier <span
+                                            class="text-danger">*</span></label>
                                     <select id="supplier" name="supplier_id" class="form-control" required>
                                         <option value="">Select a supplier</option>
                                         @foreach ($suppliers as $supplier)
-                                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                            <option value="{{ $supplier->id }}" @selected($supplier->id === $purchase->supplier_id)>
+                                                {{ $supplier->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="form-group mb-3">
-                                    <label class="field-label" for="branch">Branch <span class="text-danger">*</span></label>
+                                    <label class="field-label" for="branch">Branch <span
+                                            class="text-danger">*</span></label>
                                     <select id="branch" name="branch_id" class="form-control" required>
                                         <option value="">Select a branch</option>
                                         @foreach ($branches as $branch)
-                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                            <option value="{{ $branch->id }}" @selected($branch->id === $purchase->branch_id)>
+                                                {{ $branch->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="form-group mb-0">
-                                    <label class="field-label" for="purchase-date">Date <span class="text-danger">*</span></label>
+                                    <label class="field-label" for="purchase-date">Date <span
+                                            class="text-danger">*</span></label>
                                     <input id="purchase-date" name="purchase_date" type="date" class="form-control"
-                                        value="{{ now()->format('Y-m-d') }}" required>
+                                        value="{{ $purchase->purchase_date->format('Y-m-d') }}" required>
                                 </div>
                             </div>
                         </div>
@@ -307,78 +251,73 @@
                             <div class="card-body">
                                 <div class="side-card-title">Payment Summary</div>
                                 <div class="d-flex justify-content-between summary-line mb-3">
-                                    <span>Total amount</span><span id="total-amount" class="text-dark">PKR 0.00</span>
+                                    <span>Total amount</span><span id="total-amount" class="text-dark">PKR
+                                        {{ number_format($purchase->total_amount, 2) }}</span>
                                 </div>
                                 <div class="form-group mb-3">
-                                    <label class="field-label" for="payment-status">Payment Status <span class="text-danger">*</span></label>
+                                    <label class="field-label" for="payment-status">Payment Status <span
+                                            class="text-danger">*</span></label>
                                     <select id="payment-status" name="payment_status" class="form-control" required>
-                                        <option value="paid">Paid</option>
-                                        {{-- <option value="partial">Partial</option> --}}
-                                        <option value="due">Due</option>
+                                        <option value="paid" @selected($purchase->payment_status === 'paid')>Paid</option>
+                                        {{-- <option value="partial" @selected($purchase->payment_status === 'partial')>Partial</option> --}}
+                                        <option value="due" @selected($purchase->payment_status === 'due')>Due</option>
                                     </select>
                                 </div>
                                 <div class="form-group mb-3">
                                     <label class="field-label" for="amount-paid">Amount Paid</label>
-                                    <input id="amount-paid" name="paid_amount" type="number" class="form-control" value="0" min="0"
-                                        step="0.01">
+                                    <input id="amount-paid" name="paid_amount" type="number" class="form-control"
+                                        value="{{ $purchase->paid_amount }}" min="0" step="0.01">
                                 </div>
                                 <div class="d-flex justify-content-between summary-total">
-                                    <span>Due Amount</span><span id="due-amount" class="due-amount">PKR 0.00</span>
+                                    <span>Due Amount</span><span id="due-amount" class="due-amount">PKR
+                                        {{ number_format($purchase->due_amount, 2) }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-block mt-3">Save Purchase</button>
+                        <button type="submit" class="btn btn-primary btn-block mt-3">Update Purchase</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="supplier-modal-backdrop" class="supplier-modal-backdrop" aria-hidden="true">
-        <div class="supplier-modal" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
-            <div class="supplier-modal-header d-flex align-items-center justify-content-between">
-                <span id="supplier-modal-title">Add Supplier</span>
-                <button type="button" id="close-supplier-modal" class="supplier-modal-close" aria-label="Close">&times;</button>
-            </div>
-            <div class="supplier-modal-body">
-                <div class="form-group">
-                    <label class="field-label" for="new-supplier-name">Name</label>
-                    <input id="new-supplier-name" class="form-control" type="text" placeholder="Supplier name">
-                </div>
-                <div class="form-group">
-                    <label class="field-label" for="new-supplier-phone">Phone</label>
-                    <input id="new-supplier-phone" class="form-control" type="tel" placeholder="03XX-XXXXXXX">
-                </div>
-                <div class="form-group mb-3">
-                    <label class="field-label" for="new-supplier-address">Address</label>
-                    <textarea id="new-supplier-address" class="form-control" rows="3" placeholder="Supplier address"></textarea>
-                </div>
-                <p class="text-muted" style="font-size:.75rem;">Naya supplier abhi sirf isi page pe dikhega — DB mein save nahi hoga jab tak backend wire na karein (agla step).</p>
-                <button type="button" id="save-supplier" class="btn btn-primary btn-block">Add Supplier</button>
-            </div>
-        </div>
-    </div>
+    @php
+        $existingItemsData = $purchase->items
+            ->map(function ($item) {
+                return [
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name ?? 'Unknown',
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'variations' => $item->variations ?? [],
+                ];
+            })
+            ->values();
+    @endphp
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const items = document.getElementById('purchase-items');
             const totalAmount = document.getElementById('total-amount');
             const amountPaid = document.getElementById('amount-paid');
             const dueAmount = document.getElementById('due-amount');
-            const supplierSelect = document.getElementById('supplier');
-            const supplierModal = document.getElementById('supplier-modal-backdrop');
-            const openSupplierModal = document.getElementById('open-supplier-modal');
-            const closeSupplierModal = document.getElementById('close-supplier-modal');
-            const saveSupplier = document.getElementById('save-supplier');
 
             const pickerProduct = document.getElementById('picker-product');
             const pickerVariationType = document.getElementById('picker-variation-type');
             const pickerVariationValue = document.getElementById('picker-variation-value');
 
             let rowCounter = 0;
+            const existingItems = @json($existingItemsData);
 
-            pickerVariationType.addEventListener('change', function () {
+            existingItems.forEach(function(item) {
+                const variationLabel = (item.variations || [])
+                    .map(v => `${v.name}: ${v.value}`).join(', ') || 'Standard';
+                addRowFromData(item.product_id, item.product_name, variationLabel, item.quantity, item
+                    .unit_price, item.variations);
+            });
+
+            pickerVariationType.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 let types = [];
                 if (selectedOption.value) {
@@ -402,7 +341,7 @@
                     types.map(t => `<option value="${t}">${t}</option>`).join('');
             });
 
-            pickerVariationValue.addEventListener('change', function () {
+            pickerVariationValue.addEventListener('change', function() {
                 const productId = pickerProduct.value;
                 const productOption = pickerProduct.options[pickerProduct.selectedIndex];
                 const variationId = pickerVariationType.value;
@@ -416,7 +355,15 @@
                 }
                 if (!variationId || !value) return;
 
-                addRow(productOption, variationTypeOption, value);
+                const unitPrice = Number(productOption.dataset.price || 0);
+                const variations = [{
+                    variation_id: variationTypeOption.value,
+                    name: variationTypeOption.dataset.name,
+                    value: value,
+                }];
+
+                addRowFromData(productOption.value, productOption.text,
+                    `${variationTypeOption.dataset.name}: ${value}`, 1, unitPrice, variations);
 
                 pickerProduct.selectedIndex = 0;
                 pickerVariationType.selectedIndex = 0;
@@ -424,29 +371,32 @@
                 pickerVariationValue.disabled = true;
             });
 
-            function addRow(productOption, variationTypeOption, value) {
+            function addRowFromData(productId, productName, variationLabel, quantity, unitPrice, variations) {
                 const rowId = rowCounter++;
-                const unitPrice = Number(productOption.dataset.price || 0);
-                const label = `${productOption.text} — ${variationTypeOption.dataset.name}: ${value}`;
-
-                const emptyRow = items.querySelector('.empty-row');
-                if (emptyRow) emptyRow.remove();
+                const label = `${productName} — ${variationLabel}`;
 
                 const row = document.createElement('tr');
                 row.className = 'purchase-item';
                 row.dataset.rowId = rowId;
+
+                let variationInputs = '';
+                (variations || []).forEach((v, vIndex) => {
+                    variationInputs += `
+                        <input type="hidden" name="items[${rowId}][variations][${vIndex}][variation_id]" value="${v.variation_id}">
+                        <input type="hidden" name="items[${rowId}][variations][${vIndex}][name]" value="${v.name}">
+                        <input type="hidden" name="items[${rowId}][variations][${vIndex}][value]" value="${v.value}">`;
+                });
+
                 row.innerHTML = `
                     <td></td>
                     <td class="truncate" title="${label}">${label}</td>
-                    <td><input type="number" class="form-control quantity-input" name="items[${rowId}][quantity]" value="1" min="1"></td>
-                    <td><input type="number" class="form-control cost-input" name="items[${rowId}][unit_price]" value="${unitPrice.toFixed(2)}" min="0" step="0.01"></td>
-                    <td class="amount-cell">PKR ${unitPrice.toFixed(2)}</td>
+                    <td><input type="number" class="form-control quantity-input" name="items[${rowId}][quantity]" value="${quantity}" min="1"></td>
+                    <td><input type="number" class="form-control cost-input" name="items[${rowId}][unit_price]" value="${Number(unitPrice).toFixed(2)}" min="0" step="0.01"></td>
+                    <td class="amount-cell">PKR ${(quantity * unitPrice).toFixed(2)}</td>
                     <td>
                         <button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button>
-                        <input type="hidden" name="items[${rowId}][product_id]" value="${productOption.value}">
-                        <input type="hidden" name="items[${rowId}][variations][0][variation_id]" value="${variationTypeOption.value}">
-                        <input type="hidden" name="items[${rowId}][variations][0][name]" value="${variationTypeOption.dataset.name}">
-                        <input type="hidden" name="items[${rowId}][variations][0][value]" value="${value}">
+                        <input type="hidden" name="items[${rowId}][product_id]" value="${productId}">
+                        ${variationInputs}
                     </td>`;
                 items.appendChild(row);
                 updateRowNumbers();
@@ -455,7 +405,7 @@
 
             function updateTotals() {
                 let total = 0;
-                items.querySelectorAll('.purchase-item').forEach(function (row) {
+                items.querySelectorAll('.purchase-item').forEach(function(row) {
                     const quantity = Math.max(0, Number(row.querySelector('.quantity-input').value) || 0);
                     const unitPrice = Math.max(0, Number(row.querySelector('.cost-input').value) || 0);
                     const amount = quantity * unitPrice;
@@ -469,21 +419,23 @@
 
             function updateRowNumbers() {
                 const rows = items.querySelectorAll('.purchase-item');
-                rows.forEach(function (row, index) {
+                rows.forEach(function(row, index) {
                     row.querySelector('td').textContent = index + 1;
                 });
                 if (rows.length === 0) {
-                    items.innerHTML = '<tr class="empty-row"><td colspan="6">Product, select variation  and value </td></tr>';
+                    items.innerHTML =
+                        '<tr class="empty-row"><td colspan="6">Product, select variation and its value </td></tr>';
                 }
             }
 
             amountPaid.addEventListener('input', updateTotals);
-            items.addEventListener('input', function (e) {
-                if (e.target.classList.contains('quantity-input') || e.target.classList.contains('cost-input')) {
+            items.addEventListener('input', function(e) {
+                if (e.target.classList.contains('quantity-input') || e.target.classList.contains(
+                        'cost-input')) {
                     updateTotals();
                 }
             });
-            items.addEventListener('click', function (event) {
+            items.addEventListener('click', function(event) {
                 const removeButton = event.target.closest('.remove-product');
                 if (!removeButton) return;
                 removeButton.closest('.purchase-item').remove();
@@ -491,33 +443,14 @@
                 updateTotals();
             });
 
-            document.getElementById('purchase-form').addEventListener('submit', function (e) {
+            document.getElementById('purchase-form').addEventListener('submit', function(e) {
                 if (!items.querySelector('.purchase-item')) {
                     e.preventDefault();
-                    alert('Kam az kam ek product add karein.');
+                    alert('Please add at least one product..');
                 }
             });
 
-            function closeModal() {
-                supplierModal.classList.remove('is-open');
-                supplierModal.setAttribute('aria-hidden', 'true');
-            }
-            openSupplierModal.addEventListener('click', function () {
-                supplierModal.classList.add('is-open');
-                supplierModal.setAttribute('aria-hidden', 'false');
-            });
-            closeSupplierModal.addEventListener('click', closeModal);
-            supplierModal.addEventListener('click', function (event) {
-                if (event.target === supplierModal) closeModal();
-            });
-            saveSupplier.addEventListener('click', function () {
-                const name = document.getElementById('new-supplier-name').value.trim();
-                if (name) {
-                    const option = new Option(name, name, true, true);
-                    supplierSelect.add(option);
-                    closeModal();
-                }
-            });
+            updateTotals();
         });
     </script>
 @endsection
