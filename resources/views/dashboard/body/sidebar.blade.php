@@ -129,6 +129,15 @@
                     </li>
                 @endif  --}}
 
+                @if (auth()->user()->can('access.categories'))
+                    <li class="{{ Request::is('brands*') ? 'active' : '' }}">
+                        <a href="{{ route('brands.index') }}" class="svg-icon">
+                            <x-heroicon-o-tag class="w-6 h-6" />
+                            <span class="ml-3">Brands</span>
+                        </a>
+                    </li>
+                @endif
+
                 <li>
                     <a href="#stock" class="collapsed" data-toggle="collapse"
                         aria-expanded="{{ Request::is('stock*') ? 'true' : 'false' }}">
