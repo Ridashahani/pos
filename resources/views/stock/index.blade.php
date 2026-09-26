@@ -76,15 +76,33 @@
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h4 class="card-title mb-0">{{ $title }} Records</h4>
                         @if ($type === 'stock-transfer')
-                            <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary">
-                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
-                            </a>
+                            <div class="d-flex align-items-center">
+                                <form method="POST" action="{{ route('stock.transfer.clear') }}" class="mr-2"
+                                    onsubmit="return confirm('Delete all stock transfer records? Stock will be returned.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger">Clear All</button>
+                                </form>
+                                <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary">
+                                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
+                                </a>
+                            </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
-                            <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center">
-                                <input type="search" name="search" value="{{ request('search') }}"
-                                    class="form-control mr-2" placeholder="Search product" aria-label="Search product">
-                                <button type="submit" class="btn btn-primary">Search</button>
-                            </form>
+                            <div class="d-flex align-items-center">
+                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2">
+                                    <input type="search" name="search" value="{{ request('search') }}"
+                                        class="form-control mr-2" placeholder="Search product" aria-label="Search product">
+                                    <button type="submit" class="btn btn-primary">Search</button>
+                                </form>
+                                @if (in_array($type, ['sold-items', 'out-of-stock']))
+                                    <form method="POST" action="{{ route("stock.{$type}.clear") }}"
+                                        onsubmit="return confirm('Delete all records on this page?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Clear All</button>
+                                    </form>
+                                @endif
+                            </div>
                         @endif
                     </div>
                     <div class="card-body p-0">
@@ -112,7 +130,6 @@
                                                 <th>Status</th>
                                             @endif
                                         @elseif ($type === 'out-of-stock')
-                                            <th>Action</th>
                                         @else
                                             <th>From</th>
                                             <th>To</th>
@@ -120,7 +137,7 @@
                                         @endif
                                         @if ($type === 'stock-in')
                                             <th>Action</th>
-                                        @elseif ($type === 'stock-transfer')
+                                        @elseif (in_array($type, ['stock-transfer', 'sold-items', 'out-of-stock']))
                                             <th class="text-center">Actions</th>
                                         @endif
                                     </tr>
@@ -152,10 +169,6 @@
                                                     <td><span class="badge {{ $row['status'] === 'returned' ? 'bg-warning' : 'bg-success' }}">{{ ucfirst($row['status']) }}</span></td>
                                                 @endif
                                             @elseif ($type === 'out-of-stock')
-                                                <td>
-                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
-                                                        class="btn btn-primary btn-sm">Purchase again</a>
-                                                </td>
                                             @else
                                                 <td>{{ $row['from'] }}</td>
                                                 <td>{{ $row['to'] }}</td>
@@ -172,6 +185,37 @@
                                                         title="View details" aria-label="View details">
                                                         <x-heroicon-o-eye class="w-5 h-5" />
                                                     </a>
+                                                </td>
+                                            @elseif ($type === 'sold-items')
+                                                <td class="text-center">
+                                                    <a href="{{ route('sale.saleDetails', $row['sale_id']) }}"
+                                                        class="btn btn-light btn-sm mr-1" title="Edit sale" aria-label="Edit sale">
+                                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                    </a>
+                                                    <form action="{{ route('stock.sold-items.destroy', $row['sold_item_id']) }}" method="POST" class="d-inline"
+                                                        onsubmit="return confirm('Delete this sold item record?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete sold item" aria-label="Delete sold item">
+                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            @elseif ($type === 'out-of-stock')
+                                                <td class="text-center">
+                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
+                                                        class="btn btn-primary btn-sm mr-1">Purchase again</a>
+                                                    <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
+                                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                    </a>
+                                                    <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
+                                                        onsubmit="return confirm('Delete this exhausted stock-in record?');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
+                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                        </button>
+                                                    </form>
                                                 </td>
                                             @elseif ($type === 'stock-transfer')
                                                 <td class="text-center">

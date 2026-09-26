@@ -11,13 +11,20 @@
     <div class="data-scrollbar" data-scroll="1">
         <nav class="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" class="iq-menu">
-                <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
+                {{-- <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
                     <a href="{{ route('dashboard') }}" class="svg-icon">
                         <x-heroicon-o-home class="w-6 h-6" />
                         <span class="ml-4">Dashboards</span>
                     </a>
-                </li>
+                </li> --}}
 
+                {{-- @if (auth()->user()->can('access.pos'))
+                    <li class="{{ Request::is('pos*') ? 'active' : '' }}">
+                        <a href="{{ route('pos.index') }}" class="svg-icon">
+                            <x-heroicon-o-shopping-cart class="w-6 h-6" />
+                            <span class="ml-3">POS</span>
+                        </a>
+                    </li>
                 @if (auth()->user()->can('access.pos'))
                 <li class="{{ Request::is('pos*') ? 'active' : '' }}">
                     <a href="{{ route('pos.index') }}" class="svg-icon">
@@ -101,32 +108,41 @@
                     </ul>
                 </li>
 
-                <li>
-                    <a href="#purchases" class="collapsed" data-toggle="collapse"
-                        aria-expanded="{{ Request::is('purchases*') ? 'true' : 'false' }}">
-                        <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
-                        <span class="ml-3">Purchases</span>
-                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                    </a>
-                    <ul id="purchases" class="iq-submenu collapse {{ Request::is('purchases*') ? 'show' : '' }}"
-                        data-parent="#iq-sidebar-toggle">
-                        <li class="{{ Request::is('purchases') ? 'active' : '' }}">
-                            <a href="{{ route('purchases.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>All Purchases</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('purchases/create') ? 'active' : '' }}">
-                            <a href="{{ route('purchases.create') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Purchase</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('purchases/returns') ? 'active' : '' }}">
-                            <a href="{{ route('purchases.returns') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Purchase Returns</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                    <li>
+                        <a href="#purchases" class="collapsed" data-toggle="collapse"
+                            aria-expanded="{{ Request::is('purchases*') ? 'true' : 'false' }}">
+                            <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
+                            <span class="ml-3">Purchases</span>
+                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                        </a>
+                        <ul id="purchases" class="iq-submenu collapse {{ Request::is('purchases*') ? 'show' : '' }}"
+                            data-parent="#iq-sidebar-toggle">
+                            <li class="{{ Request::is('purchases') ? 'active' : '' }}">
+                                <a href="{{ route('purchases.index') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>All Purchases</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('purchases/create') ? 'active' : '' }}">
+                                <a href="{{ route('purchases.create') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Purchase</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is('purchases/returns') ? 'active' : '' }}">
+                                <a href="{{ route('purchases.returns') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Purchase Returns</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @endif  --}}
+
+                @if (auth()->user()->can('access.categories'))
+                    <li class="{{ Request::is('brands*') ? 'active' : '' }}">
+                        <a href="{{ route('brands.index') }}" class="svg-icon">
+                            <x-heroicon-o-tag class="w-6 h-6" />
+                            <span class="ml-3">Brands</span>
+                        </a>
+                    </li>
                 @endif
 
                 <li>
@@ -135,12 +151,12 @@
                         <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
                         <span class="ml-3">Stock</span>
                         <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                    </a>
+                    </a> 
                     <ul id="stock" class="iq-submenu collapse {{ Request::is('stock*') ? 'show' : '' }}"
                         data-parent="#iq-sidebar-toggle">
                         <li class="{{ Request::is('stock/in') ? 'active' : '' }}">
                             <a href="{{ route('stock.in') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-In</span>
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock In</span>
                             </a>
                         </li>
                         <li class="{{ Request::is('stock/sold-items') || Request::is('stock/out') ? 'active' : '' }}">
@@ -163,13 +179,13 @@
 
                 <hr>
 
-                @if (auth()->user()->can('access.customers'))
-                <li class="{{ Request::is('customers*') ? 'active' : '' }}">
-                    <a href="{{ route('customers.index') }}" class="svg-icon">
-                        <x-heroicon-o-user-group class="w-6 h-6" />
-                        <span class="ml-3">Customers</span>
-                    </a>
-                </li>
+                {{-- @if (auth()->user()->can('access.customers'))
+                    <li class="{{ Request::is('customers*') ? 'active' : '' }}">
+                        <a href="{{ route('customers.index') }}" class="svg-icon">
+                            <x-heroicon-o-user-group class="w-6 h-6" />
+                            <span class="ml-3">Customers</span>
+                        </a>
+                    </li>
                 @endif
 
                 @if (auth()->user()->can('access.suppliers'))
@@ -249,8 +265,8 @@
                     <x-heroicon-o-circle-stack class="w-6 h-6" />
                     <span class="ml-3">Backup Database</span>
                 </a>
-                </li> --}}
-                @endif
+                </li> 
+                @endif --}}
             </ul>
         </nav>
         <div class="p-3"></div>

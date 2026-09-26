@@ -25,17 +25,17 @@
                         <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
                             store today.</p>
                     </div>
-                    <div>
+                    {{-- <div>
                         <a href="{{ route('pos.index') }}" class="btn btn-primary">
                             <x-heroicon-o-computer-desktop class="w-5 h-5 mr-2" />
                             Go to POS
                         </a>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
             <!-- Metric Cards -->
-            <div class="col-lg-3 col-md-6">
+            {{-- <div class="col-lg-3 col-md-6">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-4 card-total-sale">
@@ -52,9 +52,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-lg-3 col-md-6">
+            {{-- <div class="col-lg-3 col-md-6">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-4 card-total-sale">
@@ -71,9 +71,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-lg-3 col-md-6">
+            {{-- <div class="col-lg-3 col-md-6">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-4 card-total-sale">
@@ -90,9 +90,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-lg-3 col-md-6">
+            {{-- <div class="col-lg-3 col-md-6">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-4 card-total-sale">
@@ -109,10 +109,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Sales Chart -->
-            <div class="col-lg-12">
+            {{-- <div class="col-lg-12">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
@@ -123,10 +123,10 @@
                         <div id="monthly-sales-chart"></div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Bottom Section: Recent Sales & Top Products -->
-            <div class="col-lg-7 col-md-12">
+            {{-- <div class="col-lg-7 col-md-12">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
@@ -177,9 +177,9 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
-            <div class="col-lg-5 col-md-12">
+            {{-- <div class="col-lg-5 col-md-12">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
@@ -216,8 +216,8 @@
                 </div>
         </div>
     </div>
-@endsection
-
+@endsection --}}
+{{-- 
 @section('specificpagescripts')
     <!-- ApexCharts -->
     <script>
@@ -272,4 +272,4 @@
             }
         });
     </script>
-@endsection
+@endsection --}}
