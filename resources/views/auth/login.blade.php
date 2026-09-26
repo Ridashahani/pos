@@ -43,9 +43,9 @@
                                                 <input class="floating-input form-control @error('password') is-invalid @enderror"
                                                     type="password" name="password" placeholder=" " required id="password">
                                                 <label>Password</label>
-                                                <div class="position-absolute" style="right: 15px; top: 15px; cursor: pointer; color: #6c757d;"
+                                                <div class="position-absolute" style="right: 10px; top: 10px; cursor: pointer; color: #4fa8f5;"
                                                     onclick="togglePassword('password')">
-                                                    <x-heroicon-o-eye class="w-6 h-6" id="eye-password" />
+                                                    <x-heroicon-o-eye class="w-6 h-6" id="" />
                                                     <x-heroicon-o-eye-slash class="w-6 h-6 d-none" id="eye-slash-password" />
                                                 </div>
                                             </div>

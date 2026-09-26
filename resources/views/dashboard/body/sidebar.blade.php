@@ -234,14 +234,13 @@
                         </a>
                     </li>
                 @endif
-
-                @if (auth()->user()->can('access.payments'))
-                    <li class="{{ Request::is('payments*') ? 'active' : '' }}">
-                        <a href="{{ route('payments.index') }}" class="svg-icon">
-                            <x-heroicon-o-currency-dollar class="w-6 h-6" />
-                            <span class="ml-3">Wallet Services</span>
-                        </a>
-                    </li>
+               @if (auth()->user()->can('access.payments'))
+                <li class="{{ Request::is('payments*') ? 'active' : '' }}">
+                    <a href="{{ route('payments.index') }}" class="svg-icon">
+                        <x-heroicon-o-currency-dollar class="w-6 h-6" />
+                        <span class="ml-3">Wallet/Branchless Banking</span>
+                    </a>
+                </li>
                 @endif
 
                 @if (auth()->user()->can('database.menu'))

@@ -98,7 +98,7 @@
                                                 title="View" href="{{ route('customers.show', $customer->id) }}">
                                                 <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                             </a>
-                                            <a class="btn btn-primary mr-2" data-toggle="tooltip" data-placement="top"
+                                            <a class="btn btn-success mr-2" data-toggle="tooltip" data-placement="top"
                                                 title="Edit" href="{{ route('customers.edit', $customer->id) }}">
                                                 <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
                                             </a>
