@@ -16,131 +16,41 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
             <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if ($formMethod !== 'POST') @method($formMethod) @endif
-                <div class="form-section-heading"><span class="form-section-number">01</span>
+                <div class="form-section-heading">
                     <div>
                         <h5>Product information</h5>
-                        <p>Set the identity and inventory details for this product.</p>
+                        <p>Set the details for this product.</p>
                     </div>
                 </div>
                 <div class="row">
                     <div class="form-group col-md-12 mb-3">
                         <label class="font-weight-bold d-block mb-2">Category Type</label>
                         <div class="custom-control custom-radio custom-control-inline">
-                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'accessories')>
+                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model || $product->mobile_type)) ? 'mobile' : 'accessories') === 'accessories')>
                             <label class="custom-control-label" for="cat_type_accessories" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Accessories</label>
                         </div>
                         <div class="custom-control custom-radio custom-control-inline mr-4">
-                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model)) ? 'mobile' : 'accessories') === 'mobile')>
+                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model || $product->mobile_type)) ? 'mobile' : 'accessories') === 'mobile')>
                             <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
                         </div>
                     </div>
-                    <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" id="category_id" class="form-control" required>
-                            <option value="">Choose Product Category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected($field('category_id')==$category->id)>{{ $category->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4"><label>Product Subcategory</label><select name="subcategory_id" id="subcategory_id" class="form-control">
-                            <option value="">-- Select a category first --</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category="{{ $subcategory->category_id }}" @selected($field('subcategory_id')==$subcategory->id)>{{ $subcategory->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
-                    <div class="form-group col-md-4"><label>Brand</label><select name="brand" class="form-control">
+
+                    <div class="form-group col-md-6"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
+                    <div class="form-group col-md-6"><label>Brand</label><select name="brand" class="form-control">
                             <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand }}" @selected($field('brand') === $brand)>{{ $brand }}</option>@endforeach
                         </select>
                     </div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
-                    <div class="form-group col-md-4"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
-                    {{-- Barcode Scanner is temporarily hidden until the scanner workflow is finalized. --}}
-                    <!-- Barcode Scanner: <input id="barcode_scanner" disabled> -->
-                    
-                    
-                    <!-- <div class="form-group col-md-4"><label>Branch</label><select name="branch_id" class="form-control">
-                            <option value="">Choose Branch</option>@foreach($branches as $branch)<option value="{{ $branch->id }}" @selected($field('branch_id')==$branch->id)>{{ $branch->name }}</option>@endforeach
-                        </select>
-                    </div> -->
-                    <!-- <div class="form-group col-md-4"><label>Supplier</label><select name="supplier_id" class="form-control">
-                            <option value="">Choose Supplier</option>@foreach($suppliers as $supplier)<option value="{{ $supplier->id }}" @selected($field('supplier_id')==$supplier->id)>{{ $supplier->name }}</option>@endforeach
-                        </select>
-                    </div> -->
-                    <div class="form-group col-md-4"><label>Expiry Date</label><input name="expire_date" type="date" value="{{ $field('expire_date') }}" class="form-control"></div>
-                    <div class="form-group col-md-4"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
-                </div>
-                <div class="form-section-heading section-divider"><span class="form-section-number">02</span>
-                    <div>
-                        <h5>Product type</h5>
-                        <p>Choose how this product should be priced and stocked.</p>
-                    </div>
-                </div>
-                <div class="product-type-row row">
-                    <div class="form-group col-md-4"><label>Product Type <span class="text-danger">*</span></label><select name="product_type" id="product_type" class="form-control" required>
-                            <option value="" @selected($field('product_type')==='' )>Choose Product Type</option>
-                            <option value="single" @selected($field('product_type')==='single' )>Single</option>
-                            <option value="variation" @selected($field('product_type')==='variation' )>Variation</option>
-                        </select></div>
-                    <div class="variation-only form-group col-md-4"><label>Variations <span class="text-danger">*</span></label>
-                        <div class="multi-picker" data-picker="variations"><button type="button" class="form-control multi-picker-toggle"><span class="multi-picker-label">Choose Variation</span><span class="multi-picker-chevron">&#9662;</span></button>
-                            <div class="multi-picker-menu">@foreach($variations as $variation)<label><input type="checkbox" value="{{ $variation->id }}" data-types="{{ json_encode($variation->types) }}" @checked(in_array($variation->id, $selectedVariationIds))>{{ $variation->name }}</label>@endforeach</div>
-                        </div><select name="variation_ids[]" id="variation_ids" class="picker-values" multiple></select>
-                    </div>
-                    <div class="variation-only variation-types-picker form-group col-md-4"><label>Variation Types <span class="text-danger">*</span></label>
-                        <div class="multi-picker" data-picker="types"><button type="button" class="form-control multi-picker-toggle"><span class="multi-picker-label">Choose Variation Types</span><span class="multi-picker-chevron">&#9662;</span></button>
-                            <div class="multi-picker-menu" id="variation-types-menu"></div>
-                        </div><select name="variation_types[]" id="variation_types" class="picker-values" multiple></select>
-                    </div>
-                </div>
-                <div class="form-section-heading section-divider pricing-section-heading"><span class="form-section-number">03</span>
-                    <div>
-                        <h5>Pricing and stock</h5>
-                        <p>Set prices, taxes, stock alerts, and the opening quantity.</p>
-                    </div>
-                </div>
-                <div class="variation-only variation-details row">
-                    <div class="form-group col-md-3"><label>Variation Type</label><input name="variation_type" value="{{ $field('variation_type') }}" class="form-control" placeholder="XXL"></div>
-                    <div class="form-group col-md-3"><label>Product Cost <span class="text-danger">*</span></label><input name="product_cost" value="{{ $field('product_cost', $field('buying_price')) }}" type="number" step="0.01" class="form-control variation-input"></div>
-                    <div class="form-group col-md-3"><label>SKU/Barcode <span class="text-danger">*</span></label><input value="{{ $field('code') }}" class="form-control" readonly></div>
-                    <div class="form-group col-md-3"><label>Product Price <span class="text-danger">*</span></label><input name="product_price" value="{{ $field('product_price', $field('selling_price')) }}" type="number" step="0.01" class="form-control variation-input"></div>
-                </div>
-                <div class="pricing-fields row">
-                    <div class="form-group col-md-3"><label>Currency <span class="text-danger">*</span></label>
-                        <select name="currency" class="form-control" required>
-                            <option value="PKR" @selected($field('currency', 'PKR') === 'PKR')>PKR</option>
-                            <option value="USD" @selected($field('currency') === 'USD')>USD</option>
+                    <div class="mobile-extra-fields form-group col-md-4"><label>Mobile Type</label><select name="mobile_type" class="form-control">
+                            <option value="">Choose Mobile Type</option>
+                            <option value="new" @selected($field('mobile_type')==='new')>New</option>
+                            <option value="used" @selected($field('mobile_type')==='used')>Used</option>
                         </select>
                     </div>
-                    <div class="single-pricing-field form-group col-md-3"><label>Product Cost <span class="text-danger">*</span></label>
-                        <div class="input-group"><input name="single_product_cost" value="{{ $field('product_cost', $field('buying_price')) }}" type="number" step="0.01" class="form-control single-input">
-                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
-                        </div>
-                    </div>
-                    <div class="single-pricing-field form-group col-md-3"><label><span class="single-label">Product Retail Price</span><span class="variation-label">Product Price</span> <span class="text-danger">*</span></label>
-                        <div class="input-group"><input name="single_product_price" value="{{ $field('product_price', $field('selling_price')) }}" type="number" step="0.01" class="form-control single-input">
-                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
-                        </div>
-                    </div>
-                    <!-- <div class="form-group col-md-3"><label>Product Wholesale Price</label>
-                        <div class="input-group"><input name="wholesale_price" value="{{ $field('wholesale_price') }}" type="number" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
-                        </div>
-                    </div> -->
-                    <!-- <div class="form-group col-md-3"><label>Product Special/Offer Price</label>
-                        <div class="input-group"><input name="special_price" value="{{ $field('special_price') }}" type="number" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text currency-label">PKR</span></div>
-                        </div>
-                    </div> -->
-                    <!-- <div class="form-group col-md-3"><label>Stock Alert</label><input name="stock_alert" value="{{ $field('stock_alert', 0) }}" type="number" min="0" class="form-control"></div> -->
-                    <!-- <div class="form-group col-md-3"><label>Order Tax</label>
-                        <div class="input-group"><input name="order_tax" value="{{ $field('order_tax', 0) }}" type="number" min="0" step="0.01" class="form-control">
-                            <div class="input-group-append"><span class="input-group-text">%</span></div>
-                        </div>
-                    </div> -->
-                    <!-- <div class="form-group col-md-3"><label>Tax Type <span class="text-danger">*</span></label><select name="tax_type" class="form-control">
-                            <option value="">Choose Tax Type</option>
-                            <option @selected($field('tax_type')==='exclusive' ) value="exclusive">Exclusive</option>
-                            <option @selected($field('tax_type')==='inclusive' ) value="inclusive">Inclusive</option>
-                        </select></div> -->
-                    <div class="form-group col-md-3"><label>Add Product Quantity <span class="text-danger">*</span></label><input name="add_product_quantity" value="{{ $field('add_product_quantity', $field('stock', 0)) }}" type="number" min="0" class="form-control"></div>
+                    <div class="form-group col-md-6"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
+                    <div class="form-group col-md-6"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
                 </div>
-                <input type="hidden" name="buying_price" id="buying_price" value="{{ $field('buying_price', 0) }}"><input type="hidden" name="selling_price" id="selling_price" value="{{ $field('selling_price', 0) }}"><input type="hidden" name="stock" id="stock" value="{{ $field('stock', 0) }}">
                 <div class="d-flex justify-content-start mt-3">
                     <button type="submit" class="btn btn-save mr-2">
                         <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> {{ $submitLabel }}
@@ -297,6 +207,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
         font-size: .76rem;
     }
 
+    .mobile-extra-fields,
     .variation-only,
     .pricing-fields,
     .pricing-section-heading {
@@ -436,48 +347,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     }
 </style>
 <script>
-    // ── Subcategory filtering ─────────────────────────────────────────────────
-    (function () {
-        const categorySelect    = document.getElementById('category_id');
-        const subcategorySelect = document.getElementById('subcategory_id');
-        const allOptions        = Array.from(subcategorySelect.options); // snapshot
 
-        function filterSubcategories() {
-            const selectedCategoryId = categorySelect.value;
-            const previousValue      = subcategorySelect.value;
-
-            // Remove all options except re-build from snapshot
-            subcategorySelect.innerHTML = '';
-
-            if (!selectedCategoryId) {
-                subcategorySelect.add(new Option('-- Select a category first --', ''));
-                return;
-            }
-
-            subcategorySelect.add(new Option('Choose Product Subcategory', ''));
-
-            let matched = false;
-            allOptions.forEach(function (opt) {
-                if (!opt.value) return; // skip the placeholder
-                if (opt.dataset.category === selectedCategoryId) {
-                    const newOpt = new Option(opt.text, opt.value);
-                    if (opt.value === previousValue) {
-                        newOpt.selected = true;
-                        matched = true;
-                    }
-                    subcategorySelect.add(newOpt);
-                }
-            });
-
-            if (!matched) subcategorySelect.value = '';
-        }
-
-        categorySelect.addEventListener('change', filterSubcategories);
-
-        // Run on page load so the edit form shows only the relevant subcategories
-        filterSubcategories();
-    }());
-    // ─────────────────────────────────────────────────────────────────────────
     // ── Mobile / Accessories toggle ──────────────────────────────────────────
     (function () {
         const mobileRadio = document.getElementById('cat_type_mobile');
@@ -488,7 +358,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
             const isMobile = mobileRadio && mobileRadio.checked;
             mobileFields.forEach(function (fieldGroup) {
                 if (isMobile) {
-                    fieldGroup.style.display = '';
+                    fieldGroup.style.display = 'block';
                     const inputs = fieldGroup.querySelectorAll('input, select, textarea');
                     inputs.forEach(function(input) { input.disabled = false; });
                 } else {
@@ -499,125 +369,39 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
             });
         }
 
-        if (mobileRadio && accessoriesRadio) {
-            mobileRadio.addEventListener('change', toggleMobileFields);
-            accessoriesRadio.addEventListener('change', toggleMobileFields);
-            toggleMobileFields();
-        }
+        const categoryTypeRadios = document.querySelectorAll('input[name="product_category_type"]');
+        categoryTypeRadios.forEach(function(radio) {
+            radio.addEventListener('change', toggleMobileFields);
+            radio.addEventListener('click', toggleMobileFields);
+        });
+
+        toggleMobileFields();
+        document.addEventListener('DOMContentLoaded', toggleMobileFields);
     }());
     // ─────────────────────────────────────────────────────────────────────────
     (function() {
         const page = document.querySelector('.product-form-page');
-        const form = page.querySelector('form');
-        const type = document.getElementById('product_type');
-        const variationPicker = document.querySelector('[data-picker="variations"]');
-        const variationSelect = document.getElementById('variation_ids');
-        const typeSelect = document.getElementById('variation_types');
-        const typePicker = document.querySelector('[data-picker="types"]');
-        const typeMenu = document.getElementById('variation-types-menu');
-        const selectedTypes = @json(is_array($variationTypes) ? $variationTypes : [$variationTypes]);
-        const variationFields = page.querySelectorAll('.variation-only input:not(.picker-values), .variation-only select:not(.picker-values)');
-        const singleFields = page.querySelectorAll('.single-input');
+        if (!page) return;
         const currencySelect = page.querySelector('[name="currency"]');
         const currencyLabels = page.querySelectorAll('.currency-label');
 
         function syncCurrencyLabels() {
-            currencyLabels.forEach((label) => label.textContent = currencySelect.value);
+            if (currencySelect) {
+                currencyLabels.forEach((label) => label.textContent = currencySelect.value);
+            }
         }
 
-        function setMode() {
-            const isVariation = type.value === 'variation';
-            const isSingle = type.value === 'single';
-            const hasTypes = typeMenu.querySelectorAll('input[type="checkbox"]:checked').length > 0;
-            page.classList.toggle('is-variation', isVariation);
-            page.classList.toggle('is-single', isSingle);
-            page.classList.toggle('has-variation-types', hasTypes);
-            variationFields.forEach((field) => field.disabled = !isVariation);
-            singleFields.forEach((field) => field.disabled = isVariation);
+        if (currencySelect) {
+            currencySelect.addEventListener('change', syncCurrencyLabels);
+            syncCurrencyLabels();
         }
 
-        function selectedVariationChecks() {
-            return Array.from(variationPicker.querySelectorAll('input[type="checkbox"]:checked'));
-        }
-
-        function updatePickerLabel(picker, values, placeholder) {
-            picker.querySelector('.multi-picker-label').textContent = values.length ? values.join(', ') : placeholder;
-        }
-
-        function syncVariationPicker() {
-            const checks = selectedVariationChecks();
-            page.classList.toggle('has-variation-selection', checks.length > 0);
-            variationSelect.innerHTML = '';
-            checks.forEach((check) => variationSelect.add(new Option(check.parentElement.textContent.trim(), check.value, true, true)));
-            updatePickerLabel(variationPicker, checks.map((check) => check.parentElement.textContent.trim()), 'Choose Variation');
-        }
-
-        function loadVariationTypes() {
-            const types = selectedVariationChecks().reduce((allTypes, option) => {
-                const optionTypes = option.dataset.types ? JSON.parse(option.dataset.types) : [];
-                return allTypes.concat(optionTypes);
-            }, []).filter((variationType, index, allTypes) => allTypes.indexOf(variationType) === index);
-            const previouslySelected = selectedTypes.length ? selectedTypes : Array.from(typeSelect.selectedOptions).map((option) => option.value);
-            typeMenu.innerHTML = '';
-            typeSelect.innerHTML = '';
-            types.forEach((variationType) => {
-                const label = document.createElement('label');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = variationType;
-                checkbox.checked = previouslySelected.includes(variationType);
-                label.append(checkbox, document.createTextNode(' ' + variationType));
-                typeMenu.appendChild(label);
-            });
-            syncTypePicker();
-        }
-
-        function syncTypePicker() {
-            const checks = Array.from(typeMenu.querySelectorAll('input[type="checkbox"]:checked'));
-            typeSelect.innerHTML = '';
-            checks.forEach((check) => typeSelect.add(new Option(check.value, check.value, true, true)));
-            updatePickerLabel(typePicker, checks.map((check) => check.value), 'Choose Variation Types');
-            page.classList.toggle('has-variation-types', checks.length > 0);
-        }
-
-        type.addEventListener('change', setMode);
-        currencySelect.addEventListener('change', syncCurrencyLabels);
-        variationPicker.addEventListener('change', function() {
-            syncVariationPicker();
-            loadVariationTypes();
-            setMode();
-        });
-        typeMenu.addEventListener('change', function() {
-            syncTypePicker();
-            setMode();
-        });
-        page.querySelectorAll('.multi-picker-toggle').forEach((toggle) => toggle.addEventListener('click', function() {
-            const picker = this.parentElement;
-            page.querySelectorAll('.multi-picker.open').forEach((openPicker) => {
-                if (openPicker !== picker) openPicker.classList.remove('open');
-            });
-            picker.classList.toggle('open');
-        }));
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('.multi-picker')) page.querySelectorAll('.multi-picker.open').forEach((picker) => picker.classList.remove('open'));
-        });
-        syncVariationPicker();
-        loadVariationTypes();
-        setMode();
-        syncCurrencyLabels();
-        form.addEventListener('submit', function() {
-            const isVariation = type.value === 'variation';
-            const cost = page.querySelector(isVariation ? '[name="product_cost"]' : '[name="single_product_cost"]');
-            const price = page.querySelector(isVariation ? '[name="product_price"]' : '[name="single_product_price"]');
-            syncVariationPicker();
-            syncTypePicker();
-            document.getElementById('buying_price').value = cost.value;
-            document.getElementById('selling_price').value = price.value;
-            document.getElementById('stock').value = page.querySelector('[name="add_product_quantity"]').value;
-        });
         const barcodeScanner = document.getElementById('barcode_scanner');
-        if (barcodeScanner) barcodeScanner.addEventListener('change', function() {
-            document.getElementById('code').value = this.value;
-        });
+        if (barcodeScanner) {
+            barcodeScanner.addEventListener('change', function() {
+                const codeField = document.getElementById('code');
+                if (codeField) codeField.value = this.value;
+            });
+        }
     }());
 </script>

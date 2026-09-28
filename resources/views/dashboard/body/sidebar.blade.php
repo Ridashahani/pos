@@ -208,31 +208,37 @@
                 <hr>
 
                 @if (auth()->user()->can('access.roles'))
-                <li>
-                    <a href="#permission" class="collapsed" data-toggle="collapse" aria-expanded="false">
-                        <x-heroicon-o-key class="w-6 h-6" />
-                        <span class="ml-3">Role & Permission</span>
-                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                    </a>
-                    <ul id="permission" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
-                        <li
-                            class="{{ Request::is(['permission', 'permission/create', 'permission/edit/*']) ? 'active' : '' }}">
-                            <a href="{{ route('permission.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Permissions</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is(['role', 'role/create', 'role/edit/*']) ? 'active' : '' }}">
-                            <a href="{{ route('role.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Roles</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is(['role/permission*']) ? 'active' : '' }}">
-                            <a href="{{ route('rolePermission.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Role in Permissions</span>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
+                    <li>
+                        <a href="#permission" class="collapsed" data-toggle="collapse" aria-expanded="false">
+                            <x-heroicon-o-key class="w-6 h-6" />
+                            <span class="ml-3">Role & Permission</span>
+                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                        </a>
+                        <ul id="permission" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
+                            <li
+                                class="{{ Request::is(['permission', 'permission/create', 'permission/edit/*']) ? 'active' : '' }}">
+                                <a href="{{ route('permission.index') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Permissions</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is(['role', 'role/create', 'role/edit/*']) ? 'active' : '' }}">
+                                <a href="{{ route('role.index') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Roles</span>
+                                </a>
+                            </li>
+                            <li class="{{ Request::is(['role/permission*']) ? 'active' : '' }}">
+                                <a href="{{ route('rolePermission.index') }}">
+                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Role in Permissions</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="{{ Request::is('settings*') ? 'active' : '' }}">
+                        <a href="{{ route('settings.index') }}" class="svg-icon">
+                            <x-heroicon-o-cog-6-tooth class="w-6 h-6" />
+                            <span class="ml-3">Settings</span>
+                        </a>
+                    </li>
                 @endif
 
                 @if (auth()->user()->can('access.users'))
