@@ -39,7 +39,7 @@ class UpdateProductRequest extends FormRequest
             'images' => 'nullable|array',
             'images.*' => 'image|file|max:1024',
             'name' => 'required|string|unique:products,name,' . $product->id,
-            'brand' => 'nullable|string|max:100',
+            'brand_id' => 'nullable|integer|exists:brands,id',
             'model' => 'nullable|string|max:100',
             'imei' => 'nullable|string|max:100',
             'mobile_type' => 'nullable|string|in:new,used',
