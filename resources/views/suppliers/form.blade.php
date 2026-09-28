@@ -55,16 +55,16 @@
 
     {{-- Section: Form Actions --}}
     <div class="mt-2">
-        <button type="submit" @if ($inModal) id="save-supplier" @endif class="btn btn-save mr-2">
+        <button type="submit" @if ($inModal) id="save-supplier" @endif class="btn btn-primary mr-2">
             <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Save
         </button>
 
         @if ($inModal)
-            <button type="button" id="cancel-supplier" class="btn btn-cancel">
+            <button type="button" id="cancel-supplier" class="btn btn-orange">
                 <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
             </button>
         @else
-            <a class="btn btn-cancel" href="{{ route('suppliers.index') }}">
+            <a class="btn btn-orange" href="{{ route('suppliers.index') }}">
                 <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
             </a>
         @endif
