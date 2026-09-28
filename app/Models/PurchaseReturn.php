@@ -9,7 +9,7 @@ class PurchaseReturn extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['return_no', 'purchase_id', 'return_date', 'reason', 'status', 'total_amount', 'created_by'];
+    protected $fillable = ['return_no', 'purchase_id', 'branch_id', 'return_date', 'reason', 'status', 'total_amount', 'created_by', 'approved_by'];
     protected $casts = ['return_date' => 'date'];
 
     public function purchase()
@@ -19,5 +19,14 @@ class PurchaseReturn extends Model
     public function items()
     {
         return $this->hasMany(PurchaseReturnItem::class);
+    }
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

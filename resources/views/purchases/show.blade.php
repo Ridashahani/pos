@@ -105,7 +105,7 @@
             padding-left: 0;
         }
 
-        .purchase-show-page .summary-item + .summary-item {
+        .purchase-show-page .summary-item+.summary-item {
             border-left: 1px solid #eef1f5;
         }
 
@@ -193,7 +193,8 @@
                         <div class="info-icon"><x-heroicon-o-check-badge /></div>
                         <div>
                             <div class="field-label">Status</div>
-                            <span class="status-badge badge-{{ $purchase->payment_status === 'paid' ? 'success' : ($purchase->payment_status === 'partial' ? 'warning' : 'danger') }}">
+                            <span
+                                class="status-badge badge-{{ $purchase->payment_status === 'paid' ? 'success' : ($purchase->payment_status === 'partial' ? 'warning' : 'danger') }}">
                                 {{ ucfirst($purchase->payment_status) }}
                             </span>
                         </div>
@@ -228,8 +229,8 @@
                                         @endif
                                     </td>
                                     <td>{{ $item->quantity }}</td>
-                                    <td>PKR {{ number_format($item->unit_price, 2) }}</td>
-                                    <td>PKR {{ number_format($item->total_amount, 2) }}</td>
+                                    <td>PKR {{ number_format($item->unit_cost, 2) }}</td>
+                                    <td>PKR {{ number_format($item->total, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>

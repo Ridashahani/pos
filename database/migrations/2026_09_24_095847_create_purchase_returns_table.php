@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('return_no')->unique();
             $table->foreignId('purchase_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
             $table->date('return_date');
             $table->text('reason');
-            $table->string('status')->default('pending');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->decimal('total_amount', 12, 2)->default(0);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

@@ -20,6 +20,7 @@ use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentAccountController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\UserBranchController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -55,6 +56,13 @@ Route::middleware('auth')->group(function () {
 // ====== USERS ======
 Route::middleware(['permission:access.users'])->group(function () {
     Route::resource('/users', UserController::class)->except(['show']);
+
+    Route::prefix('user-branch')->name('user-branch.')->group(function () {
+        Route::get('/', [UserBranchController::class, 'index'])->name('index');
+        Route::get('/{user}/edit', [UserBranchController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserBranchController::class, 'update'])->name('update');
+        Route::delete('/{user}/{branch}', [UserBranchController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ====== CUSTOMERS ======
@@ -93,9 +101,6 @@ Route::middleware(['permission:access.pos'])->group(function () {
     Route::get('/pos/customers-ajax', [PosController::class, 'searchCustomers'])->name('pos.customers.search');
 
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
-
-
-
     // Create Sale
     Route::post('/pos/sale', [SaleController::class, 'storeSale'])->name('pos.storeSale');
 });
@@ -122,9 +127,6 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');
     Route::post('/sales/update/due', [SaleController::class, 'updateDue'])->name('sale.updateDue');
-
-    // Stock Management
-
 });
 // Branches
 Route::resource('branches', BranchController::class);

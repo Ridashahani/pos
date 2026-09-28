@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('purchase_return_id')->constrained()->cascadeOnDelete();
             $table->foreignId('purchase_item_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained();
+            $table->foreignId('variation_id')->nullable()->constrained('variations')->nullOnDelete();
             $table->unsignedInteger('quantity');
-            $table->decimal('unit_price', 12, 2);
-            $table->decimal('total_amount', 12, 2);
+            $table->decimal('unit_cost', 12, 2);
+            $table->decimal('total', 12, 2);
             $table->timestamps();
         });
     }
