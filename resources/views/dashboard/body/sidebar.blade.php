@@ -30,7 +30,7 @@
                 <hr>
 
                 @if (auth()->user()->can('access.products'))
-                @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*') || Request::is('subcategories*'))
+                @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('units*') || Request::is('categories*') || Request::is('subcategories*'))
                 <li class="{{ $productsMenuActive ? 'active' : '' }}">
                     <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse"
                         aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
@@ -49,6 +49,11 @@
                         <li class="{{ Request::is('variations*') ? 'active' : '' }}">
                             <a href="{{ route('variations.index') }}">
                                 <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('units*') ? 'active' : '' }}">
+                            <a href="{{ route('units.index') }}">
+                                <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
                             </a>
                         </li>
                         <li
