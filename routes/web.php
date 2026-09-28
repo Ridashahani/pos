@@ -17,6 +17,7 @@ use App\Http\Controllers\Dashboard\RoleController;
 use App\Http\Controllers\Dashboard\StockController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
+use App\Http\Controllers\Dashboard\UnitController;
 use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentController;
@@ -75,6 +76,7 @@ Route::middleware(['permission:access.suppliers'])->group(function () {
 // ====== PRODUCTS ======
 Route::middleware(['permission:access.products'])->group(function () {
     Route::resource('/variations', VariationController::class)->except(['show']);
+    Route::resource('/units', UnitController::class)->except(['show']);
     Route::get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
     Route::post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
     Route::get('/products/export', [ProductController::class, 'exportData'])->name('products.exportData');
