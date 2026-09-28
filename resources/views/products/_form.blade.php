@@ -43,8 +43,8 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                         </select>
                     </div>
                     <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
-                    <div class="form-group col-md-4"><label>Brand</label><select name="brand" class="form-control">
-                            <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand }}" @selected($field('brand') === $brand)>{{ $brand }}</option>@endforeach
+                        <div class="form-group col-md-4"><label>Brand</label><select name="brand_id" class="form-control">
+                            <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string) $field('brand_id') === (string) $brand->id)>{{ $brand->name }}</option>@endforeach
                         </select>
                     </div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>

@@ -55,7 +55,7 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label>Brand</label>
-                                <input type="text" class="form-control bg-white" value="{{ $product->brand ?: 'Not provided' }}" readonly>
+                                <input type="text" class="form-control bg-white" value="{{ $product->brand?->name ?: 'Not provided' }}" readonly>
                             </div>
                             <div class="form-group col-md-4">
                                 <label>Model</label>

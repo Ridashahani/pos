@@ -122,7 +122,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Google Pixel 9 Pro',
-                'brand' => 'Google',
                 'model' => 'Pixel 9 Pro',
                 'imei' => '356789012345671',
                 'category_id' => 2,
@@ -133,7 +132,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'OnePlus 12',
-                'brand' => 'OnePlus',
                 'model' => 'CPH2573',
                 'imei' => '356789012345672',
                 'category_id' => 2,
@@ -144,7 +142,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Vivo X200 Ultra',
-                'brand' => 'Dell',
                 'model' => 'XPS 15 9530',
                 'category_id' => 1,
                 'stock' => 6,
@@ -154,7 +151,6 @@ class ProductSeeder extends Seeder
             ],
             // [
             //     'name' => 'Lenovo ThinkPad X1 Carbon',
-            //     'brand' => 'Lenovo',
             //     'model' => 'Gen 12',
             //     'category_id' => 1,
             //     'stock' => 7,
@@ -164,7 +160,6 @@ class ProductSeeder extends Seeder
             // ],
             // [
             //     'name' => 'HP Spectre x360',
-            //     'brand' => 'HP',
             //     'model' => '14-eu0000',
             //     'category_id' => 1,
             //     'stock' => 5,
@@ -174,7 +169,6 @@ class ProductSeeder extends Seeder
             // ],
             [
                 'name' => 'iPad Pro 13-inch',
-                'brand' => 'Apple',
                 'model' => 'M4 Wi-Fi',
                 'imei' => '356789012345673',
                 'category_id' => 2,
@@ -185,7 +179,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Xiaomi 14 Ultra',
-                'brand' => 'Xiaomi',
                 'model' => '24030PN60G',
                 'imei' => '356789012345674',
                 'category_id' => 2,
@@ -196,7 +189,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Anker USB-C Hub',
-                'brand' => 'Anker',
                 'model' => 'PowerExpand 8-in-1',
                 'category_id' => 3,
                 'stock' => 30,
@@ -206,7 +198,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Samsung T7 Portable SSD',
-                'brand' => 'Samsung',
                 'model' => 'MU-PC1T0T',
                 'category_id' => 3,
                 'stock' => 18,
@@ -216,7 +207,6 @@ class ProductSeeder extends Seeder
             ],
             [
                 'name' => 'Bose QuietComfort Ultra',
-                'brand' => 'Bose',
                 'model' => 'QC Ultra Headphones',
                 'category_id' => 5,
                 'stock' => 11,
@@ -226,7 +216,6 @@ class ProductSeeder extends Seeder
             ],
             // [
             //     'name' => 'Canon EOS R6 Mark II',
-            //     'brand' => 'Canon',
             //     'model' => 'EOS R6 Mark II',
             //     'category_id' => 5,
             //     'stock' => 4,
@@ -236,7 +225,6 @@ class ProductSeeder extends Seeder
             // ],
             [
                 'name' => 'TP-Link Archer AX73',
-                'brand' => 'TP-Link',
                 'model' => 'Archer AX73',
                 'category_id' => 6,
                 'stock' => 13,
@@ -246,7 +234,6 @@ class ProductSeeder extends Seeder
             ],
             // [
             //     'name' => 'Logitech Brio 4K Webcam',
-            //     'brand' => 'Logitech',
             //     'model' => 'Brio 4K',
             //     'category_id' => 3,
             //     'stock' => 16,
@@ -256,7 +243,6 @@ class ProductSeeder extends Seeder
             // ],
             [
                 'name' => 'Nintendo Switch OLED',
-                'brand' => 'Nintendo',
                 'model' => 'HEG-001',
                 'category_id' => 7,
                 'stock' => 8,
@@ -266,7 +252,6 @@ class ProductSeeder extends Seeder
             ],
             // [
             //     'name' => 'Epson EcoTank Printer',
-            //     'brand' => 'Epson',
             //     'model' => 'L3250',
             //     'category_id' => 8,
             //     'stock' => 6,
@@ -276,7 +261,6 @@ class ProductSeeder extends Seeder
             // ],
             // [
             //     'name' => 'Microsoft Surface Laptop 6',
-            //     'brand' => 'Microsoft',
             //     'model' => 'Surface Laptop 6',
             //     'category_id' => 1,
             //     'stock' => 5,
@@ -290,7 +274,6 @@ class ProductSeeder extends Seeder
             $slug = Str::slug($product['name']);
             $productData = [
                 'name' => $product['name'],
-                'brand' => $product['brand'] ?? null,
                 'model' => $product['model'] ?? null,
                 'imei' => $product['imei'] ?? null,
                 'category_id' => $product['category_id'],
