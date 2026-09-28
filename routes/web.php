@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\PurchaseController;
 use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\SettingController;
 use App\Http\Controllers\Dashboard\StockController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
@@ -147,6 +148,8 @@ Route::middleware('auth')->group(function () {
 
 // ====== ROLE CONTROLLER ======
 Route::middleware(['permission:access.roles'])->group(function () {
+    Route::resource('/settings', SettingController::class)->except(['show']);
+
     // Permissions
     Route::get('/permission', [RoleController::class, 'permissionIndex'])->name('permission.index');
     Route::get('/permission/create', [RoleController::class, 'permissionCreate'])->name('permission.create');

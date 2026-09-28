@@ -224,6 +224,12 @@
                             </li>
                         </ul>
                     </li>
+                    <li class="{{ Request::is('settings*') ? 'active' : '' }}">
+                        <a href="{{ route('settings.index') }}" class="svg-icon">
+                            <x-heroicon-o-cog-6-tooth class="w-6 h-6" />
+                            <span class="ml-3">Settings</span>
+                        </a>
+                    </li>
                 @endif
 
                 @if (auth()->user()->can('access.users'))
