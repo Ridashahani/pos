@@ -11,14 +11,14 @@
     <div class="data-scrollbar" data-scroll="1">
         <nav class="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" class="iq-menu">
-                {{-- <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
+                <li class="{{ Request::is('dashboard') ? 'active' : '' }}">
                     <a href="{{ route('dashboard') }}" class="svg-icon">
                         <x-heroicon-o-home class="w-6 h-6" />
                         <span class="ml-4">Dashboards</span>
                     </a>
-                </li> --}}
+                </li> 
 
-                {{-- @if (auth()->user()->can('access.pos'))
+                @if (auth()->user()->can('access.pos'))
                     <li class="{{ Request::is('pos*') ? 'active' : '' }}">
                         <a href="{{ route('pos.index') }}" class="svg-icon">
                             <x-heroicon-o-shopping-cart class="w-6 h-6" />
@@ -127,7 +127,7 @@
                             </li>
                         </ul>
                     </li>
-                @endif  --}}
+                @endif 
 
                 @if (auth()->user()->can('access.categories'))
                     <li class="{{ Request::is('brands*') ? 'active' : '' }}">
@@ -172,7 +172,7 @@
 
                 <hr>
 
-                {{-- @if (auth()->user()->can('access.customers'))
+                @if (auth()->user()->can('access.customers'))
                     <li class="{{ Request::is('customers*') ? 'active' : '' }}">
                         <a href="{{ route('customers.index') }}" class="svg-icon">
                             <x-heroicon-o-user-group class="w-6 h-6" />
@@ -253,13 +253,13 @@
                 @endif
 
                 @if (auth()->user()->can('database.menu'))
-                    {{-- <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
+                 <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
                 <a href="{{ route('backup.index') }}" class="svg-icon">
                     <x-heroicon-o-circle-stack class="w-6 h-6" />
                     <span class="ml-3">Backup Database</span>
                 </a>
                 </li> 
-                @endif --}}
+                @endif
             </ul>
         </nav>
         <div class="p-3"></div>
