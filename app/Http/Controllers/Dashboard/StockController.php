@@ -46,7 +46,7 @@ class StockController extends Controller
     public function inDetails(StockIn $stockIn)
     {
         return view('stock.details', [
-            'purchaseItem' => $stockIn->load(['product.category', 'purchase.supplier']),
+            'purchaseItem' => $stockIn->load(['product.category', 'product.brand', 'purchase.supplier']),
         ]);
     }
 
