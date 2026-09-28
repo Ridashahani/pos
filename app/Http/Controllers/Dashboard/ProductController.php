@@ -73,24 +73,13 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreProductRequest $request)
     {
         $validatedData = $request->validated();
-
-        if (!empty($validatedData['variation_ids'])) {
-            $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
-            $validatedData['variation_id'] = $validatedData['variation_ids'][0];
-            $validatedData['variation'] = $variations->pluck('name')->implode(', ');
-            $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
-        }
-
-        $validatedData['buying_price'] = $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? $validatedData['buying_price'];
-        $validatedData['selling_price'] = $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? $validatedData['selling_price'];
-        $validatedData['stock'] = $validatedData['add_product_quantity'] ?? $validatedData['stock'];
-        unset($validatedData['product_cost'], $validatedData['product_price'], $validatedData['single_product_cost'], $validatedData['single_product_price'], $validatedData['add_product_quantity']);
+        $validatedData['product_type'] = $validatedData['product_type'] ?? 'single';
+        $validatedData['buying_price'] = $validatedData['buying_price'] ?? $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? 0;
+        $validatedData['selling_price'] = $validatedData['selling_price'] ?? $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? 0;
+        $validatedData['stock'] = $validatedData['stock'] ?? $validatedData['add_product_quantity'] ?? 0;
 
         // Generate code only if not provided
         if (!isset($validatedData['code']) || empty($validatedData['code'])) {

@@ -79,10 +79,6 @@
                                 <input class="form-control bg-white" value="{{ $product->buying_date }}" readonly />
                             </div>
                             <div class="form-group col-md-6">
-                                <label>Expire Date</label>
-                                <input class="form-control bg-white" value="{{ $product->expire_date }}" readonly />
-                            </div>
-                            <div class="form-group col-md-6">
                                 <label>Buying Price</label>
                                 <input type="text" class="form-control bg-white" value="{{  $product->buying_price }}"
                                     readonly>

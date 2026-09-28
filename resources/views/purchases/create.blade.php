@@ -169,11 +169,6 @@
             white-space: nowrap;
         }
 
-        .purchase-create-page .purchase-table .ref-price-input {
-            background: #f3f5f8;
-            color: #687386;
-        }
-
         .purchase-create-page .product-picker {
             background: #f5f8fb;
             border: 1px solid #e5eaf0;
@@ -192,35 +187,60 @@
 
     <div class="container-fluid">
         <div class="purchase-create-page">
-            <div class="row">
-                <form id="purchase-form" method="POST" action="{{ route('purchases.store') }}" class="w-100">
-                    @csrf
-                <div class="col-lg-12">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
-                        <div>
-                            <div class="page-kicker">New Record</div>
-                            <h4 class="page-title">Add Purchase</h4>
-                            <p class="page-subtitle mb-0">Create a new purchase from supplier.</p>
-                        </div>
-                        <a href="{{ route('purchases.index') }}" class="btn btn-light border d-flex align-items-center">
-                            <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
-                        </a>
+
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form id="purchase-form" method="POST" action="{{ route('purchases.store') }}">
+                @csrf
+
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+                    <div>
+                        <div class="page-kicker">New Record</div>
+                        <h4 class="page-title">Add Purchase</h4>
+                        <p class="page-subtitle mb-0">Create a new purchase from supplier.</p>
                     </div>
+                    <a href="{{ route('purchases.index') }}" class="btn btn-light border d-flex align-items-center">
+                        <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
+                    </a>
                 </div>
 
-                <div class="col-xl-8 mb-4 mb-xl-0">
-                    <div class="card purchase-card h-100">
-                        <div class="card-body">
+                <div class="row">
+                    <div class="col-xl-8 mb-4 mb-xl-0">
+                        <div class="card purchase-card h-100">
+                            <div class="card-body">
                                 <div class="product-picker">
                                     <div class="row">
-                                        <div class="col-md-6 form-group mb-2 mb-md-0">
+                                        <div class="col-md-4 form-group mb-2 mb-md-0">
                                             <label class="field-label" for="picker-product">Product</label>
-                                            <select id="picker-product" class="form-control"></select>
+                                            <select id="picker-product" class="form-control">
+                                                <option value="">Select Product</option>
+                                                @foreach ($products as $product)
+                                                    <option value="{{ $product->id }}" data-price="{{ $product->buying_price }}">{{ $product->name }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
-                                        <div class="col-md-6 form-group mb-0">
-                                            <label class="field-label" for="picker-variant">Combination / Variant</label>
-                                            <select id="picker-variant" class="form-control" disabled>
-                                                <option value="">Select product first</option>
+                                        <div class="col-md-4 form-group mb-2 mb-md-0">
+                                            <label class="field-label" for="picker-variation-type">Variation</label>
+                                            <select id="picker-variation-type" class="form-control">
+                                                <option value="">Select Variation</option>
+                                                @foreach ($variations as $variation)
+                                                    <option value="{{ $variation->id }}" data-name="{{ $variation->name }}"
+                                                        data-types='@json($variation->types)'>{{ $variation->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 form-group mb-0">
+                                            <label class="field-label" for="picker-variation-value">Value</label>
+                                            <select id="picker-variation-value" class="form-control" disabled>
+                                                <option value="">Select variation first</option>
                                             </select>
                                         </div>
                                     </div>
@@ -228,103 +248,90 @@
 
                                 <div class="table-responsive rounded">
                                     <table class="table purchase-table mb-0">
-                                        <colgroup>
-                                            <col style="width:5%">
-                                            <col style="width:29%">
-                                            <col style="width:9%">
-                                            <col style="width:16%">
-                                            <col style="width:16%">
-                                            <col style="width:19%">
-                                            <col style="width:6%">
-                                        </colgroup>
                                         <thead class="bg-white text-uppercase">
                                             <tr class="ligth ligth-data">
                                                 <th>#</th>
-                                                <th>Product / Combination</th>
+                                                <th>Product / Variation</th>
                                                 <th>Qty</th>
-                                                {{-- <th>Purchase Price</th> --}}
                                                 <th>Purchase Unit Price</th>
-                                                <th> Total Amount</th>
+                                                <th>Total Amount</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody id="purchase-items" class="ligth-body">
                                             <tr class="empty-row">
-                                                <td colspan="6">Select a product & combination above to add it here.</td>
+                                                <td colspan="6">Product, variation aur value select karein — row khud add ho jayegi.</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-4">
-                    <div class="card purchase-card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <div class="side-card-title mb-0">Purchase Details</div>
-                                <a href="{{ route('suppliers.create') }}" class="btn btn-primary btn-sm p-1"
-                                    aria-label="Add supplier">+</a>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label class="field-label" for="supplier">Supplier <span
-                                        class="text-danger">*</span></label>
-                                <select id="supplier" name="supplier_id" class="form-control" required>
-                                    <option value="">Select a supplier</option>
-                                    @foreach ($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label class="field-label" for="branch">Branch <span class="text-danger">*</span></label>
-                                <select id="branch" name="branch_id" class="form-control" required>
-                                    <option value="">Select a branch</option>
-                                    @foreach ($branches as $branch)
-                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group mb-0">
-                                <label class="field-label" for="purchase-date">Date <span
-                                        class="text-danger">*</span></label>
-                                <input id="purchase-date" name="purchase_date" type="date" class="form-control"
-                                    value="{{ now()->format('Y-m-d') }}" required>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card purchase-card">
-                        <div class="card-body">
-                            <div class="side-card-title">Payment Summary</div>
-                            <div class="d-flex justify-content-between summary-line mb-3">
-                                <span>Total amount</span><span id="total-amount" class="text-dark">PKR 0.00</span>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label class="field-label" for="payment-status">Payment Status <span
-                                        class="text-danger">*</span></label>
-                                <select id="payment-status" name="payment_status" class="form-control" required>
-                                    <option>Paid</option>
-                                    <option>Partial</option>
-                                    <option>Due</option>
-                                </select>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label class="field-label" for="amount-paid">Amount Paid</label>
-                                <input id="amount-paid" name="amount_paid" type="number" class="form-control" value="0" min="0"
-                                    step="0.01">
-                            </div>
-                            <div class="d-flex justify-content-between summary-total">
-                                <span>Due Amount</span><span id="due-amount" class="due-amount">PKR 0.00</span>
+                    <div class="col-xl-4">
+                        <div class="card purchase-card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="side-card-title mb-0">Purchase Details</div>
+                                    <button type="button" id="open-supplier-modal" class="btn btn-primary btn-sm p-1"
+                                        aria-label="Add supplier">+</button>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="field-label" for="supplier">Supplier <span class="text-danger">*</span></label>
+                                    <select id="supplier" name="supplier_id" class="form-control" required>
+                                        <option value="">Select a supplier</option>
+                                        @foreach ($suppliers as $supplier)
+                                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="field-label" for="branch">Branch <span class="text-danger">*</span></label>
+                                    <select id="branch" name="branch_id" class="form-control" required>
+                                        <option value="">Select a branch</option>
+                                        @foreach ($branches as $branch)
+                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="field-label" for="purchase-date">Date <span class="text-danger">*</span></label>
+                                    <input id="purchase-date" name="purchase_date" type="date" class="form-control"
+                                        value="{{ now()->format('Y-m-d') }}" required>
+                                </div>
                             </div>
                         </div>
+
+                        <div class="card purchase-card">
+                            <div class="card-body">
+                                <div class="side-card-title">Payment Summary</div>
+                                <div class="d-flex justify-content-between summary-line mb-3">
+                                    <span>Total amount</span><span id="total-amount" class="text-dark">PKR 0.00</span>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="field-label" for="payment-status">Payment Status <span class="text-danger">*</span></label>
+                                    <select id="payment-status" name="payment_status" class="form-control" required>
+                                        <option value="paid">Paid</option>
+                                        {{-- <option value="partial">Partial</option> --}}
+                                        <option value="due">Due</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label class="field-label" for="amount-paid">Amount Paid</label>
+                                    <input id="amount-paid" name="paid_amount" type="number" class="form-control" value="0" min="0"
+                                        step="0.01">
+                                </div>
+                                <div class="d-flex justify-content-between summary-total">
+                                    <span>Due Amount</span><span id="due-amount" class="due-amount">PKR 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block mt-3">Save Purchase</button>
                     </div>
-                    <button type="button" class="btn btn-primary btn-block mt-3"
-                        onclick="document.getElementById('purchase-form').requestSubmit()">Save Purchase</button>
                 </div>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -332,8 +339,7 @@
         <div class="supplier-modal" role="dialog" aria-modal="true" aria-labelledby="supplier-modal-title">
             <div class="supplier-modal-header d-flex align-items-center justify-content-between">
                 <span id="supplier-modal-title">Add Supplier</span>
-                <button type="button" id="close-supplier-modal" class="supplier-modal-close"
-                    aria-label="Close">&times;</button>
+                <button type="button" id="close-supplier-modal" class="supplier-modal-close" aria-label="Close">&times;</button>
             </div>
             <div class="supplier-modal-body">
                 <div class="form-group">
@@ -348,13 +354,14 @@
                     <label class="field-label" for="new-supplier-address">Address</label>
                     <textarea id="new-supplier-address" class="form-control" rows="3" placeholder="Supplier address"></textarea>
                 </div>
+                <p class="text-muted" style="font-size:.75rem;">Naya supplier abhi sirf isi page pe dikhega — DB mein save nahi hoga jab tak backend wire na karein (agla step).</p>
                 <button type="button" id="save-supplier" class="btn btn-primary btn-block">Add Supplier</button>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const items = document.getElementById('purchase-items');
             const totalAmount = document.getElementById('total-amount');
             const amountPaid = document.getElementById('amount-paid');
@@ -364,81 +371,91 @@
             const openSupplierModal = document.getElementById('open-supplier-modal');
             const closeSupplierModal = document.getElementById('close-supplier-modal');
             const saveSupplier = document.getElementById('save-supplier');
+
             const pickerProduct = document.getElementById('picker-product');
-            const pickerVariant = document.getElementById('picker-variant');
+            const pickerVariationType = document.getElementById('picker-variation-type');
+            const pickerVariationValue = document.getElementById('picker-variation-value');
+
             let rowCounter = 0;
 
-            const PRODUCTS = @json($products);
+            pickerVariationType.addEventListener('change', function () {
+                const selectedOption = this.options[this.selectedIndex];
+                let types = [];
+                if (selectedOption.value) {
+                    try {
+                        types = JSON.parse(selectedOption.dataset.types || '[]');
+                    } catch (e) {
+                        types = [];
+                    }
+                }
+                types = types
+                    .map(t => (typeof t === 'object' && t !== null) ? (t.value ?? t.name ?? '') : t)
+                    .filter(t => t !== '' && t !== null && t !== undefined);
 
-            function populateProductPicker() {
-                pickerProduct.innerHTML = '<option value="">Select Product</option>' +
-                    PRODUCTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-            }
-
-            function resetVariantPicker() {
-                pickerVariant.innerHTML = '<option value="">Select product first</option>';
-                pickerVariant.disabled = true;
-            }
-
-            pickerProduct.addEventListener('change', function() {
-                const product = PRODUCTS.find(p => p.id === Number(this.value));
-                if (!product) {
-                    resetVariantPicker();
+                if (!types.length) {
+                    pickerVariationValue.innerHTML = '<option value="">Select variation first</option>';
+                    pickerVariationValue.disabled = true;
                     return;
                 }
-                pickerVariant.disabled = false;
-                pickerVariant.innerHTML = '<option value="">Select Combination</option>' +
-                    product.variants.map(v => `<option value="${v.id}">${v.name}</option>`).join('');
+                pickerVariationValue.disabled = false;
+                pickerVariationValue.innerHTML = '<option value="">Select Value</option>' +
+                    types.map(t => `<option value="${t}">${t}</option>`).join('');
             });
 
-            pickerVariant.addEventListener('change', function() {
-                const productId = Number(pickerProduct.value);
-                const variantId = String(this.value);
-                const product = PRODUCTS.find(p => p.id === productId);
-                const variant = product && product.variants.find(v => String(v.id) === variantId);
-                if (!product || !variant) return;
+            pickerVariationValue.addEventListener('change', function () {
+                const productId = pickerProduct.value;
+                const productOption = pickerProduct.options[pickerProduct.selectedIndex];
+                const variationId = pickerVariationType.value;
+                const variationTypeOption = pickerVariationType.options[pickerVariationType.selectedIndex];
+                const value = this.value;
 
-                addOrIncrementRow(product, variant);
+                if (!productId) {
+                    alert('Pehle product select karein.');
+                    this.value = '';
+                    return;
+                }
+                if (!variationId || !value) return;
+
+                addRow(productOption, variationTypeOption, value);
 
                 pickerProduct.selectedIndex = 0;
-                resetVariantPicker();
+                pickerVariationType.selectedIndex = 0;
+                pickerVariationValue.innerHTML = '<option value="">Select variation first</option>';
+                pickerVariationValue.disabled = true;
             });
 
-            function addOrIncrementRow(product, variant) {
-                const existing = items.querySelector(`.purchase-item[data-variant-id="${variant.id}"]`);
-                if (existing) {
-                    const qtyInput = existing.querySelector('.quantity-input');
-                    qtyInput.value = Number(qtyInput.value) + 1;
-                    existing.querySelector('.quantity-hidden').value = qtyInput.value;
-                } else {
-                    const emptyRow = items.querySelector('.empty-row');
-                    if (emptyRow) emptyRow.remove();
+            function addRow(productOption, variationTypeOption, value) {
+                const rowId = rowCounter++;
+                const unitPrice = Number(productOption.dataset.price || 0);
+                const label = `${productOption.text} — ${variationTypeOption.dataset.name}: ${value}`;
 
-                    const label = `${product.name} — ${variant.name}`;
-                    const rowKey = rowCounter++;
-                    const row = document.createElement('tr');
-                    row.className = 'purchase-item';
-                    row.dataset.variantId = variant.id;
-                    row.innerHTML =
-                        `
-                        <td></td>
-                        <td class="truncate" title="${label}">${label}</td>
-                        <td><input type="number" class="form-control quantity-input" value="1" min="1">
-                            <input type="hidden" class="quantity-hidden" name="items[${rowKey}][quantity]" value="1"></td>
-                        <td><input type="number" class="form-control cost-input" name="items[${rowKey}][unit_cost]" value="${Number(variant.purchasePrice).toFixed(2)}" min="0" step="0.01">
-                            <input type="hidden" name="items[${rowKey}][product_id]" value="${product.id}">
-                            <input type="hidden" name="items[${rowKey}][variant]" value="${variant.name}"></td>
-                        <td class="amount-cell">PKR 0.00</td>
-                        <td><button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button></td>`;
-                    items.appendChild(row);
-                }
+                const emptyRow = items.querySelector('.empty-row');
+                if (emptyRow) emptyRow.remove();
+
+                const row = document.createElement('tr');
+                row.className = 'purchase-item';
+                row.dataset.rowId = rowId;
+                row.innerHTML = `
+                    <td></td>
+                    <td class="truncate" title="${label}">${label}</td>
+                    <td><input type="number" class="form-control quantity-input" name="items[${rowId}][quantity]" value="1" min="1"></td>
+                    <td><input type="number" class="form-control cost-input" name="items[${rowId}][unit_price]" value="${unitPrice.toFixed(2)}" min="0" step="0.01"></td>
+                    <td class="amount-cell">PKR ${unitPrice.toFixed(2)}</td>
+                    <td>
+                        <button type="button" class="btn btn-link p-0 remove-product" aria-label="Remove product">&times;</button>
+                        <input type="hidden" name="items[${rowId}][product_id]" value="${productOption.value}">
+                        <input type="hidden" name="items[${rowId}][variations][0][variation_id]" value="${variationTypeOption.value}">
+                        <input type="hidden" name="items[${rowId}][variations][0][name]" value="${variationTypeOption.dataset.name}">
+                        <input type="hidden" name="items[${rowId}][variations][0][value]" value="${value}">
+                    </td>`;
+                items.appendChild(row);
                 updateRowNumbers();
                 updateTotals();
             }
 
             function updateTotals() {
                 let total = 0;
-                items.querySelectorAll('.purchase-item').forEach(function(row) {
+                items.querySelectorAll('.purchase-item').forEach(function (row) {
                     const quantity = Math.max(0, Number(row.querySelector('.quantity-input').value) || 0);
                     const unitPrice = Math.max(0, Number(row.querySelector('.cost-input').value) || 0);
                     const amount = quantity * unitPrice;
@@ -452,49 +469,48 @@
 
             function updateRowNumbers() {
                 const rows = items.querySelectorAll('.purchase-item');
-                rows.forEach(function(row, index) {
+                rows.forEach(function (row, index) {
                     row.querySelector('td').textContent = index + 1;
                 });
                 if (rows.length === 0) {
-                    items.innerHTML =
-                        '<tr class="empty-row"><td colspan="7">Select a product & combination above to add it here.</td></tr>';
+                    items.innerHTML = '<tr class="empty-row"><td colspan="6">Product, select variation  and value </td></tr>';
                 }
             }
 
-            populateProductPicker();
-            resetVariantPicker();
             amountPaid.addEventListener('input', updateTotals);
-            items.addEventListener('input', function(e) {
-                if (e.target.classList.contains('quantity-input') || e.target.classList.contains(
-                        'cost-input')) {
-                    if (e.target.classList.contains('quantity-input')) {
-                        e.target.closest('.purchase-item').querySelector('.quantity-hidden').value = e.target.value;
-                    }
+            items.addEventListener('input', function (e) {
+                if (e.target.classList.contains('quantity-input') || e.target.classList.contains('cost-input')) {
                     updateTotals();
                 }
             });
-            items.addEventListener('click', function(event) {
+            items.addEventListener('click', function (event) {
                 const removeButton = event.target.closest('.remove-product');
                 if (!removeButton) return;
                 removeButton.closest('.purchase-item').remove();
                 updateRowNumbers();
                 updateTotals();
             });
-            updateTotals();
+
+            document.getElementById('purchase-form').addEventListener('submit', function (e) {
+                if (!items.querySelector('.purchase-item')) {
+                    e.preventDefault();
+                    alert('Kam az kam ek product add karein.');
+                }
+            });
 
             function closeModal() {
                 supplierModal.classList.remove('is-open');
                 supplierModal.setAttribute('aria-hidden', 'true');
             }
-            openSupplierModal.addEventListener('click', function() {
+            openSupplierModal.addEventListener('click', function () {
                 supplierModal.classList.add('is-open');
                 supplierModal.setAttribute('aria-hidden', 'false');
             });
             closeSupplierModal.addEventListener('click', closeModal);
-            supplierModal.addEventListener('click', function(event) {
+            supplierModal.addEventListener('click', function (event) {
                 if (event.target === supplierModal) closeModal();
             });
-            saveSupplier.addEventListener('click', function() {
+            saveSupplier.addEventListener('click', function () {
                 const name = document.getElementById('new-supplier-name').value.trim();
                 if (name) {
                     const option = new Option(name, name, true, true);

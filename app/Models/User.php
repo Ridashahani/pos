@@ -83,11 +83,16 @@ class User extends Authenticatable
         $hasPermission = true;
 
         foreach ($permissions as $permission) {
-            if(!$role->hasPermissionTo($permission->name)) {
+            if (!$role->hasPermissionTo($permission->name)) {
                 $hasPermission = false;
                 return $hasPermission;
             }
             return $hasPermission;
         }
+    }
+
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'user_branch', 'user_id', 'branch_id');
     }
 }

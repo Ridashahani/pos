@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Models\Branch;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -29,6 +30,7 @@ class UserController extends Controller
         return view('users.index', [
             'users' => QueryBuilder::for(User::class)
                 ->with('roles')
+                ->with(['roles', 'branches'])
                 ->allowedSorts(['name', 'username', 'email'])
                 ->filter(request(['search']))
                 ->paginate($row)
@@ -42,7 +44,8 @@ class UserController extends Controller
     public function create()
     {
         return view('users.create', [
-            'roles' => Role::all(),
+            'roles'    => Role::all(),
+            'branches' => Branch::where('status', 'Active')->orWhere('status', 1)->orWhere('status', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -54,6 +57,10 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
+        $request->validate([
+            'branch_ids'   => 'nullable|array',
+            'branch_ids.*' => 'exists:branches,id',
+        ]);
         $validatedData = $request->validated();
         $validatedData['password'] = Hash::make($request->password);
 
@@ -61,7 +68,7 @@ class UserController extends Controller
          * Handle upload image with Storage.
          */
         if ($file = $request->file('photo')) {
-            $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+            $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
             $path = 'public/profile/';
 
             $file->storeAs($path, $fileName);
@@ -70,8 +77,9 @@ class UserController extends Controller
 
         $user = User::create($validatedData);
 
-        if($request->role) {
+        if ($request->role) {
             $user->assignRole($request->role);
+            $this->syncBranches($request, $user);
         }
 
         return Redirect::route('users.index')->with('success', 'New User has been created!');
@@ -93,6 +101,8 @@ class UserController extends Controller
         return view('users.edit', [
             'userData' => $user,
             'roles' => Role::all(),
+            'branches' => Branch::where('status', 'Active')->orWhere('status', 1)->orWhere('status', true)->orderBy('name')->get(),
+            'assigned' => $user->branches->pluck('id')->toArray(),
         ]);
     }
 
@@ -115,13 +125,13 @@ class UserController extends Controller
          * Handle upload image with Storage.
          */
         if ($file = $request->file('photo')) {
-            $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+            $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
             $path = 'public/profile/';
 
             /**
              * Delete photo if exists.
              */
-            if($user->photo){
+            if ($user->photo) {
                 Storage::delete($path . $user->photo);
             }
 
@@ -131,8 +141,9 @@ class UserController extends Controller
 
         $user->update($validatedData);
 
-        if($request->role) {
+        if ($request->role) {
             $user->syncRoles($request->role);
+            $this->syncBranches($request, $user);
         }
 
         return Redirect::route('users.index')->with('success', 'User has been updated!');
@@ -146,12 +157,21 @@ class UserController extends Controller
         /**
          * Delete photo if exists.
          */
-        if($user->photo){
+        if ($user->photo) {
             Storage::delete('public/profile/' . $user->photo);
         }
 
         User::destroy($user->id);
 
         return Redirect::route('users.index')->with('success', 'User has been deleted!');
+    }
+
+    private function syncBranches(Request $request, User $user): void
+    {
+        $role = $request->role ? (is_numeric($request->role) ? Role::find($request->role) : Role::where('name', $request->role)->first()) : null;
+        $isAdmin = $role && strtolower($role->name) === 'admin';
+
+        // Admin has access to all branches, other roles sync selected branches
+        $user->branches()->sync($isAdmin ? [] : ($request->branch_ids ?? []));
     }
 }

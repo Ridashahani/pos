@@ -23,61 +23,30 @@
                     <div class="col-lg-12">
                         <div class="card card-block card-stretch card-height">
                             <div class="card-body">
-                                <div class="pos-category-tabs mb-3 px-3">
-                                    <button type="button" class="pos-tab active">All Product</button>
-                                    <button type="button" class="pos-tab">Category</button>
-                                    <button type="button" class="pos-tab px-4">Brand</button>
-                                    <button type="button" class="pos-tab">Featured</button>
-                                </div>
+                                <div class="pos-category-tabs mb-3">
+    <button type="button" class="pos-tab active">All Product</button>
+    <button type="button" class="pos-tab">Category</button>
+    <button type="button" class="pos-tab">Brand</button>
+    <button type="button" class="pos-tab">Featured</button>
+</div>
                                 <!-- Filter & Search Form -->
-                                <form action="{{ route('pos.index') }}" method="get">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <!-- Search Input -->
-                                        <div class="form-group row mb-0 col-md-5">
-                                            <div class="input-group pos-search-box">
-                                                <input type="text" class="form-control" name="search" id="pos_search"
-                                                    placeholder="Search by name or barcode..."
-                                                    value="{{ request('search') }}" autocomplete="off">
-                                                <div class="input-group-append">
-                                                    <button type="submit" class="input-group-text bg-primary text-white">
-                                                        <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                                                    </button>
-                                                    @if (request('search') || request('category_id'))
-                                                        <a href="{{ route('pos.index') }}"
-                                                            class="input-group-text bg-danger text-white">
-                                                            <x-heroicon-o-x-mark class="w-5 h-5" />
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Category Filter -->
-                                        <div class="form-group row mb-0 col-md-4">
-                                            <select class="form-control" name="category_id" onchange="this.form.submit()">
-                                                <option value="">All Categories</option>
-                                                @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}"
-                                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <!-- Pagination Limit -->
-                                        <div class="form-group row mb-0 col-md-3">
-                                            <select class="form-control" name="row" onchange="this.form.submit()">
-                                                <option value="10" {{ request('row') == '10' ? 'selected' : '' }}>10 /
-                                                    Page</option>
-                                                <option value="20" {{ request('row') == '20' ? 'selected' : '' }}>20 /
-                                                    Page</option>
-                                                <option value="50" {{ request('row') == '50' ? 'selected' : '' }}>50 /
-                                                    Page</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </form>
+                                <form action="{{ route('pos.index') }}" method="get" class="mb-0">
+    <div class="input-group pos-search-box">
+        <input type="text" class="form-control" name="search" id="pos_search"
+            placeholder="Search products..."
+            value="{{ request('search') }}" autocomplete="off">
+        <div class="input-group-append">
+            <button type="submit" class="btn btn-primary pos-search-btn" title="Search">
+                <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+            </button>
+            @if (request('search') || request('category_id'))
+                <a href="{{ route('pos.index') }}" class="btn btn-danger pos-search-btn" title="Clear">
+                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                </a>
+            @endif
+        </div>
+    </div>
+</form>
                             </div>
                         </div>
                     </div>
@@ -187,7 +156,8 @@
                                     <label class="pos-field-label">Biller</label>
                                     <select class="form-control">
                                         <option>Admin</option>
-                                        <option>Staff</option>
+                                        <option>Manager</option>
+                                        <option>Cashier</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-2">
@@ -850,17 +820,27 @@
 
         .pos-category-tabs {
             display: flex;
-            gap: .45rem;
+            flex-wrap: nowrap;      /* never wrap: always one row */
+            gap: .35rem;
         }
 
         .pos-tab {
+            flex: 1 1 0;            /* four equal-width tabs */
+            min-width: 0;           /* lets them shrink below their text width */
             background: #2f80ed;
             border: 0;
             border-radius: 3px;
             color: #fff;
-            font-size: .72rem;
             font-weight: 700;
-            padding: .5rem .75rem;
+            font-size: clamp(.6rem, 1.6vw, .72rem);   /* text scales down when tight */
+            padding: .5rem .25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (min-width: 768px) {
+            .pos-tab { padding: .5rem .6rem; }
         }
 
         .pos-tab:nth-child(2) {
@@ -875,12 +855,36 @@
             background: #a40c72;
         }
 
-        .pos-search-box .form-control,
-        .pos-catalog select {
-            border-radius: 3px;
-            font-size: .72rem;
-            height: 34px;
-        }
+        .pos-search-box {
+    flex-wrap: nowrap;
+}
+
+.pos-search-box .form-control {
+    height: 38px;
+    font-size: .85rem;
+    padding: .4rem .75rem;
+    border-radius: 4px 0 0 4px;
+}
+
+.pos-search-box .pos-search-btn {
+    height: 38px;
+    width: 42px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    color: #fff;
+}
+
+.pos-search-box .input-group-append .pos-search-btn:last-child {
+    border-radius: 0 4px 4px 0;
+}
+
+.pos-search-box .pos-search-btn svg {
+    width: 18px;
+    height: 18px;
+}
 
         .pos-cart .card {
             position: sticky;
