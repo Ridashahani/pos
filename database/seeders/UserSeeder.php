@@ -28,6 +28,6 @@ class UserSeeder extends Seeder
         ]);
 
         $admin->syncRoles('Admin');
-        $user->syncRoles('Staff');
+        $user->syncRoles('Cashier');
     }
 }
