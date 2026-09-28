@@ -36,18 +36,28 @@ class RolePermissionSeeder extends Seeder
             Permission::firstOrCreate(['name' => $name], ['group_name' => $group]);
         }
 
-        Role::whereNotIn('name', ['Admin', 'Staff'])->get()->each->delete();
+        Role::whereNotIn('name', ['Admin', 'Manager', 'Cashier'])->get()->each->delete();
 
         $admin = Role::firstOrCreate(['name' => 'Admin']);
-        $staff = Role::firstOrCreate(['name' => 'Staff']);
+        $manager = Role::firstOrCreate(['name' => 'Manager']);
+        $cashier = Role::firstOrCreate(['name' => 'Cashier']);
 
         $admin->syncPermissions(Permission::all());
-        $staff->syncPermissions([
+
+        $manager->syncPermissions([
             'access.pos',
             'access.customers',
             'access.suppliers',
             'access.categories',
             'access.products',
+            'access.sales',
+            'access.stocks',
+            'access.payments',
+        ]);
+
+        $cashier->syncPermissions([
+            'access.pos',
+            'access.customers',
             'access.sales',
             'access.payments',
         ]);
