@@ -22,6 +22,7 @@ class UpdateProductRequest extends FormRequest
             'buying_price' => $this->input('buying_price', 0),
             'selling_price' => $this->input('selling_price', 0),
             'stock' => $this->input('stock', 0),
+            'order_tax' => 'nullable|numeric|min:0|max:100',
         ]);
     }
 
