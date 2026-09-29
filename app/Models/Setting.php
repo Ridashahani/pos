@@ -13,4 +13,8 @@ class Setting extends Model
         'key',
         'value',
     ];
+    public static function get(string $key, $default = null)
+{
+    return static::where('key', $key)->value('value') ?? $default;
+}
 }
