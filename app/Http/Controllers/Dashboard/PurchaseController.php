@@ -46,7 +46,7 @@ class PurchaseController extends Controller
     public function create()
     {
         return view('purchases.create', [
-            'products' => Product::select(['id', 'name', 'buying_price'])->orderBy('name')->get(),
+            'products' => Product::select(['id', 'name', 'buying_price','image'])->orderBy('name')->get(),
             'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => Branch::orderBy('name')->get(),
@@ -94,7 +94,7 @@ class PurchaseController extends Controller
 
         return view('purchases.edit', [
             'purchase' => $purchase,
-            'products' => Product::select(['id', 'name', 'buying_price'])->orderBy('name')->get(),
+            'products' => Product::select(['id', 'name', 'buying_price','image'])->orderBy('name')->get(),
             'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => Branch::orderBy('name')->get(),
