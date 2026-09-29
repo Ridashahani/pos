@@ -42,7 +42,7 @@
                                 <td>1</td>
                                 <td class="font-weight-bold">{{ $purchaseItem->product->name }}</td>
                                 <td>{{ $purchaseItem->product->code }}</td>
-                                <td>{{ $purchaseItem->product->brand ?: 'Not provided' }}</td>
+                                <td>{{ $purchaseItem->product->brand?->name ?: 'Not provided' }}</td>
                                 <td>{{ $purchaseItem->product->model ?: 'Not provided' }}</td>
                                 <td>{{ $purchaseItem->imei ?: 'Not provided' }}</td>
                                 <td>{{ $purchaseItem->product->category?->name ?: 'Uncategorized' }}</td>

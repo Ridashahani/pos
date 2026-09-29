@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Branch;
+use App\Models\Brand;
 use App\Models\Supplier;
 use App\Models\Variation;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -127,6 +128,8 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        $product->load('brand');
+
         // Barcode Generator
         $generator = new BarcodeGeneratorHTML();
 
