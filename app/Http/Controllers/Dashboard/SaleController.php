@@ -202,7 +202,7 @@ class SaleController extends Controller
                 StockIn::whereKey($item->stock_in_id)
                     ->lockForUpdate()
                     ->firstOrFail()
-                    ->increment('remaining_qty', $item->quantity);
+                    ->increment('remaining_quantity', $item->quantity);
 
                 Product::whereKey($item->product_id)
                     ->lockForUpdate()

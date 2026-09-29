@@ -9,9 +9,11 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
+use App\Models\StockIn;
 use App\Models\Variation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseController extends Controller
 {
@@ -73,16 +75,7 @@ class PurchaseController extends Controller
                 'created_by' => auth()->id(),
             ]);
 
-            foreach ($validated['items'] as $item) {
-                PurchaseItem::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'total_amount' => $item['quantity'] * $item['unit_price'],
-                    'variations' => $item['variations'] ?? null,
-                ]);
-            }
+            $this->createPurchaseItemsAndStock($purchase, $validated['items']);
         });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase created successfully.');
@@ -118,6 +111,18 @@ class PurchaseController extends Controller
         $paidAmount = $validated['paid_amount'] ?? 0;
 
         DB::transaction(function () use ($validated, $purchase, $itemsTotal, $paidAmount) {
+            $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
+            $stockIns = $this->lockPurchaseStockIns($purchase);
+
+            if ($stockIns->contains(fn (StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
+                throw ValidationException::withMessages([
+                    'purchase' => 'This purchase cannot be edited because stock from it has sale history.',
+                ]);
+            }
+
+            $this->removePurchaseStock($stockIns);
+            $purchase->stockIns()->delete();
+
             $purchase->update([
                 'supplier_id' => $validated['supplier_id'],
                 'branch_id' => $validated['branch_id'],
@@ -129,17 +134,7 @@ class PurchaseController extends Controller
             ]);
 
             $purchase->items()->delete();
-
-            foreach ($validated['items'] as $item) {
-                PurchaseItem::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'total_amount' => $item['quantity'] * $item['unit_price'],
-                    'variations' => $item['variations'] ?? null,
-                ]);
-            }
+            $this->createPurchaseItemsAndStock($purchase, $validated['items']);
         });
 
         return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully.');
@@ -147,10 +142,82 @@ class PurchaseController extends Controller
 
     public function destroy(Purchase $purchase)
     {
-        $purchase->items()->delete();
-        $purchase->delete();
+        $deleted = DB::transaction(function () use ($purchase): bool {
+            $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
+            $stockIns = $this->lockPurchaseStockIns($purchase);
+
+            if ($stockIns->contains(fn (StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
+                return false;
+            }
+
+            $this->removePurchaseStock($stockIns);
+            $purchase->stockIns()->delete();
+            $purchase->items()->delete();
+            $purchase->delete();
+
+            return true;
+        });
+
+        if (! $deleted) {
+            return redirect()->route('purchases.index')->with('error', 'This purchase cannot be deleted because stock from it has sale history.');
+        }
 
         return redirect()->route('purchases.index')->with('success', 'Purchase deleted successfully.');
+    }
+
+    private function createPurchaseItemsAndStock(Purchase $purchase, array $items): void
+    {
+        foreach ($items as $item) {
+            $product = Product::whereKey($item['product_id'])->lockForUpdate()->firstOrFail();
+            $variationId = data_get($item, 'variations.0.variation_id', $product->variation_id);
+
+            PurchaseItem::create([
+                'purchase_id' => $purchase->id,
+                'product_id' => $product->id,
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'total_amount' => $item['quantity'] * $item['unit_price'],
+                'variations' => $item['variations'] ?? null,
+            ]);
+
+            $purchase->stockIns()->create([
+                'product_id' => $product->id,
+                'variation_id' => $variationId,
+                'branch_id' => $purchase->branch_id,
+                'batch_no' => $purchase->purchase_no,
+                'quantity' => $item['quantity'],
+                'remaining_quantity' => $item['quantity'],
+                'cost_price' => $item['unit_price'],
+            ]);
+
+            $product->increment('stock', $item['quantity']);
+        }
+    }
+
+    private function lockPurchaseStockIns(Purchase $purchase)
+    {
+        $productIds = $purchase->stockIns()
+            ->pluck('product_id')
+            ->unique()
+            ->sort();
+
+        foreach ($productIds as $productId) {
+            Product::whereKey($productId)->lockForUpdate()->firstOrFail();
+        }
+
+        return $purchase->stockIns()
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+    }
+
+    private function removePurchaseStock($stockIns): void
+    {
+        foreach ($stockIns->groupBy('product_id') as $productId => $productStockIns) {
+            Product::whereKey($productId)
+                ->firstOrFail()
+                ->decrement('stock', $productStockIns->sum('remaining_quantity'));
+        }
     }
 
     private function generatePurchaseNo(): string

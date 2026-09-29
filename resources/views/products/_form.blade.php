@@ -55,6 +55,16 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                             <option value="used" @selected($field('mobile_type')==='used')>Used</option>
                         </select>
                     </div>
+                    <div class="form-group col-md-6">
+    <label>GST (%)</label>
+    <input type="number" step="0.01" min="0" max="100" name="order_tax"
+           value="{{ $field('order_tax', $defaultGst ?? 0) }}"
+           class="form-control @error('order_tax') is-invalid @enderror"
+           placeholder="Enter GST">
+    @error('order_tax')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
                     <div class="form-group col-md-6"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
                     <div class="form-group col-md-6"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
                 </div>

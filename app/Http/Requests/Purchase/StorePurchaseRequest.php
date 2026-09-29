@@ -32,6 +32,7 @@ class StorePurchaseRequest extends FormRequest
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.variations' => 'nullable|array',
+            'items.*.variations.*.variation_id' => 'required|integer|exists:variations,id',
         ];
     }
 }

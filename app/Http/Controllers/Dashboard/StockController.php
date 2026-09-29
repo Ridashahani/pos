@@ -16,8 +16,12 @@ class StockController extends Controller
 {
    public function in(Request $request)
 {
-    $stockIns = StockIn::with(['product.category', 'purchase.supplier'])
-        ->where('remaining_qty', '>', 0)
+    $stockIns = StockIn::with([
+        'product.category',
+        'purchase.supplier',
+        'branch',
+    ])
+        ->where('remaining_quantity', '>', 0)
         ->when($request->filled('search'), function ($query) use ($request) {
             $query->whereHas('product', function ($productQuery) use ($request) {
                 $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
@@ -28,10 +32,27 @@ class StockController extends Controller
     $stockIns->appends($request->query());
 
     $rows = collect($stockIns->items())->map(function (StockIn $stock): array {
-        // ... same as before
+        return [
+            'id' => $stock->id,
+            'product_id' => $stock->product_id,
+            'product' => $stock->product->name,
+            'currency' => $stock->product->currency ?: 'PKR',
+            'variation_id' => $stock->variation_id,
+            'branch_id' => $stock->branch_id,
+            'branch' => $stock->branch->name,
+            'purchase_id' => $stock->purchase_id,
+            'purchase' => $stock->purchase?->purchase_no ?: 'Manual',
+            'batch_no' => $stock->batch_no,
+            'cost_price' => $stock->cost_price,
+            'quantity' => $stock->quantity,
+            'remaining_quantity' => $stock->remaining_quantity,
+            'created_at' => $stock->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $stock->updated_at->format('Y-m-d H:i:s'),
+            'stock_in_id' => $stock->id,
+        ];
     })->all();
 
-    $thisMonthCount = StockIn::where('remaining_qty', '>', 0)
+    $thisMonthCount = StockIn::where('remaining_quantity', '>', 0)
         ->whereYear('created_at', now()->year)
         ->whereMonth('created_at', now()->month)
         ->count();
@@ -39,6 +60,7 @@ class StockController extends Controller
     return view('stock.index', array_merge($this->pageData('Stock-In', 'stock-in', $rows), [
         'pagination' => $stockIns,
         'total_products' => $stockIns->total(),
+        'total_units' => StockIn::where('remaining_quantity', '>', 0)->sum('remaining_quantity'),
         'this_month' => $thisMonthCount, // override pageData() ka wrong value
     ]));
 }
@@ -46,7 +68,12 @@ class StockController extends Controller
     public function inDetails(StockIn $stockIn)
     {
         return view('stock.details', [
-            'purchaseItem' => $stockIn->load(['product.category', 'product.brand', 'purchase.supplier']),
+            'purchaseItem' => $stockIn->load([
+                'product.category',
+                'product.brand',
+                'purchase.supplier',
+                'branch',
+            ]),
         ]);
     }
 
@@ -94,7 +121,7 @@ class StockController extends Controller
     public function outOfStock(Request $request)
     {
         $stockIns = StockIn::with(['product', 'purchase'])
-            ->where('remaining_qty', '<=', 0)
+            ->where('remaining_quantity', '<=', 0)
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->whereHas('product', function ($productQuery) use ($request) {
                     $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
@@ -107,9 +134,9 @@ class StockController extends Controller
         $rows = collect($stockIns->items())->map(function (StockIn $stock): array {
             return [
                 'date' => $stock->purchase?->purchase_date?->format('d M Y') ?: $stock->created_at->format('d M Y'),
-                'reference' => $stock->purchase?->purchase_number ?: 'STK-' . $stock->id,
+                'reference' => $stock->batch_no,
                 'product' => $stock->product->name,
-                'quantity' => $stock->remaining_qty,
+                'quantity' => $stock->remaining_quantity,
                 'currency' => $stock->product->currency ?: 'PKR',
                 'stock_in_id' => $stock->id,
                 'product_id' => $stock->product_id,
@@ -122,12 +149,20 @@ class StockController extends Controller
         ]));
     }
 
-    public function transfer()
+    public function transfer(Request $request)
     {
         $branches = Branch::where('status', 'Active')->orderBy('name')->get()->values();
-        $savedRows = StockTransfer::with(['product', 'fromBranch', 'toBranch'])
+        $transfers = StockTransfer::with(['product', 'fromBranch', 'toBranch'])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $query->whereHas('product', function ($productQuery) use ($request) {
+                    $productQuery->where('name', 'like', '%' . $request->string('search') . '%');
+                });
+            })
             ->latest()
-            ->get()
+            ->paginate(10)
+            ->withQueryString();
+
+        $savedRows = $transfers->getCollection()
             ->map(fn (StockTransfer $transfer): array => [
                 'id' => $transfer->id,
                 'date' => $transfer->created_at->format('d M Y'),
@@ -142,9 +177,13 @@ class StockController extends Controller
             ])
             ->all();
 
-        return view('stock.index', $this->pageData('Stock-Transfer', 'stock-transfer', $savedRows) + [
+        return view('stock.index', array_merge($this->pageData('Stock-Transfer', 'stock-transfer', $savedRows), [
             'branches' => $branches,
-        ]);
+            'pagination' => $transfers,
+            'total_products' => $transfers->total(),
+            'total_units' => StockTransfer::sum('quantity'),
+            'pending' => StockTransfer::whereIn('status', ['Pending', 'In Transit'])->count(),
+        ]));
     }
 
     public function createTransfer()
@@ -262,7 +301,7 @@ public function storeTransfer(Request $request)
 
     public function destroyOutOfStock(StockIn $stockIn)
     {
-        if ($stockIn->remaining_qty > 0) {
+        if ($stockIn->remaining_quantity > 0) {
             return redirect()->route('stock.out-of-stock')->with('error', 'Only out-of-stock products can be deleted from this page.');
         }
 
@@ -281,7 +320,7 @@ public function storeTransfer(Request $request)
         $skipped = 0;
 
         StockIn::query()
-            ->where('remaining_qty', '<=', 0)
+            ->where('remaining_quantity', '<=', 0)
             ->get()
             ->each(function (StockIn $stockIn) use (&$deleted, &$skipped): void {
                 try {
@@ -331,4 +370,5 @@ public function storeTransfer(Request $request)
                 : 0,
         ];
     }
+
 }
