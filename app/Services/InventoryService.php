@@ -16,13 +16,12 @@ class InventoryService
         $discountPerUnit = $remaining > 0 ? (float) $detail->discount / $remaining : 0;
 
         $stockRows = StockIn::where('product_id', $detail->product_id)
-            ->where('remaining_qty', '>', 0)
-            ->when($detail->product->imei, fn ($query, $imei) => $query->where('imei', $imei))
+            ->where('remaining_quantity', '>', 0)
             ->orderBy('id')
             ->lockForUpdate()
             ->get();
 
-        if ($stockRows->sum('remaining_qty') < $remaining) {
+        if ($stockRows->sum('remaining_quantity') < $remaining) {
             throw ValidationException::withMessages([
                 'stock' => "Insufficient stock for {$detail->product->name}.",
             ]);
@@ -33,8 +32,8 @@ class InventoryService
                 break;
             }
 
-            $quantity = min($remaining, (int) $stock->remaining_qty);
-            $stock->decrement('remaining_qty', $quantity);
+            $quantity = min($remaining, (int) $stock->remaining_quantity);
+            $stock->decrement('remaining_quantity', $quantity);
             $discount = $discountPerUnit * $quantity;
             $salePrice = (float) $detail->unit_price;
 
@@ -42,7 +41,7 @@ class InventoryService
                 'sale_id' => $sale->id,
                 'stock_in_id' => $stock->id,
                 'product_id' => $detail->product_id,
-                'imei' => $stock->imei,
+                'imei' => $detail->product->imei,
                 'quantity' => $quantity,
                 'cost_price' => $stock->cost_price,
                 'sale_price' => $salePrice,
