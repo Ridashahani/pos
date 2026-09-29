@@ -16,41 +16,33 @@
         <div class="card card-block card-stretch">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h4 class="card-title mb-0">Purchase Details</h4>
-                <span class="text-muted small">{{ $purchaseItem->purchase->purchase_number }}</span>
+                <span class="text-muted small">{{ $purchaseItem->purchase?->purchase_no ?: 'Manual stock' }}</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead class="bg-white text-uppercase">
                             <tr class="ligth ligth-data">
-                                <th>#</th>
                                 <th>Product</th>
-                                <th>Code</th>
-                                <th>Brand</th>
-                                <th>Model</th>
-                                <th>IMEI / Serial</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Buying Price</th>
-                                <th>Selling Price</th>
-                                <th>Buying Date</th>
-                                <th>Supplier</th>
+                                <th>Branch</th>
+                                <th>Purchase</th>
+                                <th>Purchase Price</th>
+                                <th class="text-right text-nowrap">Purchased Qty</th>
+                                <th class="text-right text-nowrap">Available Qty</th>
                             </tr>
                         </thead>
                         <tbody class="ligth-body">
                             <tr>
-                                <td>1</td>
                                 <td class="font-weight-bold">{{ $purchaseItem->product->name }}</td>
-                                <td>{{ $purchaseItem->product->code }}</td>
-                                <td>{{ $purchaseItem->product->brand?->name ?: 'Not provided' }}</td>
-                                <td>{{ $purchaseItem->product->model ?: 'Not provided' }}</td>
-                                <td>{{ $purchaseItem->imei ?: 'Not provided' }}</td>
-                                <td>{{ $purchaseItem->product->category?->name ?: 'Uncategorized' }}</td>
-                                <td>{{ number_format($purchaseItem->remaining_qty) }}</td>
+                                <td>{{ $purchaseItem->branch->name }}</td>
+                                <td>{{ $purchaseItem->purchase?->purchase_no ?: 'Manual' }}</td>
                                 <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->cost_price, 2) }}</td>
-                                <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->sale_price, 2) }}</td>
-                                <td>{{ $purchaseItem->purchase->purchase_date->format('d M Y') }}</td>
-                                <td>{{ $purchaseItem->purchase->supplier?->name ?: 'N/A' }}</td>
+                                <td class="text-right font-weight-bold">{{ number_format($purchaseItem->quantity) }}</td>
+                                <td class="text-right">
+                                    <span class="badge {{ $purchaseItem->remaining_quantity > 0 ? 'bg-success' : 'bg-danger' }}">
+                                        {{ number_format($purchaseItem->remaining_quantity) }}
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
