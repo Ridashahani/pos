@@ -104,6 +104,9 @@
                             <th><x-sort-link name="category.name" label="Category" /></th>
                             <th><x-sort-link name="selling_price" label="Price" /></th>
                             <th><x-sort-link name="stock" label="Stock" /></th>
+                            <th><x-sort-link name="status" label="Status" /></th>
+
+                            
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -118,6 +121,14 @@
                             <td>{{ $product->category->name }}</td>
                             <td>{{ $product->selling_price }}</td>
                             <td>{{ $product->stock }}</td>
+                            <td>{{ $product->stock }}</td>
+<td>
+    @if($product->status)
+        <span class="badge bg-success">Active</span>
+    @else
+        <span class="badge bg-danger">Inactive</span>
+    @endif
+</td>
                             <td>
                                 <div class="d-flex align-items-center list-action">
                                     <a class="btn btn-info mr-2" data-bs-toggle="tooltip" data-bs-placement="top" title="View"

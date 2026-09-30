@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -269,7 +268,7 @@
         <div class="total-section">
             <div class="d-flex justify-between mb-1">
                 <span>Subtotal</span>
-                <span>{{ number_format($sale->sub_total, 0, ',', '.') }}</span>
+                <span>{{ number_format($sale->subtotal, 0, ',', '.') }}</span>
             </div>
             <div class="d-flex justify-between mb-1">
                 <span>Discount</span>
@@ -277,17 +276,17 @@
             </div>
             <div class="d-flex justify-between mb-1">
                 <span>Tax</span>
-                <span>{{ number_format($sale->vat, 0, ',', '.') }}</span>
+                <span>{{ number_format($sale->tax, 0, ',', '.') }}</span>
             </div>
 
             <div class="grand-total d-flex justify-between align-center font-bold">
                 <span>TOTAL</span>
-                <span style="font-size: 16px;">{{ number_format($sale->total, 0, ',', '.') }}</span>
+                <span style="font-size: 16px;">{{ number_format($sale->grand_total, 0, ',', '.') }}</span>
             </div>
 
             <div class="d-flex justify-between mt-2 mb-1">
-                <span>Pay ({{ $sale->payment_type ?? 'Cash' }})</span>
-                <span>{{ number_format($sale->pay_amount, 0, ',', '.') }}</span>
+                <span>Pay ({{ $sale->payment_method ?? 'Cash' }})</span>
+                <span>{{ number_format($sale->paid_amount, 0, ',', '.') }}</span>
             </div>
             <div class="d-flex justify-between">
                 <span>Change</span>
