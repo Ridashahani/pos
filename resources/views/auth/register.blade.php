@@ -48,11 +48,14 @@
 
                                         <!-- Input: Email -->
                                         <div class="col-lg-12">
-                                            <div class="floating-label form-group">
+                                            <div class="floating-label form-group position-relative">
                                                 <input class="floating-input form-control @error('email') is-invalid @enderror"
                                                     type="email" id="reg_email" placeholder=" " name="email" autocomplete="off"
-                                                    value="{{ old('email') }}" required>
+                                                    value="{{ old('email') }}" required style="padding-right: 40px;">
                                                 <label for="reg_email">Email</label>
+                                                <div class="position-absolute" style="right: 10px; top: 10px; color: #4fa8f5; pointer-events: none;">
+                                                    <x-heroicon-o-envelope class="w-5 h-5" />
+                                                </div>
                                             </div>
                                             @error('email')
                                             <div class="mb-4" style="margin-top: -20px">

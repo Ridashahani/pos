@@ -22,15 +22,18 @@
                             <form action="{{ route('login') }}" method="POST">
                                 @csrf
                                 <div class="row">
-                                    <!-- Input: Username -->
+                                    <!-- Input: Email -->
                                     <div class="col-lg-12">
-                                        <div class="floating-label form-group">
-                                            <input class="floating-input form-control @error('username') is-invalid @enderror" type="text"
-                                                id="login_username" name="username" placeholder=" " value="{{ old('username') }}" autocomplete="off" required
-                                                autofocus>
-                                            <label for="login_username">Username</label>
+                                        <div class="floating-label form-group position-relative">
+                                            <input class="floating-input form-control @error('email') is-invalid @enderror" type="email"
+                                                id="login_email" name="email" placeholder=" " value="{{ old('email') }}" autocomplete="email" required
+                                                autofocus style="padding-right: 40px;">
+                                            <label for="login_email">Email</label>
+                                            <div class="position-absolute" style="right: 10px; top: 10px; color: #4fa8f5; pointer-events: none;">
+                                                <x-heroicon-o-envelope class="w-5 h-5" />
+                                            </div>
                                         </div>
-                                        @error('username')
+                                        @error('email')
                                         <div class="mb-4" style="margin-top: -20px">
                                             <div class="text-danger small">{{ $message }}</div>
                                         </div>

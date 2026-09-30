@@ -18,10 +18,7 @@ return new class extends Migration
 
             $table->foreignId('branch_id')->nullable();
 
-            $table->foreignId('customer_id')
-                ->nullable()
-                ->constrained()
-                ->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
 
             $table->foreignId('user_id')->nullable()
                 ->constrained()
@@ -57,5 +54,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('sales');
+        Schema::dropIfExists('orders');
     }
 };
