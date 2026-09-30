@@ -74,7 +74,7 @@
                                 <div class="form-group col-md-6" id="branch-wrapper" style="display:none;">
                                     <label for="branch_ids">Branches <span class="text-danger">*</span></label>
                                     <select class="form-control @error('branch_ids') is-invalid @enderror"
-                                        name="branch_ids[]" id="branch_ids" multiple size="4" style="height:auto;">
+                                        name="branch_ids[]" id="branch_ids" multiple>
                                         @foreach ($branches as $branch)
                                             <option value="{{ $branch->id }}"
                                                 {{ in_array($branch->id, old('branch_ids', $assigned)) ? 'selected' : '' }}>
@@ -89,11 +89,11 @@
                             </div>
                     </div>
                     <!-- end: Input Data -->
-                    <div class="mt-2">
-                        <button type="submit" class="btn btn-save mr-2">
-                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Update
+                    <div class="mt-1 mb-4 ml-4">
+                        <button type="submit" class="btn btn-primary mr-1">
+                            <x-heroicon-o-check-circle class="w-4 h-5 mr-1 inline" /> Update
                         </button>
-                        <a class="btn btn-cancel" href="{{ route('users.index') }}">
+                        <a class="btn btn-orange" href="{{ route('users.index') }}">
                             <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
                         </a>
                     </div>
@@ -104,18 +104,95 @@
     </div>
     <!-- Page end  -->
     </div>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/css/bootstrap-multiselect.min.css">
+
+    <style>
+        #branch-wrapper .btn-group,
+        #branch-wrapper .multiselect-container {
+            width: 100%;
+        }
+
+        #branch-wrapper .multiselect {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            height: calc(1.5em + 0.75rem + 2px) !important;
+            min-height: calc(1.5em + 0.75rem + 2px) !important;
+            max-height: calc(1.5em + 0.75rem + 2px) !important;
+            margin: 0 !important;
+            padding: 0 2rem 0 1rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            line-height: 1.5 !important;
+            appearance: none;
+            background-color: #fff !important;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right .75rem center !important;
+            background-size: 14px 14px !important;
+        }
+
+        #branch-wrapper .multiselect .multiselect-selected-text {
+            display: block;
+            width: 100%;
+            text-align: left !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        #branch-wrapper .multiselect .caret {
+            display: none !important;
+        }
+
+        #branch-wrapper .multiselect-container .multiselect-option {
+            padding: 0 !important;
+        }
+
+        #branch-wrapper .multiselect-container .multiselect-option .form-check {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px;
+            margin: 0 !important;
+            padding: 8px 12px !important;
+            min-height: 0;
+        }
+
+        #branch-wrapper .multiselect-container .multiselect-option .form-check-input {
+            position: static !important;
+            float: none !important;
+            margin: 0 !important;
+            flex-shrink: 0;
+        }
+
+        #branch-wrapper .multiselect-container .multiselect-option .form-check-label {
+            margin: 0 !important;
+            padding: 0 !important;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+    </style>
+
     <script>
         window.addEventListener('load', function() {
             const s = document.createElement('script');
-            s.src = 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js';
+            s.src = 'https://cdn.jsdelivr.net/npm/bootstrap-multiselect@1.1.2/dist/js/bootstrap-multiselect.min.js';
             s.onload = initBranches;
             document.body.appendChild(s);
 
             function initBranches() {
-                $('#branch_ids').select2({
-                    placeholder: 'Select Branches',
-                    width: '100%',
-                    closeOnSelect: false
+                $('#branch_ids').multiselect({
+                    buttonClass: 'form-control',
+                    buttonWidth: '100%',
+                    buttonText: function(options) {
+                        if (!options.length) return 'Select Branches';
+                        return options.map(function() {
+                            return $(this).text().trim();
+                        }).get().join(', ');
+                    }
                 });
 
                 function toggleBranches() {
