@@ -375,4 +375,70 @@ class PosControllerTest extends TestCase
         $updatedItem = Cart::content()->first();
         $this->assertSame(25.0, (float) $updatedItem->options->discount);
     }
+
+    public function test_cart_quantity_is_limited_to_current_product_stock(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $product = $this->createProductWithCode('Stock Limit Item', 'STOCK-LIMIT-001');
+        $product->update(['stock' => 5]);
+        $item = Cart::add([
+            'id' => $product->id,
+            'name' => $product->name,
+            'qty' => 1,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'currency' => 'PKR',
+                'stock' => $product->stock,
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/pos/update/{$item->rowId}", [
+            'qty' => 8,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $updatedItem = Cart::content()->first();
+        $this->assertSame(5, (int) $updatedItem->qty);
+        $this->assertSame(5, (int) $updatedItem->options->stock);
+        $this->assertStringContainsString('max="5"', $response->json('cart_html'));
+    }
+
+    public function test_updating_cart_tax_rate_persists_and_recalculates_tax(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $item = Cart::add([
+            'id' => 'tax-rate-test',
+            'name' => 'Tax Rate Test Item',
+            'qty' => 2,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'discount' => 0,
+                'currency' => 'PKR',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/pos/tax-rate/{$item->rowId}", [
+            'tax_rate' => 18,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $updatedItem = Cart::content()->first();
+        $this->assertSame(18.0, (float) $updatedItem->options->tax_rate);
+        $this->assertSame(18.0, (float) $updatedItem->taxRate);
+        $this->assertEquals(36.0, (float) Cart::tax(2, '.', ''));
+        $this->assertStringContainsString('value="18.00"', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">36.00</td>', $response->json('cart_html'));
+    }
 }

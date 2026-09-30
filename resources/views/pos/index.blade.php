@@ -333,6 +333,15 @@
         }
 
         // Logic: Update Item Quantity (AJAX)
+        function limitCartQuantity(input) {
+            const quantity = parseInt(input.value, 10);
+            const max = input.max === '' ? Infinity : parseInt(input.max, 10);
+
+            if (Number.isFinite(quantity) && quantity > max) {
+                input.value = max;
+            }
+        }
+
         async function updateCart(rowId, qty) {
             const customerId = getCustomerId();
             try {
@@ -379,6 +388,47 @@
             } catch (error) {
                 console.error('Error updating discount:', error);
             }
+        }
+
+        async function updateTaxRate(rowId, taxRate) {
+            try {
+                const response = await fetch("{{ url('pos/tax-rate') }}/" + rowId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ tax_rate: taxRate })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
+                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
+                } else {
+                    alert(data.message || 'Failed to update tax rate');
+                }
+            } catch (error) {
+                console.error('Error updating tax rate:', error);
+            }
+        }
+
+        function updateTaxAmounts(input) {
+            const row = input.closest('tr');
+            const gross = parseFloat(row.querySelector('.pos-gross-amount').dataset.amount) || 0;
+            const taxRate = parseFloat(input.value) || 0;
+            const taxAmount = gross * taxRate / 100;
+            const inclTax = gross + taxAmount;
+            const formatAmount = amount => new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(amount);
+
+            row.querySelector('.pos-tax-amount').textContent = formatAmount(taxAmount);
+            const inclTaxCell = row.querySelector('.pos-incl-tax-amount');
+            inclTaxCell.dataset.amount = inclTax;
+            inclTaxCell.textContent = formatAmount(inclTax);
+            updateNetAmount(row.querySelector('.pos-discount-input'));
         }
 
         function updateNetAmount(input) {

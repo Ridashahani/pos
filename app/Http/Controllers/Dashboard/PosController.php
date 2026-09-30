@@ -113,6 +113,7 @@ class PosController extends Controller
                 'discount' => $request->input('discount', 0),
                 'original_price' => $validatedData['price'],
                 'currency' => $product->currency ?: 'PKR',
+                'stock' => (int) $product->stock,
             ]
         ]);
     }
@@ -137,10 +138,30 @@ class PosController extends Controller
     public function updateCart(Request $request, string $rowId)
     {
         $validatedData = $request->validate([
-            'qty' => 'required|numeric',
+            'qty' => 'required|integer|min:0',
         ]);
 
-        Cart::update($rowId, $validatedData['qty']);
+        $item = Cart::get($rowId);
+        $quantity = $validatedData['qty'];
+
+        if (!($item->options->manual ?? false)) {
+            $product = Product::findOrFail($item->id);
+            $stock = max(0, (int) $product->stock);
+            $quantity = min($quantity, $stock);
+            $options = $item->options->toArray();
+            $options['stock'] = $stock;
+
+            if ($quantity === 0) {
+                Cart::update($rowId, 0);
+            } else {
+                Cart::update($rowId, [
+                    'qty' => $quantity,
+                    'options' => $options,
+                ]);
+            }
+        } else {
+            Cart::update($rowId, $quantity);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -172,6 +193,28 @@ class PosController extends Controller
             'price' => max(0, $originalPrice + $tax - $discount),
             'options' => $options,
         ]);
+
+        return response()->json([
+            'success' => true,
+            'cart_html' => view('pos.cart-sidebar', ['productItem' => Cart::content()])->render(),
+            'cart_count' => Cart::count(),
+        ]);
+    }
+
+    public function updateTaxRate(Request $request, string $rowId)
+    {
+        $validatedData = $request->validate([
+            'tax_rate' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $taxRate = (float) $validatedData['tax_rate'];
+
+        Cart::setTax($rowId, $taxRate);
+        $item = Cart::get($rowId);
+        $options = $item->options->toArray();
+        $options['tax_rate'] = $taxRate;
+
+        Cart::update($rowId, ['options' => $options]);
 
         return response()->json([
             'success' => true,

@@ -10,7 +10,7 @@
                         <th>Price (PKR)</th>
                         <th>Quantity</th>
                         <th>Gross Amount (PKR)</th>
-                        <th>Tax Rate</th>
+                        <th>Tax Rate(%)</th>
                         <th>Tax Amount</th>
                         <th>Amount Incl. Tax</th>
                         <th>Discount (PKR)</th>
@@ -25,12 +25,13 @@
                             $tax = (float) ($options->tax ?? 0);
                             $discount = (float) ($options->discount ?? 0);
                             $originalPrice = (float) ($options->original_price ?? $item->price);
+                            $stock = $options->stock ?? null;
                             $currency = $options->currency ?? 'PKR';
                             $image = $options->image ?? asset('assets/images/product/default.webp');
                         @endphp
                         @php
                             $gross     = $originalPrice * $item->qty;
-                            $taxRate   = (float) ($options->tax_rate ?? 10);   // e.g. 17 for 17%
+                            $taxRate   = (float) ($options->tax_rate ?? 10);
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - ($discount * $item->qty));
@@ -53,15 +54,23 @@
                                  <div class="pos-quantity-control">
                                      <input type="number" class="form-control form-control-sm pos-quantity-input"
                                          style="width: 50px;"
-                                         value="{{ $item->qty }}" min="0" step="1" aria-label="Quantity"
-                                         onchange="updateCart('{{ $item->rowId }}', Math.max(0, parseInt(this.value) || 0))"
+                                         value="{{ $item->qty }}" min="0" @if ($stock !== null) max="{{ $stock }}" @endif step="1" aria-label="Quantity"
+                                         oninput="limitCartQuantity(this)"
+                                         onchange="limitCartQuantity(this); updateCart('{{ $item->rowId }}', Math.max(0, parseInt(this.value) || 0))"
                                          onkeydown="if (event.key === 'Enter') this.blur()"
                                      >
                                  </div>
                             </td>
-                            <td>{{ number_format($gross, 2) }}</td>
-                            <td>{{ number_format($taxRate, 2) }}%</td>
-                            <td>{{ number_format($taxAmount, 2) }}</td>
+                            <td class="pos-gross-amount" data-amount="{{ $gross }}">{{ number_format($gross, 2) }}</td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm pos-tax-rate-input"
+                                    style="width: 64px;" value="{{ number_format($taxRate, 2, '.', '') }}"
+                                    min="0" max="100" step="1" aria-label="Tax Rate"
+                                    oninput="updateTaxAmounts(this)"
+                                    onchange="updateTaxRate('{{ $item->rowId }}', this.value)"
+                                    onkeydown="if (event.key === 'Enter') this.blur()">
+                            </td>
+                            <td class="pos-tax-amount">{{ number_format($taxAmount, 2) }}</td>
                             <td class="pos-incl-tax-amount" data-amount="{{ $inclTax }}">{{ number_format($inclTax, 2) }}</td>
                             <td>
     <div class="pos-discount-control">
