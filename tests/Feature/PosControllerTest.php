@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Category;
 use Carbon\Carbon;
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -280,5 +281,98 @@ class PosControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Search by name or barcode...', false);
+    }
+
+    public function test_product_search_matches_category_name(): void
+    {
+        $category = $this->createCategory();
+        $product = $this->createProductWithCode('Category Search Product', 'CATEGORY-SEARCH-001', $category);
+
+        $productsByName = Product::filter(['search' => $product->name])->get();
+        $products = Product::filter(['search' => $category->name])->get();
+
+        $this->assertTrue($productsByName->contains('id', $product->id));
+        $this->assertTrue($products->contains('id', $product->id));
+    }
+
+    public function test_pos_search_returns_json_product_fragment(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $category = $this->createCategory();
+        $product = Product::factory()->create([
+            'name' => 'AJAX Search Product',
+            'code' => 'AJAX-SEARCH-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'expire_date' => Carbon::now()->addYear(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/pos?search=AJAX+Search+Product');
+
+        $response->assertOk()
+            ->assertJsonStructure(['html', 'total'])
+            ->assertJsonPath('total', 1);
+        $this->assertStringContainsString($product->name, $response->json('html'));
+    }
+
+    public function test_pos_does_not_show_products_before_a_search(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $category = $this->createCategory();
+        $product = Product::factory()->create([
+            'name' => 'Initial Catalog Product',
+            'code' => 'INITIAL-CATALOG-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'expire_date' => Carbon::now()->addYear(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/pos');
+
+        $response->assertOk()
+            ->assertDontSee($product->name, false)
+            ->assertSee('Search by product name, barcode, or category to view products.', false);
+    }
+
+    public function test_updating_cart_discount_refreshes_net_amount(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $item = Cart::add([
+            'id' => 'discount-test',
+            'name' => 'Discount Test Item',
+            'qty' => 2,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'tax' => 0,
+                'discount' => 0,
+                'currency' => 'PKR',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/pos/discount/{$item->rowId}", [
+            'discount' => 25,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true);
+        $this->assertStringContainsString('PKR 170.00', $response->json('cart_html'));
+        $updatedItem = Cart::content()->first();
+        $this->assertSame(25.0, (float) $updatedItem->options->discount);
     }
 }

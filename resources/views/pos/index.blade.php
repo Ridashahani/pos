@@ -24,97 +24,35 @@
                         <div class="card card-block card-stretch card-height">
                             <div class="card-body">
                                 <div class="pos-category-tabs mb-3">
-    <button type="button" class="pos-tab active">All Product</button>
-    <button type="button" class="pos-tab">Category</button>
-    <button type="button" class="pos-tab">Brand</button>
-    <button type="button" class="pos-tab">Featured</button>
-</div>
+                                    <button type="button" class="pos-tab active">All Product</button>
+                                    <button type="button" class="pos-tab">Category</button>
+                                    <button type="button" class="pos-tab">Brand</button>
+                                    <button type="button" class="pos-tab">Featured</button>
+                                </div>
                                 <!-- Filter & Search Form -->
-                                <form action="{{ route('pos.index') }}" method="get" class="mb-0">
-    <div class="input-group pos-search-box">
-        <input type="text" class="form-control" name="search" id="pos_search"
-            placeholder="Search products..."
-            value="{{ request('search') }}" autocomplete="off">
-        <div class="input-group-append">
-            <button type="submit" class="btn btn-primary pos-search-btn" title="Search">
-                <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-            </button>
-            @if (request('search') || request('category_id'))
-                <a href="{{ route('pos.index') }}" class="btn btn-danger pos-search-btn" title="Clear">
-                    <x-heroicon-o-x-mark class="w-5 h-5" />
-                </a>
-            @endif
-        </div>
-    </div>
-</form>
+                                <form action="{{ route('pos.index') }}" method="get" class="mb-0" id="pos-search-form">
+                                    <div class="input-group pos-search-box">
+                                        <input type="text" class="form-control" name="search" id="pos_search"
+                                            placeholder="Search products..."
+                                            value="{{ request('search') }}" autocomplete="off" aria-label="Search products">
+                                        <div class="input-group-append">
+                                            <button type="submit" class="btn btn-primary pos-search-btn" title="Search">
+                                                <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                                            </button>
+                                            <button type="button" id="pos-search-clear" class="btn btn-danger pos-search-btn {{ request('search') || request('category_id') ? '' : 'd-none' }}" title="Clear search" aria-label="Clear search">
+                                                <x-heroicon-o-x-mark class="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <span id="pos-search-status" class="sr-only" role="status" aria-live="polite"></span>
+                                </form>
                             </div>
                         </div>
                     </div>
 
                     <!-- Product Grid -->
-                    <div class="col-lg-12">
-                        <div class="row product-grid">
-                            @forelse($products as $product)
-                                <div class="col-lg-6 col-md-4 col-sm-6 mb-3">
-                                    <div class="product-card h-100 d-flex flex-column">
-                                        <!-- Product Image -->
-                                        <div class="image-container">
-                                            <img src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
-                                                class="product-image" alt="{{ $product->name }}">
-
-                                            <!-- Stock Badge -->
-                                            <span class="badge position-absolute shadow-sm"
-                                                style="top: 12px; right: 12px; font-size: 0.75rem; padding: 0.5em 0.8em; {{ $product->stock > 10 ? 'background-color: #10b981; color: white;' : 'background-color: #ef4444; color: white;' }}">
-                                                Stock: {{ $product->stock }}
-                                            </span>
-                                        </div>
-
-                                        <!-- Product Content -->
-                                        <div class="p-3 d-flex flex-column flex-grow-1">
-                                            <h6 class="font-weight-bold text-dark text-truncate mb-2"
-                                                title="{{ $product->name }}" style="font-size: 0.95rem;">
-                                                {{ $product->name }}
-                                            </h6>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-auto">
-                                                <h5 class="text-primary font-weight-bolder mb-0" style="font-size: 1.1rem;">
-                                                    {{ number_format($product->selling_price) }}
-                                                </h5>
-
-                                                <!-- Add to Cart Form -->
-                                                <form class="add-to-cart-form" onsubmit="addToCart(event)">
-                                                    <input type="hidden" name="id" value="{{ $product->id }}">
-                                                    <input type="hidden" name="name" value="{{ $product->name }}">
-                                                    <input type="hidden" name="price"
-                                                        value="{{ $product->selling_price }}">
-                                                    <input type="hidden" name="code" value="{{ $product->code }}">
-                                                    <input type="hidden" name="image"
-                                                        value="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}">
-                                                    <button type="submit"
-                                                        class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center">
-                                                        <x-heroicon-o-plus class="w-4 h-4 mr-1" /> Add
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="col-12">
-                                    <div class="alert alert-info text-center">
-                                        <x-heroicon-o-information-circle class="w-6 h-6 mx-auto mb-2" />
-                                        No products found.
-                                    </div>
-                                </div>
-                            @endforelse
-                        </div>
-
-                        <!-- Pagination Links -->
-                        <div class="row mt-3">
-                            <div class="col-12 d-flex justify-content-center">
-                                {{ $products->links() }}
-                            </div>
-                        </div>
+                    <div id="pos-product-results" class="col-lg-12" aria-busy="false">
+                        @include('pos.product-grid', ['products' => $products])
                     </div>
                 </div>
             </div>
@@ -420,9 +358,7 @@
             }
         }
 
-        async function applyDiscount(rowId, button) {
-            const input = button.closest('.pos-discount-control').querySelector('.pos-discount-input');
-            const discount = input.value;
+        async function updateDiscount(rowId, discount) {
             try {
                 const response = await fetch("{{ url('pos/discount') }}/" + rowId, {
                     method: 'POST',
@@ -443,6 +379,20 @@
             } catch (error) {
                 console.error('Error updating discount:', error);
             }
+        }
+
+        function updateNetAmount(input) {
+            const row = input.closest('tr');
+            const inclTax = parseFloat(row.querySelector('.pos-incl-tax-amount').dataset.amount) || 0;
+            const quantity = parseFloat(row.querySelector('.pos-quantity-input').value) || 0;
+            const discount = parseFloat(input.value) || 0;
+            const currency = row.querySelector('.pos-net-amount').dataset.currency;
+            const netAmount = Math.max(0, inclTax - discount * quantity);
+
+            row.querySelector('.pos-net-amount').textContent = currency + ' ' + new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(netAmount);
         }
 
         // Logic: Remove Item from Cart (AJAX)
@@ -628,52 +578,144 @@
             }
         }
 
-        // Barcode Scanner Handling for POS Search
+        // AJAX product search
         (function() {
             const posSearchField = document.getElementById('pos_search');
             const searchForm = posSearchField ? posSearchField.closest('form') : null;
+            const resultsContainer = document.getElementById('pos-product-results');
+            const clearButton = document.getElementById('pos-search-clear');
+            const searchStatus = document.getElementById('pos-search-status');
 
-            if (posSearchField && searchForm) {
+            if (posSearchField && searchForm && resultsContainer) {
+                let debounceTimeout;
+                let activeRequest;
                 let scannerTimeout;
 
-                // Auto-focus search field on mobile devices
+                function syncClearButton() {
+                    const hasFilters = posSearchField.value.trim() !== '' || new URLSearchParams(window.location.search).has('category_id');
+                    clearButton.classList.toggle('d-none', !hasFilters);
+                }
+
+                function getSearchUrl() {
+                    const url = new URL(window.location.href);
+                    const search = posSearchField.value.trim();
+
+                    if (search) {
+                        url.searchParams.set('search', search);
+                    } else {
+                        url.searchParams.delete('search');
+                    }
+
+                    url.searchParams.delete('page');
+                    return url;
+                }
+
+                async function loadProducts(url, historyMode = 'replace') {
+                    if (activeRequest) {
+                        activeRequest.abort();
+                    }
+
+                    const requestController = new AbortController();
+                    activeRequest = requestController;
+                    resultsContainer.setAttribute('aria-busy', 'true');
+                    searchForm.setAttribute('aria-busy', 'true');
+                    searchStatus.textContent = 'Searching products';
+
+                    try {
+                        const response = await fetch(url.toString(), {
+                            headers: { 'Accept': 'application/json' },
+                            signal: requestController.signal
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Product search failed with status ' + response.status);
+                        }
+
+                        const data = await response.json();
+                        resultsContainer.innerHTML = data.html;
+                        searchStatus.textContent = data.total + (data.total === 1 ? ' product found' : ' products found');
+
+                        if (window.location.href !== url.href) {
+                            window.history[historyMode + 'State']({}, '', url);
+                        }
+
+                        syncClearButton();
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.error('Unable to search products:', error);
+                            searchStatus.textContent = 'Unable to load products. Please try again.';
+                        }
+                    } finally {
+                        if (activeRequest === requestController) {
+                            resultsContainer.setAttribute('aria-busy', 'false');
+                            searchForm.setAttribute('aria-busy', 'false');
+                            activeRequest = null;
+                        }
+                    }
+                }
+
+                searchForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    window.clearTimeout(debounceTimeout);
+                    loadProducts(getSearchUrl(), 'push');
+                });
+
+                posSearchField.addEventListener('input', function() {
+                    syncClearButton();
+                    window.clearTimeout(debounceTimeout);
+                    debounceTimeout = window.setTimeout(function() {
+                        loadProducts(getSearchUrl());
+                    }, 250);
+                });
+
+                clearButton.addEventListener('click', function() {
+                    posSearchField.value = '';
+                    const url = new URL(searchForm.action);
+                    loadProducts(url, 'push');
+                });
+
+                resultsContainer.addEventListener('click', function(event) {
+                    const link = event.target.closest('.pagination a');
+                    if (!link) return;
+
+                    const url = new URL(link.href);
+                    if (url.origin !== window.location.origin) return;
+
+                    event.preventDefault();
+                    posSearchField.value = url.searchParams.get('search') || '';
+                    loadProducts(url, 'push');
+                });
+
+                window.addEventListener('popstate', function() {
+                    const url = new URL(window.location.href);
+                    posSearchField.value = url.searchParams.get('search') || '';
+                    loadProducts(url, 'replace');
+                });
+
+                // Barcode scanners commonly submit with Enter or paste.
                 function isMobileDevice() {
                     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                         (window.innerWidth <= 768);
                 }
 
-                // Handle scanner input (scanners typically send Enter after barcode)
                 posSearchField.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter' || e.keyCode === 13) {
-                        // Clear any existing timeout
                         if (scannerTimeout) {
                             clearTimeout(scannerTimeout);
                         }
 
-                        const searchValue = posSearchField.value.trim();
-                        if (searchValue) {
-                            // Check if this looks like a barcode scan (fast input + Enter)
-                            // Barcode scanners typically input very quickly
-                            scannerTimeout = setTimeout(function() {
-                                // Submit the form to search
-                                searchForm.submit();
-                            }, 100);
-                        }
+                        scannerTimeout = setTimeout(function() {
+                            searchForm.requestSubmit();
+                        }, 100);
                     }
                 });
 
-                // Handle paste events (some scanners use paste)
                 posSearchField.addEventListener('paste', function(e) {
                     setTimeout(function() {
-                        const pastedValue = posSearchField.value.trim();
-                        if (pastedValue) {
-                            // Auto-submit on paste (likely from scanner)
-                            searchForm.submit();
-                        }
+                        searchForm.requestSubmit();
                     }, 50);
                 });
 
-                // Auto-focus on mobile for better scanner experience
                 if (isMobileDevice()) {
                     setTimeout(function() {
                         posSearchField.focus();
