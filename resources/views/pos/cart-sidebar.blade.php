@@ -31,7 +31,7 @@
                         @endphp
                         @php
                             $gross     = $originalPrice * $item->qty;
-                            $taxRate   = (float) ($options->tax_rate ?? 10);
+                            $taxRate   = (float) ($options->tax_rate ?? $item->taxRate ?? 0);
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - ($discount * $item->qty));
@@ -55,8 +55,9 @@
                                      <input type="number" class="form-control form-control-sm pos-quantity-input"
                                          style="width: 50px;"
                                          value="{{ $item->qty }}" min="0" @if ($stock !== null) max="{{ $stock }}" @endif step="1" aria-label="Quantity"
-                                         oninput="limitCartQuantity(this)"
-                                         onchange="limitCartQuantity(this); updateCart('{{ $item->rowId }}', Math.max(0, parseInt(this.value) || 0))"
+                                         data-row-id="{{ $item->rowId }}" data-saved-qty="{{ $item->qty }}"
+                                         oninput="scheduleCartQuantityUpdate(this)"
+                                         onchange="commitCartQuantity(this)"
                                          onkeydown="if (event.key === 'Enter') this.blur()"
                                      >
                                  </div>

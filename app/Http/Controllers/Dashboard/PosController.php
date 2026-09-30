@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Customer;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redirect;
@@ -99,8 +100,9 @@ class PosController extends Controller
             'price' => 'required|numeric',
         ]);
         $product = Product::findOrFail($validatedData['id']);
+        $taxRate = (float) ($product->order_tax ?? Setting::get('gst', 0));
 
-        Cart::add([
+        $cartItem = Cart::add([
             'id' => $validatedData['id'],
             'name' => $validatedData['name'],
             'qty' => 1,
@@ -110,12 +112,14 @@ class PosController extends Controller
                 'code' => $request->input('code', 'PRD-' . str_pad($validatedData['id'], 6, '0', STR_PAD_LEFT)),
                 'image' => $request->input('image'),
                 'tax' => $request->input('tax', 0),
+                'tax_rate' => $taxRate,
                 'discount' => $request->input('discount', 0),
                 'original_price' => $validatedData['price'],
                 'currency' => $product->currency ?: 'PKR',
                 'stock' => (int) $product->stock,
             ]
         ]);
+        Cart::setTax($cartItem->rowId, $taxRate);
     }
 
         if ($request->wantsJson()) {

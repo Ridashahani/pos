@@ -376,6 +376,35 @@ class PosControllerTest extends TestCase
         $this->assertSame(25.0, (float) $updatedItem->options->discount);
     }
 
+    public function test_adding_product_uses_its_gst_rate_in_the_cart(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $product = $this->createProductWithCode('GST Rate Item', 'GST-RATE-001');
+        $product->update([
+            'selling_price' => 100,
+            'order_tax' => 17.5,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/pos/add', [
+            'id' => $product->id,
+            'name' => $product->name,
+            'price' => 100,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $cartItem = Cart::content()->first();
+        $this->assertSame(17.5, (float) $cartItem->options->tax_rate);
+        $this->assertSame(17.5, (float) $cartItem->taxRate);
+        $this->assertEquals(17.5, (float) Cart::tax(2, '.', ''));
+        $this->assertStringContainsString('value="17.50"', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">17.50</td>', $response->json('cart_html'));
+    }
+
     public function test_cart_quantity_is_limited_to_current_product_stock(): void
     {
         $permission = Permission::firstOrCreate(

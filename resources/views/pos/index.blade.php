@@ -342,7 +342,28 @@
             }
         }
 
+        function scheduleCartQuantityUpdate(input) {
+            limitCartQuantity(input);
+            clearTimeout(input.quantityUpdateTimer);
+
+            if (input.value === '') return;
+
+            input.quantityUpdateTimer = setTimeout(() => commitCartQuantity(input), 400);
+        }
+
+        function commitCartQuantity(input) {
+            limitCartQuantity(input);
+            clearTimeout(input.quantityUpdateTimer);
+
+            const quantity = Math.max(0, parseInt(input.value, 10) || 0);
+            if (String(quantity) === input.dataset.savedQty) return;
+
+            input.dataset.savedQty = String(quantity);
+            updateCart(input.dataset.rowId, quantity);
+        }
+
         async function updateCart(rowId, qty) {
+            const activeInput = document.activeElement;
             const customerId = getCustomerId();
             try {
                 const response = await fetch("{{ url('pos/update') }}/" + rowId, {
@@ -359,8 +380,20 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
+                    const isQuantityInput = activeInput?.classList.contains('pos-quantity-input') &&
+                        activeInput.dataset.rowId === rowId;
+                    if (isQuantityInput && activeInput.value !== String(qty)) return;
+
+                    const shouldRestoreFocus = isQuantityInput && document.activeElement === activeInput;
+                    const cartContainer = document.getElementById('cart-sidebar-container');
+                    cartContainer.innerHTML = data.cart_html;
                     document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
+
+                    if (shouldRestoreFocus) {
+                        cartContainer.querySelector(`.pos-quantity-input[data-row-id="${rowId}"]`)?.focus({
+                            preventScroll: true
+                        });
+                    }
                 }
             } catch (error) {
                 console.error('Error updating cart:', error);
