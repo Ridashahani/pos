@@ -49,7 +49,7 @@ class InventoryService
                 'profit' => (($salePrice - (float) $stock->cost_price) * $quantity) - $discount,
                 'customer_id' => $sale->customer_id,
                 'sold_by' => auth()->id(),
-                'payment_method' => $sale->payment_type,
+                'payment_method' => $sale->payment_method,
                 'status' => 'sold',
             ]);
 

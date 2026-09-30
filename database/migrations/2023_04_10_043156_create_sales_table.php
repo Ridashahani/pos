@@ -18,14 +18,9 @@ return new class extends Migration
 
             $table->foreignId('branch_id');
 
-            $table->foreignId('customer_id')
-                ->nullable()
-                ->constrained()
-                ->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
 
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
             $table->dateTime('sale_date')->index();
 
@@ -43,10 +38,7 @@ return new class extends Migration
 
             $table->string('payment_method')->nullable();
 
-            $table->enum('status', [
-                'pending',
-                'completed',
-                'returned'
+            $table->enum('status', [ 'pending','completed','returned'
             ])->default('pending')->index();
 
             $table->timestamps();
