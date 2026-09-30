@@ -27,6 +27,7 @@ class Product extends Model
         'currency',
         'product_cost', 'product_price', 'wholesale_price', 'special_price', 'stock_alert',
         'order_tax', 'tax_type', 'add_product_quantity',
+        'status',
         'image',
         'images',
         'buying_date',
@@ -36,6 +37,7 @@ class Product extends Model
     protected $with = ['category'];
 
     protected $casts = [
+            'status' => 'boolean',
         'variation_types' => 'array',
         'variation_ids' => 'array',
         'images' => 'array',

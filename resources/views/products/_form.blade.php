@@ -56,6 +56,16 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                         </select>
                     </div>
                     <div class="form-group col-md-6">
+    <label>Status</label>
+    <div class="custom-control custom-switch mt-2">
+        <input type="hidden" name="status" value="0">
+        <input type="checkbox" class="custom-control-input" id="status" name="status" value="1"
+               @checked($field('status', true))>
+        <label class="custom-control-label" for="status">Active</label>
+    </div>
+</div>
+
+                    <div class="form-group col-md-6">
     <label>GST (%)</label>
     <input type="number" step="0.01" min="0" max="100" name="order_tax"
            value="{{ $field('order_tax', $defaultGst ?? 0) }}"
