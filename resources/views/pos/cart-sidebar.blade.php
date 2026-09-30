@@ -1,4 +1,9 @@
 <!-- Detailed POS cart table and payment summary. -->
+@php
+    $summaryNetAmount = 0.0;
+    $summaryTaxAmount = 0.0;
+    $summaryDiscount = 0.0;
+@endphp
 <div class="cart-items-wrapper position-relative" style="height: 350px; overflow-y: auto; overflow-x: hidden;">
     @if ($productItem->count() > 0)
         <div class="table-responsive pos-cart-table-wrap">
@@ -31,10 +36,13 @@
                         @endphp
                         @php
                             $gross     = $originalPrice * $item->qty;
-                            $taxRate   = (float) ($options->tax_rate ?? $item->taxRate ?? 0);
+                            $taxRate   = (float) ($options->tax_rate ?? 10);
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
-                            $netAmount = max(0, $inclTax - ($discount * $item->qty));
+                            $netAmount = max(0, $inclTax - $discount);
+                            $summaryNetAmount += $netAmount;
+                            $summaryTaxAmount += $taxAmount;
+                            $summaryDiscount += $discount;
                         @endphp
                         <tr>
                             <td>
@@ -77,7 +85,7 @@
     <div class="pos-discount-control">
         <input type="number" class="form-control form-control-sm pos-discount-input"
             style="width: 50px;"
-            value="{{ (int) $discount }}" min="0" max="{{ $originalPrice + $tax }}"
+            value="{{ (int) $discount }}" min="0" max="{{ $inclTax }}"
             step="1" aria-label="Discount"
             oninput="updateNetAmount(this)"
             onchange="updateDiscount('{{ $item->rowId }}', this.value)"
@@ -117,25 +125,24 @@
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
-            <input class="form-control form-control-sm"
-                value="{{ $cartCurrency }} {{ number_format((float) Cart::subtotal(), 2) }}" readonly>
+            <input class="form-control form-control-sm pos-summary-price"
+                value="{{ $cartCurrency }} {{ number_format($summaryNetAmount, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>
-            <input class="form-control form-control-sm"
-                value="{{ $cartCurrency }} {{ number_format((float) Cart::tax(), 2) }}" readonly>
+            <input class="form-control form-control-sm pos-summary-tax"
+                value="{{ $cartCurrency }} {{ number_format($summaryTaxAmount, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group">
             <label>Discount</label>
-            <input class="form-control form-control-sm"
-                value="{{ $cartCurrency }} {{ number_format($productItem->sum(function ($item) {return (float) ($item->options->discount ?? 0) * $item->qty;}),2) }}"
-                readonly>
+            <input class="form-control form-control-sm pos-summary-discount"
+                value="{{ $cartCurrency }} {{ number_format($summaryDiscount, 2) }}" readonly>
         </div>
     </div>
     <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
         <span class="font-weight-bold">Grand Total</span>
         <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
-            {{ number_format((float) Cart::total(), 2) }}</span>
+            {{ number_format($summaryNetAmount, 2) }}</span>
     </div>
 </div>
 

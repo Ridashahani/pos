@@ -362,6 +362,7 @@ class PosControllerTest extends TestCase
                 'tax' => 0,
                 'discount' => 0,
                 'currency' => 'PKR',
+                'manual' => true,
             ],
         ]);
 
@@ -371,9 +372,23 @@ class PosControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true);
-        $this->assertStringContainsString('PKR 170.00', $response->json('cart_html'));
+        $this->assertStringContainsString('PKR 195.00', $response->json('cart_html'));
+        $cartHtml = $response->json('cart_html');
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 195\.00"/', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-tax"\s+value="PKR 20\.00"/', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-discount"\s+value="PKR 25\.00"/', $cartHtml);
         $updatedItem = Cart::content()->first();
         $this->assertSame(25.0, (float) $updatedItem->options->discount);
+        $this->assertEquals(195.0, (float) Cart::total(null, null, ''));
+
+        $quantityResponse = $this->actingAs($user)->postJson("/pos/update/{$updatedItem->rowId}", [
+            'qty' => 3,
+        ]);
+
+        $quantityResponse->assertOk()->assertJsonPath('success', true);
+        $this->assertStringContainsString('PKR 305.00', $quantityResponse->json('cart_html'));
+        $this->assertEquals(305.0, (float) Cart::total(null, null, ''));
+        $this->assertSame(25.0, (float) Cart::content()->first()->options->discount);
     }
 
     public function test_adding_product_uses_its_gst_rate_in_the_cart(): void

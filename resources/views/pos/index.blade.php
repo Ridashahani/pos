@@ -467,10 +467,9 @@
         function updateNetAmount(input) {
             const row = input.closest('tr');
             const inclTax = parseFloat(row.querySelector('.pos-incl-tax-amount').dataset.amount) || 0;
-            const quantity = parseFloat(row.querySelector('.pos-quantity-input').value) || 0;
             const discount = parseFloat(input.value) || 0;
             const currency = row.querySelector('.pos-net-amount').dataset.currency;
-            const netAmount = Math.max(0, inclTax - discount * quantity);
+            const netAmount = Math.max(0, inclTax - discount);
 
             row.querySelector('.pos-net-amount').textContent = currency + ' ' + new Intl.NumberFormat('en-US', {
                 minimumFractionDigits: 2,

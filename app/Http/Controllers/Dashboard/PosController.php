@@ -147,24 +147,32 @@ class PosController extends Controller
 
         $item = Cart::get($rowId);
         $quantity = $validatedData['qty'];
+        $options = $item->options->toArray();
 
         if (!($item->options->manual ?? false)) {
             $product = Product::findOrFail($item->id);
             $stock = max(0, (int) $product->stock);
             $quantity = min($quantity, $stock);
-            $options = $item->options->toArray();
             $options['stock'] = $stock;
+        }
 
-            if ($quantity === 0) {
-                Cart::update($rowId, 0);
-            } else {
-                Cart::update($rowId, [
-                    'qty' => $quantity,
-                    'options' => $options,
-                ]);
-            }
+        if ($quantity === 0) {
+            Cart::update($rowId, 0);
         } else {
-            Cart::update($rowId, $quantity);
+            $originalPrice = (float) ($options['original_price'] ?? $item->price);
+            $taxRate = (float) ($options['tax_rate'] ?? 10);
+            $gross = $originalPrice * $quantity;
+            $taxAmount = $gross * $taxRate / 100;
+            $discount = min((float) ($options['discount'] ?? 0), $gross + $taxAmount);
+            $options['discount'] = $discount;
+            $netAmount = max(0, $gross + $taxAmount - $discount);
+
+            Cart::setTax($rowId, $taxRate);
+            Cart::update($rowId, [
+                'qty' => $quantity,
+                'price' => $netAmount / ($quantity * (1 + $taxRate / 100)),
+                'options' => $options,
+            ]);
         }
 
         if ($request->wantsJson()) {
@@ -183,18 +191,26 @@ class PosController extends Controller
 
     public function updateDiscount(Request $request, string $rowId)
     {
-        $discount = max(0, (float) $request->input('discount', 0));
+        $validatedData = $request->validate([
+            'discount' => 'required|numeric|min:0',
+        ]);
         $item = Cart::get($rowId);
 
         abort_if(!$item, 404);
 
         $options = $item->options->toArray();
         $originalPrice = (float) ($options['original_price'] ?? $item->price);
-        $tax = (float) ($options['tax'] ?? 0);
+        $quantity = max(1, (int) $item->qty);
+        $taxRate = (float) ($options['tax_rate'] ?? 10);
+        $gross = $originalPrice * $quantity;
+        $taxAmount = $gross * $taxRate / 100;
+        $discount = min((float) $validatedData['discount'], $gross + $taxAmount);
+        $netAmount = max(0, $gross + $taxAmount - $discount);
         $options['discount'] = $discount;
 
+        Cart::setTax($rowId, $taxRate);
         Cart::update($rowId, [
-            'price' => max(0, $originalPrice + $tax - $discount),
+            'price' => $netAmount / ($quantity * (1 + $taxRate / 100)),
             'options' => $options,
         ]);
 
