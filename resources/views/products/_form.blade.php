@@ -34,10 +34,17 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                             <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
                         </div>
                     </div>
-
-                    <div class="form-group col-md-6"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
-                    <div class="form-group col-md-6"><label>Brand</label><select name="brand" class="form-control">
-                            <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand }}" @selected($field('brand') === $brand)>{{ $brand }}</option>@endforeach
+                    <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" id="category_id" class="form-control" required>
+                            <option value="">Choose Product Category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected($field('category_id')==$category->id)>{{ $category->name }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4"><label>Product Subcategory</label><select name="subcategory_id" id="subcategory_id" class="form-control">
+                            <option value="">-- Select a category first --</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category="{{ $subcategory->category_id }}" @selected($field('subcategory_id')==$subcategory->id)>{{ $subcategory->name }}</option>@endforeach
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
+                        <div class="form-group col-md-4"><label>Brand</label><select name="brand_id" class="form-control">
+                            <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string) $field('brand_id') === (string) $brand->id)>{{ $brand->name }}</option>@endforeach
                         </select>
                     </div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>
@@ -48,6 +55,16 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                             <option value="used" @selected($field('mobile_type')==='used')>Used</option>
                         </select>
                     </div>
+                    <div class="form-group col-md-6">
+    <label>GST (%)</label>
+    <input type="number" step="0.01" min="0" max="100" name="order_tax"
+           value="{{ $field('order_tax', $defaultGst ?? 0) }}"
+           class="form-control @error('order_tax') is-invalid @enderror"
+           placeholder="Enter GST">
+    @error('order_tax')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
                     <div class="form-group col-md-6"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
                     <div class="form-group col-md-6"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
                 </div>

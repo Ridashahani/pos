@@ -50,7 +50,14 @@ class PosController extends Controller
         return view('pos.index', [
             'categories' => Category::orderBy('name')->get(),
             'productItem' => Cart::content(),
-            'products' => $products,
+            'products' => QueryBuilder::for(Product::class)
+                ->whereHas('stockIns', fn ($query) => $query->where('remaining_quantity', '>', 0))
+                ->where('expire_date', '>', $todayDate)
+                ->allowedSorts(['name', 'selling_price'])
+                ->allowedFilters(['name', 'category_id'])
+                ->filter(request(['search', 'category_id']))
+                ->paginate($row)
+                ->appends(request()->query()),
         ]);
     }
 

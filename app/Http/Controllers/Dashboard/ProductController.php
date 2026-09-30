@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Branch;
+use App\Models\Brand;
 use App\Models\Supplier;
 use App\Models\Variation;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -20,6 +21,7 @@ use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use Picqer\Barcode\BarcodeGeneratorHTML;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use App\Models\Setting;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
@@ -61,67 +63,73 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        return view('products.create', [
-            'categories' => Category::all(),
-            'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
-            'suppliers' => Supplier::orderBy('name')->get(),
-            'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
-            'variations' => Variation::orderBy('name')->get(),
+  public function create()
+{
+    return view('products.create', [
+        'categories' => Category::all(),
+        'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
+        'branches' => Branch::orderBy('name')->get(),
+        'suppliers' => Supplier::orderBy('name')->get(),
+        'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
+        'variations' => Variation::orderBy('name')->get(),
+        'defaultGst' => (float) Setting::get('gst', 0),
+    ]);
+}
+
+    public function store(StoreProductRequest $request)
+{
+    $validatedData = $request->validated();
+    $validatedData['product_type'] = $validatedData['product_type'] ?? 'single';
+    $validatedData['buying_price'] = $validatedData['buying_price'] ?? $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? 0;
+    $validatedData['selling_price'] = $validatedData['selling_price'] ?? $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? 0;
+    $validatedData['stock'] = $validatedData['stock'] ?? $validatedData['add_product_quantity'] ?? 0;
+
+    // GST: form se na aaye to settings wali default GST lagegi
+    $validatedData['order_tax'] = $validatedData['order_tax'] ?? Setting::get('gst', 0);
+
+    // Generate code only if not provided
+    if (!isset($validatedData['code']) || empty($validatedData['code'])) {
+        $validatedData['code'] = IdGenerator::generate([
+            'table' => 'products',
+            'field' => 'code',
+            'length' => 4,
+            'prefix' => 'PC'
         ]);
     }
 
-    public function store(StoreProductRequest $request)
-    {
-        $validatedData = $request->validated();
-        $validatedData['product_type'] = $validatedData['product_type'] ?? 'single';
-        $validatedData['buying_price'] = $validatedData['buying_price'] ?? $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? 0;
-        $validatedData['selling_price'] = $validatedData['selling_price'] ?? $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? 0;
-        $validatedData['stock'] = $validatedData['stock'] ?? $validatedData['add_product_quantity'] ?? 0;
+    $validatedData['slug'] = Str::slug($validatedData['name']);
 
-        // Generate code only if not provided
-        if (!isset($validatedData['code']) || empty($validatedData['code'])) {
-            $validatedData['code'] = IdGenerator::generate([
-                'table' => 'products',
-                'field' => 'code',
-                'length' => 4,
-                'prefix' => 'PC'
-            ]);
-        }
+    /**
+     * Handle upload image with Storage.
+     */
+    if ($file = $request->file('image')) {
+        $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+        $path = 'public/products/';
 
-        $validatedData['slug'] = Str::slug($validatedData['name']);
-
-        /**
-         * Handle upload image with Storage.
-         */
-        if ($file = $request->file('image')) {
-            $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
-            $path = 'public/products/';
-
-            $file->storeAs($path, $fileName);
-            $validatedData['image'] = $fileName;
-        }
-
-        if ($files = $request->file('images')) {
-            $validatedData['images'] = collect($files)->map(function ($file) {
-                $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
-                $file->storeAs('public/products', $fileName);
-                return $fileName;
-            })->values()->all();
-        }
-
-        Product::create($validatedData);
-
-        return Redirect::route('products.index')->with('success', 'Product has been created!');
+        $file->storeAs($path, $fileName);
+        $validatedData['image'] = $fileName;
     }
+
+    if ($files = $request->file('images')) {
+        $validatedData['images'] = collect($files)->map(function ($file) {
+            $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+            $file->storeAs('public/products', $fileName);
+            return $fileName;
+        })->values()->all();
+    }
+
+    Product::create($validatedData);
+
+    return Redirect::route('products.index')->with('success', 'Product has been created!');
+}
 
     /**
      * Display the specified resource.
      */
     public function show(Product $product)
     {
+        $product->load('brand');
+
         // Barcode Generator
         $generator = new BarcodeGeneratorHTML();
 
@@ -136,18 +144,22 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Product $product)
-    {
-        return view('products.edit', [
-            'categories' => Category::all(),
-            'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
-            'suppliers' => Supplier::orderBy('name')->get(),
-            'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
-            'variations' => Variation::orderBy('name')->get(),
-            'product' => $product
-        ]);
-    }
+   /**
+ * Show the form for editing the specified resource.
+ */
+public function edit(Product $product)
+{
+    return view('products.edit', [
+        'categories' => Category::all(),
+        'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
+        'branches' => Branch::orderBy('name')->get(),
+        'suppliers' => Supplier::orderBy('name')->get(),
+        'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
+        'variations' => Variation::orderBy('name')->get(),
+        'product' => $product,
+        'defaultGst' => (float) Setting::get('gst', 0),
+    ]);
+}
 
     /**
      * Update the specified resource in storage.

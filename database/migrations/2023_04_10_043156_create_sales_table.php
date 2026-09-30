@@ -11,19 +11,46 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained()->onDelete('cascade');
-            $table->string('invoice_no')->unique(); // Unique Invoice
-            $table->dateTime('order_date')->index(); // Index for reporting
-            $table->string('order_status')->default('pending')->index(); // Status with default
-            $table->integer('total_products');
-            $table->decimal('sub_total', 15, 2);
-            $table->decimal('vat', 15, 2)->default(0);
-            $table->decimal('total', 15, 2); // Grand Total
-            $table->string('payment_type')->nullable(); // Cash, Card, etc.
-            $table->decimal('pay_amount', 15, 2)->default(0); // Paid amount
-            $table->decimal('due_amount', 15, 2)->default(0); // Change or Due
+
+            $table->string('invoice_no')->unique();
+
+            $table->foreignId('branch_id')
+                ->constrained()
+                ->onDelete('cascade');
+
+            $table->foreignId('customer_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            $table->foreignId('user_id')
+                ->constrained()
+                ->onDelete('cascade');
+
+            $table->dateTime('sale_date')->index();
+
+            $table->decimal('subtotal', 15, 2)->default(0);
+
+            $table->decimal('discount', 15, 2)->default(0);
+
+            $table->decimal('tax', 15, 2)->default(0);
+
+            $table->decimal('grand_total', 15, 2)->default(0);
+
+            $table->decimal('paid_amount', 15, 2)->default(0);
+
+            $table->decimal('due_amount', 15, 2)->default(0);
+
+            $table->string('payment_method')->nullable();
+
+            $table->enum('status', [
+                'pending',
+                'completed',
+                'returned'
+            ])->default('pending')->index();
+
             $table->timestamps();
         });
     }
@@ -33,6 +60,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('sales');
     }
 };

@@ -94,7 +94,8 @@
                                     <label class="pos-field-label">Biller</label>
                                     <select class="form-control">
                                         <option>Admin</option>
-                                        <option>Staff</option>
+                                        <option>Manager</option>
+                                        <option>Cashier</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-2">

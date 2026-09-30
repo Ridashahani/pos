@@ -76,16 +76,21 @@
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h4 class="card-title mb-0">{{ $title }} Records</h4>
                         @if ($type === 'stock-transfer')
-                            <div class="d-flex align-items-center">
-                                <form method="POST" action="{{ route('stock.transfer.clear') }}" class="mr-2"
+                            <div class="d-flex flex-wrap align-items-center">
+                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2">
+                                    <input type="search" name="search" value="{{ request('search') }}"
+                                        class="form-control mr-2" placeholder="Search product" aria-label="Search product">
+                                    <button type="submit" class="btn btn-primary">Search</button>
+                                </form>
+                                <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary mr-2">
+                                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
+                                </a>
+                                <form method="POST" action="{{ route('stock.transfer.clear') }}"
                                     onsubmit="return confirm('Delete all stock transfer records? Stock will be returned.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger">Clear All</button>
                                 </form>
-                                <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary">
-                                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
-                                </a>
                             </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                             <div class="d-flex align-items-center">
@@ -106,6 +111,51 @@
                         @endif
                     </div>
                     <div class="card-body p-0">
+                        @if ($type === 'stock-in')
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead class="bg-white text-uppercase">
+                                        <tr class="ligth ligth-data">
+                                            <th>No</th>
+                                            <th>Product</th>
+                                            <th>Branch</th>
+                                            <th>Purchase</th>
+                                            <th>Purchase Price</th>
+                                            <th class="text-right text-nowrap">Purchased Qty</th>
+                                            <th class="text-right text-nowrap">Available Qty</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="ligth-body">
+                                        @forelse ($rows as $row)
+                                            <tr>
+                                                <td>{{ $pagination->firstItem() + $loop->index }}</td>
+                                                <td>{{ $row['product'] }}</td>
+                                                <td>{{ $row['branch'] }}</td>
+                                                <td>{{ $row['purchase'] }}</td>
+                                                <td>{{ $row['currency'] }} {{ number_format($row['cost_price'], 2) }}</td>
+                                                <td class="text-right font-weight-bold">{{ number_format($row['quantity']) }}</td>
+                                                <td class="text-right">
+                                                    <span class="badge {{ $row['remaining_quantity'] > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                        {{ number_format($row['remaining_quantity']) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
+                                                        class="btn btn-info" title="View details" aria-label="View details">
+                                                        <x-heroicon-o-eye class="w-5 h-5" />
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
                         <div class="table-responsive">
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
@@ -245,8 +295,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        @endif
                     </div>
-                    @if (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
+                    @if (isset($pagination) && $pagination->total() > 10)
                         <div class="card-footer d-flex justify-content-between align-items-center">
                             <span class="text-muted small">{{ $total_products }} matching records</span>
                             {{ $pagination->links() }}

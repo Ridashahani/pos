@@ -221,10 +221,10 @@
         border: 1px solid #b9d5ff;
         border-radius: 3px;
         color: #2f80ed;
-        height: 27px;
+        height: 16px;
         line-height: 20px;
         padding: 0;
-        width: 27px;
+        width: 16px;
     }
 
     .pos-quantity-add {
@@ -247,7 +247,7 @@
     }
 
     .pos-discount-input {
-        min-width:50px;
+        min-width: 50px;
         max-width: 60px;
         padding: 0.25rem 0.3rem;
     }
