@@ -52,7 +52,10 @@
                                         onclick="updateCart('{{ $item->rowId }}', {{ max(0, $item->qty - 1) }})">&minus;</button>
                                     <span>{{ $item->qty }}</span>
                                     <button type="button" class="pos-quantity-button pos-quantity-add"
-                                        onclick="updateCart('{{ $item->rowId }}', {{ $item->qty + 1 }})">+</button>
+                                        onclick="updateCart('{{ $item->rowId }}', {{ $item->qty + 1 }})"
+                                        aria-label="Increase quantity">
+                                        <x-heroicon-o-plus class="w-5 h-5" />
+                                    </button>
                                 </div>
                             </td>
                             <td>{{ $currency }} {{ number_format($item->subtotal, 2) }}</td>
@@ -201,10 +204,10 @@
         border: 1px solid #b9d5ff;
         border-radius: 3px;
         color: #2f80ed;
-        height: 27px;
+        height: 16px;
         line-height: 20px;
         padding: 0;
-        width: 27px;
+        width: 16px;
     }
 
     .pos-quantity-add {
@@ -227,7 +230,7 @@
     }
 
     .pos-discount-input {
-        min-width:50px;
+        min-width: 50px;
         max-width: 60px;
         padding: 0.25rem 0.3rem;
     }

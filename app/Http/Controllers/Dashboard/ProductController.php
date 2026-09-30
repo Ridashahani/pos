@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Branch;
+use App\Models\Brand;
 use App\Models\Supplier;
 use App\Models\Variation;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -42,6 +43,7 @@ class ProductController extends Controller
             ->allowedSorts([
                 'name',
                 'selling_price',
+                'status',
                 AllowedSort::callback('category.name', function ($query, $descending) {
                     $query->join('categories', 'products.category_id', '=', 'categories.id')
                         ->orderBy('categories.name', $descending ? 'DESC' : 'ASC')
@@ -69,7 +71,7 @@ class ProductController extends Controller
         'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
         'branches' => Branch::orderBy('name')->get(),
         'suppliers' => Supplier::orderBy('name')->get(),
-        'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
+'brands' => Brand::orderBy('name')->get(),
         'variations' => Variation::orderBy('name')->get(),
         'defaultGst' => (float) Setting::get('gst', 0),
     ]);
@@ -127,6 +129,8 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        $product->load('brand');
+
         // Barcode Generator
         $generator = new BarcodeGeneratorHTML();
 
@@ -151,7 +155,8 @@ public function edit(Product $product)
         'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
         'branches' => Branch::orderBy('name')->get(),
         'suppliers' => Supplier::orderBy('name')->get(),
-        'brands' => Product::whereNotNull('brand')->where('brand', '<>', '')->distinct()->orderBy('brand')->pluck('brand'),
+       'brands' => Brand::orderBy('name')->get(),
+
         'variations' => Variation::orderBy('name')->get(),
         'product' => $product,
         'defaultGst' => (float) Setting::get('gst', 0),

@@ -12,12 +12,24 @@
                         </button>
                     </div>
                 @endif
+                @if (session('error'))
+                    <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+                @endif
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
-                    <h4 class="mb-0">Brand List</h4>
-                    <a href="{{ route('brands.create') }}" class="btn btn-primary add-list d-flex align-items-center">
-                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add New Brand
-                    </a>
+                    <h4 class="mb-0">Brands List</h4>
+                    <div class="d-flex flex-nowrap align-items-center" style="width: 410px; max-width: 100%;">
+                        <form id="brand-search-form" action="{{ route('brands.index') }}" method="GET"
+                            class="mr-2" style="min-width: 0; flex: 1 1 240px;">
+                            <input id="brand-search" name="search" type="search" class="form-control"
+                                value="{{ request('search') }}" placeholder="Search brands..."
+                                aria-label="Search brands by name">
+                        </form>
+                        <a href="{{ route('brands.create') }}" class="btn btn-primary add-list d-flex align-items-center"
+                            style="white-space: nowrap; flex-shrink: 0;">
+                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add New Brand
+                        </a>
+                    </div>
                 </div>
 
                 <div class="table-responsive rounded mb-3">
@@ -52,12 +64,23 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="2" class="text-center text-muted">No brands found. Click "Add New Brand" to add one.</td>
+                                    <td colspan="2" class="text-center text-muted">
+                                        @if (request('search') !== null && request('search') !== '')
+                                            No brands match your search.
+                                        @else
+                                            No brands found. Click "Add New Brand" to add one.
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+                @if ($brands->hasPages())
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $brands->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -69,7 +92,18 @@
                     alert.classList.remove('show');
                     window.setTimeout(() => alert.remove(), 150);
                 }
-            }, 4000);
+            }, 2000);
         </script>
     @endif
+    <script>
+        const brandSearch = document.getElementById('brand-search');
+        let searchTimeout;
+
+        brandSearch.addEventListener('input', () => {
+            window.clearTimeout(searchTimeout);
+            searchTimeout = window.setTimeout(() => {
+                brandSearch.form.submit();
+            }, 300);
+        });
+    </script>
 @endsection
