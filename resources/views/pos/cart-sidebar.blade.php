@@ -2,15 +2,19 @@
 <div class="cart-items-wrapper position-relative" style="height: 350px; overflow-y: auto; overflow-x: hidden;">
     @if ($productItem->count() > 0)
         <div class="table-responsive pos-cart-table-wrap">
-            <table class="table table-sm mb-0 pos-cart-table">
+            <table class="table table-sm mb-0 pos-cart-table rounded-0 mt-0">
                 <thead>
                     <tr>
                         <th>Image</th>
                         <th>Product</th>
-                        <th>Price</th>
-                        <th>Discount</th>
+                        <th>Price (PKR)</th>
                         <th>Quantity</th>
-                        <th>Sub Total</th>
+                        <th>Gross Amount (PKR)</th>
+                        <th>Tax Rate</th>
+                        <th>Tax Amount</th>
+                        <th>Amount Incl. Tax</th>
+                        <th>Discount (PKR)</th>
+                        <th>Net Amount</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -24,38 +28,54 @@
                             $currency = $options->currency ?? 'PKR';
                             $image = $options->image ?? asset('assets/images/product/default.webp');
                         @endphp
+                        @php
+                            $gross     = $originalPrice * $item->qty;
+                            $taxRate   = (float) ($options->tax_rate ?? 10);   // e.g. 17 for 17%
+                            $taxAmount = $gross * $taxRate / 100;
+                            $inclTax   = $gross + $taxAmount;
+                            $netAmount = max(0, $inclTax - ($discount * $item->qty));
+                        @endphp
                         <tr>
                             <td>
                                 <img class="pos-cart-product-image" src="{{ $image }}" alt="{{ $item->name }}">
                             </td>
                             <td class="pos-cart-product-name">
                                 <div>{{ $item->name }}</div>
-                                <small
-                                    class="text-muted">{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}</small>
+                                <!-- <small
+                                    class="text-muted">{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}
+                                </small> -->
                             </td>
                             <td>
-                                <div>{{ $currency }} {{ number_format($originalPrice, 2) }}</div>
-                                <small class="text-muted">Tax: {{ number_format($tax, 2) }}</small>
+                                <div>{{ number_format($originalPrice, 2) }}</div>
+                                <!-- <small class="text-muted">Tax: {{ number_format($tax, 2) }}</small> -->
                             </td>
                             <td>
-                                <div class="pos-discount-control">
-                                    <input type="number" class="form-control form-control-sm pos-discount-input"
-                                        value="{{ (int) $discount }}" min="0" max="{{ $originalPrice + $tax }}"
-                                        step="0.01" aria-label="Discount">
-                                    <button type="button" class="btn btn-primary btn-sm pos-discount-apply"
-                                        onclick="applyDiscount('{{ $item->rowId }}', this)">Apply</button>
-                                </div>
+                                 <div class="pos-quantity-control">
+                                     <input type="number" class="form-control form-control-sm pos-quantity-input"
+                                         style="width: 50px;"
+                                         value="{{ $item->qty }}" min="0" step="1" aria-label="Quantity"
+                                         onchange="updateCart('{{ $item->rowId }}', Math.max(0, parseInt(this.value) || 0))"
+                                         onkeydown="if (event.key === 'Enter') this.blur()"
+                                     >
+                                 </div>
                             </td>
+                            <td>{{ number_format($gross, 2) }}</td>
+                            <td>{{ number_format($taxRate, 2) }}%</td>
+                            <td>{{ number_format($taxAmount, 2) }}</td>
+                            <td class="pos-incl-tax-amount" data-amount="{{ $inclTax }}">{{ number_format($inclTax, 2) }}</td>
                             <td>
-                                <div class="pos-quantity-control">
-                                    <button type="button" class="pos-quantity-button"
-                                        onclick="updateCart('{{ $item->rowId }}', {{ max(0, $item->qty - 1) }})">&minus;</button>
-                                    <span>{{ $item->qty }}</span>
-                                    <button type="button" class="pos-quantity-button pos-quantity-add"
-                                        onclick="updateCart('{{ $item->rowId }}', {{ $item->qty + 1 }})">+</button>
-                                </div>
-                            </td>
-                            <td>{{ $currency }} {{ number_format($item->subtotal, 2) }}</td>
+    <div class="pos-discount-control">
+        <input type="number" class="form-control form-control-sm pos-discount-input"
+            style="width: 50px;"
+            value="{{ (int) $discount }}" min="0" max="{{ $originalPrice + $tax }}"
+            step="1" aria-label="Discount"
+            oninput="updateNetAmount(this)"
+            onchange="updateDiscount('{{ $item->rowId }}', this.value)"
+            onkeydown="if (event.key === 'Enter') this.blur()"
+        >
+    </div>
+</td>
+                            <td class="pos-net-amount" data-currency="{{ $currency }}">{{ $currency }} {{ number_format($netAmount, 2) }}</td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     onclick="deleteCart('{{ $item->rowId }}')">
@@ -145,7 +165,7 @@
     .pos-cart-table {
         min-width: 0;
         width: 100%;
-        table-layout: fixed;
+        /* table-layout: fixed; */
         font-size: 10px;
 
     }

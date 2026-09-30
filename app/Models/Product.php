@@ -81,11 +81,22 @@ class Product extends Model
 
     public function scopeFilter($query, array $filters)
     {
-        $query->when($filters['search'] ?? false, function ($query, $search) {
-            return $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('code', 'like', '%' . $search . '%');
+        $search = trim($filters['search'] ?? '');
+
+        $query->when($search !== '', function ($query) use ($search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('products.name', 'like', '%' . $search . '%')
+                    ->orWhere('products.code', 'like', '%' . $search . '%')
+                    ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                        $categoryQuery->where('name', 'like', '%' . $search . '%');
+                    });
             });
         });
+
+        $query->when($filters['category_id'] ?? null, function ($query, $categoryId) {
+            $query->where('products.category_id', $categoryId);
+        });
+
+        return $query;
     }
 }

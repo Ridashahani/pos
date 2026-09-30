@@ -17,26 +17,40 @@ class PosController extends Controller
     /**
      * Display the POS interface.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $todayDate = Carbon::now();
-        $row = (int) request('row', 10);
+        $todayDate = Carbon::today();
+        $row = (int) $request->input('row', 10);
+        $search = trim((string) $request->input('search', ''));
 
         if ($row < 1 || $row > 100) {
             abort(400, 'The per-page parameter must be an integer between 1 and 100.');
         }
 
+        $products = QueryBuilder::for(Product::class)
+            ->where('products.stock', '>', 0)
+            ->where(function ($query) use ($todayDate) {
+                $query->whereNull('expire_date')
+                    ->orWhereDate('expire_date', '>=', $todayDate);
+            })
+            ->allowedSorts(['name', 'selling_price'])
+            ->allowedFilters(['name', 'category_id'])
+            ->filter($request->only(['search', 'category_id']))
+            ->when($search === '', fn ($query) => $query->whereIn('products.id', []))
+            ->paginate($row)
+            ->appends($request->query());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('pos.product-grid', compact('products'))->render(),
+                'total' => $products->total(),
+            ]);
+        }
+
         return view('pos.index', [
             'categories' => Category::orderBy('name')->get(),
             'productItem' => Cart::content(),
-            'products' => QueryBuilder::for(Product::class)
-                ->whereHas('stockIns', fn ($query) => $query->where('remaining_qty', '>', 0))
-                ->where('expire_date', '>', $todayDate)
-                ->allowedSorts(['name', 'selling_price'])
-                ->allowedFilters(['name', 'category_id'])
-                ->filter(request(['search', 'category_id']))
-                ->paginate($row)
-                ->appends(request()->query()),
+            'products' => $products,
         ]);
     }
 
