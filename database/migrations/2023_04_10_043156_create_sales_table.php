@@ -16,9 +16,7 @@ return new class extends Migration
 
             $table->string('invoice_no')->unique();
 
-            $table->foreignId('branch_id')
-                ->constrained()
-                ->onDelete('cascade');
+            $table->foreignId('branch_id');
 
             $table->foreignId('customer_id')
                 ->nullable()
@@ -61,5 +59,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('sales');
+        Schema::dropIfExists('orders');
     }
 };
