@@ -12,26 +12,29 @@ class Sale extends Model
     protected $table = 'sales';
 
     protected $fillable = [
-        'customer_id',
-        'sale_date',
-        'sale_status',
-        'total_products',
-        'sub_total',
-        'vat',
         'invoice_no',
-        'total',
-        'payment_type',
-        'pay_amount',
+        'branch_id',
+        'customer_id',
+        'user_id',
+        'sale_date',
+        'subtotal',
+        'discount',
+        'tax',
+        'grand_total',
+        'paid_amount',
         'due_amount',
+        'payment_method',
+        'status',
     ];
 
     protected $casts = [
-        'sale_date' => 'datetime',
-        'sub_total' => 'float',
-        'vat' => 'float',
-        'total' => 'float',
-        'pay_amount' => 'float',
-        'due_amount' => 'float',
+        'sale_date'   => 'datetime',
+        'subtotal'    => 'float',
+        'discount'    => 'float',
+        'tax'         => 'float',
+        'grand_total' => 'float',
+        'paid_amount' => 'float',
+        'due_amount'  => 'float',
     ];
 
     public function customer()

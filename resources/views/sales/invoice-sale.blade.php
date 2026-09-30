@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -67,8 +66,8 @@
                                 </div>
                                 <div class="col-sm-6 text-end mb-50">
                                     <h4 class="inv-title-1">Details</h4>
-                                    <p class="inv-from-1">Payment Type: {{ $sale->payment_type }}</p>
-                                    <p class="inv-from-1">Total Pay: {{ number_format($sale->pay_amount, 2) }}</p>
+                                    <p class="inv-from-1">Payment Type: {{ $sale->payment_method }}</p>
+                                    <p class="inv-from-1">Total Pay: {{ number_format($sale->paid_amount, 2) }}</p>
                                     <p class="inv-from-1">Due: {{ number_format($sale->due_amount, 2) }}</p>
                                 </div>
                             </div>
@@ -98,7 +97,9 @@
                                             <td><strong class="text-danger">Total</strong></td>
                                             <td></td>
                                             <td></td>
-                                            <td><strong class="text-danger">{{ number_format($sale->total, 2) }}</strong></td>
+                                            <td><strong
+                                                    class="text-danger">{{ number_format($sale->grand_total, 2) }}</strong>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>

@@ -3,14 +3,16 @@
 @section('container')
     <style>
         .row-selector-container {
-            min-width: 0; /* Default for mobile - allows shrinking */
+            min-width: 0;
+            /* Default for mobile - allows shrinking */
             padding-top: 0.5rem;
             padding-bottom: 0.5rem;
         }
 
         @media (min-width: 576px) {
             .row-selector-container {
-                min-width: 180px; /* Apply min-width only on sm+ screens */
+                min-width: 180px;
+                /* Apply min-width only on sm+ screens */
                 padding-top: 0;
                 padding-bottom: 0;
             }
@@ -51,13 +53,17 @@
                                     <div class="d-flex align-items-center">
                                         <label for="row" class="mb-0 mr-2" style="min-width: 50px;">Row:</label>
                                         <select class="form-control" name="row">
-                                            <option value="10" @if (request('row') == '10') selected="selected" @endif>10
+                                            <option value="10"
+                                                @if (request('row') == '10') selected="selected" @endif>10
                                             </option>
-                                            <option value="25" @if (request('row') == '25') selected="selected" @endif>25
+                                            <option value="25"
+                                                @if (request('row') == '25') selected="selected" @endif>25
                                             </option>
-                                            <option value="50" @if (request('row') == '50') selected="selected" @endif>50
+                                            <option value="50"
+                                                @if (request('row') == '50') selected="selected" @endif>50
                                             </option>
-                                            <option value="100" @if (request('row') == '100') selected="selected" @endif>100
+                                            <option value="100"
+                                                @if (request('row') == '100') selected="selected" @endif>100
                                             </option>
                                         </select>
                                     </div>
@@ -68,8 +74,8 @@
                                     <label class="control-label col-sm-3 align-self-center" for="search">Search:</label>
                                     <div class="col-sm-8">
                                         <div class="input-group">
-                                            <input type="text" id="search" class="form-control" name="search" placeholder="Search sale"
-                                                value="{{ request('search') }}">
+                                            <input type="text" id="search" class="form-control" name="search"
+                                                placeholder="Search sale" value="{{ request('search') }}">
                                             <div class="input-group-append">
                                                 <button type="submit" class="input-group-text bg-primary">
                                                     <x-heroicon-o-magnifying-glass class="w-5 h-5" />
@@ -99,19 +105,19 @@
                                 <tbody class="ligth-body">
                                     @forelse ($sales as $sale)
                                         <tr>
-                                            <td>{{ (($sales->currentPage() * 10) - 10) + $loop->iteration }}</td>
+                                            <td>{{ $sales->currentPage() * 10 - 10 + $loop->iteration }}</td>
                                             <td>{{ $sale->invoice_no }}</td>
                                             <td>{{ $sale->customer->name }}</td>
                                             <td>{{ $sale->sale_date->format('Y-m-d') }}</td>
-                                            <td>{{ $sale->payment_type }}</td>
-                                            <td>{{ number_format($sale->total, 2) }}</td>
+                                            <td>{{ $sale->payment_method }}</td>
+                                            <td>{{ number_format($sale->grand_total, 2) }}</td>
                                             <td>
-                                                <span class="badge badge-warning">{{ ucfirst($sale->sale_status) }}</span>
+                                                <span class="badge badge-warning">{{ ucfirst($sale->status) }}</span>
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center list-action">
-                                                    <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top" title="Details"
-                                                        href="{{ route('sale.saleDetails', $sale->id) }}">
+                                                    <a class="btn btn-info mr-2" data-toggle="tooltip" data-placement="top"
+                                                        title="Details" href="{{ route('sale.saleDetails', $sale->id) }}">
                                                         <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                                     </a>
                                                 </div>
