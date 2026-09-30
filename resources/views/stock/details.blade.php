@@ -15,17 +15,18 @@
 
         <div class="card card-block card-stretch">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h4 class="card-title mb-0">Purchase Details</h4>
+                <h4 class="card-title mb-0">Products Details</h4>
                 <span class="text-muted small">{{ $purchaseItem->purchase?->purchase_no ?: 'Manual stock' }}</span>
-            </div>
+            </div> 
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead class="bg-white text-uppercase">
                             <tr class="ligth ligth-data">
-                                <th>Product</th>
+                                <th>Product_Name</th>
+                                <th>Variation</th>
                                 <th>Branch</th>
-                                <th>Purchase</th>
+                                <th>Purchase_No</th>
                                 <th>Purchase Price</th>
                                 <th class="text-right text-nowrap">Purchased Qty</th>
                                 <th class="text-right text-nowrap">Available Qty</th>
@@ -34,6 +35,7 @@
                         <tbody class="ligth-body">
                             <tr>
                                 <td class="font-weight-bold">{{ $purchaseItem->product->name }}</td>
+                                <td>{{ $variationLabel }}</td>
                                 <td>{{ $purchaseItem->branch->name }}</td>
                                 <td>{{ $purchaseItem->purchase?->purchase_no ?: 'Manual' }}</td>
                                 <td>{{ $purchaseItem->product->currency ?: 'PKR' }} {{ number_format($purchaseItem->cost_price, 2) }}</td>

@@ -16,40 +16,36 @@ return new class extends Migration
 
             $table->string('invoice_no')->unique();
 
-            $table->foreignId('branch_id')
-                ->constrained()
-                ->onDelete('cascade');
+            $table->foreignId('branch_id')->nullable();
 
             $table->foreignId('customer_id')
                 ->nullable()
                 ->constrained()
                 ->nullOnDelete();
 
-            $table->foreignId('user_id')
+            $table->foreignId('user_id')->nullable()
                 ->constrained()
                 ->onDelete('cascade');
 
             $table->dateTime('sale_date')->index();
 
-            $table->decimal('subtotal', 15, 2)->default(0);
+            $table->unsignedInteger('total_products')->default(0);
+
+            $table->decimal('sub_total', 15, 2)->default(0);
 
             $table->decimal('discount', 15, 2)->default(0);
 
-            $table->decimal('tax', 15, 2)->default(0);
+            $table->decimal('vat', 15, 2)->default(0);
 
-            $table->decimal('grand_total', 15, 2)->default(0);
+            $table->decimal('total', 15, 2)->default(0);
 
-            $table->decimal('paid_amount', 15, 2)->default(0);
+            $table->decimal('pay_amount', 15, 2)->default(0);
 
             $table->decimal('due_amount', 15, 2)->default(0);
 
-            $table->string('payment_method')->nullable();
+            $table->string('payment_type')->nullable();
 
-            $table->enum('status', [
-                'pending',
-                'completed',
-                'returned'
-            ])->default('pending')->index();
+            $table->string('sale_status')->default('pending')->index();
 
             $table->timestamps();
         });
