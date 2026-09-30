@@ -183,6 +183,7 @@ class PurchaseController extends Controller
             $purchase->stockIns()->create([
                 'product_id' => $product->id,
                 'variation_id' => $variationId,
+                'variation_details' => $item['variations'] ?? [],
                 'branch_id' => $purchase->branch_id,
                 'batch_no' => $purchase->purchase_no,
                 'quantity' => $item['quantity'],
