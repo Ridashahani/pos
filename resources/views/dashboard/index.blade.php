@@ -5,7 +5,7 @@
         <!-- Success Message -->
         <div class="row">
             <div class="col-lg-12">
-                @if(session()->has('success'))
+                @if (session()->has('success'))
                     <div class="alert text-white bg-success" role="alert">
                         <div class="iq-alert-text">{{ session('success') }}</div>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -82,7 +82,7 @@
                             </div>
                             <div>
                                 <p class="mb-2">Complete Sales</p>
-                                <h4>{{ $complete_sales}}</h4>
+                                <h4>{{ $complete_sales }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -150,19 +150,20 @@
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @forelse(($recent_sales ) as $sale)
+                                    @forelse($recent_sales as $sale)
                                         <tr>
                                             <td>{{ $sale->created_at->format('d M Y') }}</td>
                                             <td>{{ $sale->customer->name ?? 'Walk-in Customer' }}</td>
-                                            <td>${{ number_format($sale->total, 2) }}</td>
+                                            <td>PKR {{ number_format($sale->grand_total, 2) }}</td>
                                             <td>
                                                 <span
-                                                    class="badge {{ $sale->sale_status == 'complete' ? 'bg-success' : 'bg-warning' }}">
-                                                    {{ ucfirst($sale->sale_status) }}
+                                                    class="badge {{ $sale->status == 'completed' ? 'bg-success' : 'bg-warning' }}">
+                                                    {{ ucfirst($sale->status) }}
                                                 </span>
                                             </td>
                                             <td>
-                                                <a class="btn btn-primary btn-sm" href="{{ route('sale.saleDetails', $sale->id) }}">
+                                                <a class="btn btn-primary btn-sm"
+                                                    href="{{ route('sale.saleDetails', $sale->id) }}">
                                                     <x-heroicon-o-eye class="w-4 h-4" />
                                                 </a>
                                             </td>
@@ -213,7 +214,7 @@
                         </div>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -221,7 +222,7 @@
 @section('specificpagescripts')
     <!-- ApexCharts -->
     <script>
-            document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             if (typeof ApexCharts !== 'undefined') {
                 var options = {
                     series: [{
@@ -242,13 +243,14 @@
                         curve: 'smooth'
                     },
                     xaxis: {
-                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+                            'Nov',
                             'Dec'
                         ],
                     },
                     tooltip: {
                         y: {
-                            formatter: function (val) {
+                            formatter: function(val) {
                                 return "PKR " + val
                             }
                         }
@@ -272,4 +274,4 @@
             }
         });
     </script>
-@endsection 
+@endsection

@@ -79,8 +79,8 @@ class PurchaseReturnController extends Controller
                     'purchase_item_id' => $item->id,
                     'product_id'       => $item->product_id,
                     'quantity'         => $qty,
-                    'unit_price'       => $item->unit_price,
-                    'total_amount'     => $qty * $item->unit_price,
+                    'unit_cost'        => $item->unit_price,
+                    'total'            => $qty * $item->unit_price,
                 ];
             }
 
@@ -93,10 +93,11 @@ class PurchaseReturnController extends Controller
             $return = PurchaseReturn::create([
                 'return_no'    => 'TMP-' . uniqid(),
                 'purchase_id'  => $purchase->id,
+                'branch_id'    => $purchase->branch_id,
                 'return_date'  => $data['return_date'],
                 'reason'       => $data['reason'],
                 'status'       => $data['status'],
-                'total_amount' => collect($lines)->sum('total_amount'),
+                'total_amount' => collect($lines)->sum('total'),
                 'created_by'   => auth()->id(),
             ]);
 

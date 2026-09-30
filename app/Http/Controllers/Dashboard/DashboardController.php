@@ -13,14 +13,12 @@ class DashboardController extends Controller
     public function index()
     {
         // 1. Key Metrics
-        $total_paid = Sale::sum('pay_amount');
+        $total_paid = Sale::sum('paid_amount');
         $total_due = Sale::sum('due_amount');
-        $complete_sales = Sale::where('sale_status', 'complete')->count();
-        $pending_sales = Sale::where('sale_status', 'pending')->count();
-
+        $complete_sales = Sale::where('status', 'completed')->count();
+        $pending_sales = Sale::where('status', 'pending')->count();
         // 2. Today's Snapshot
-        $today_sales = Sale::whereDate('created_at', \Carbon\Carbon::today())->sum('total');
-
+        $today_sales = Sale::whereDate('created_at', \Carbon\Carbon::today())->sum('grand_total');
         $top_products = DB::table('sale_details')
             ->join('products', 'sale_details.product_id', '=', 'products.id')
             ->select(
@@ -36,7 +34,7 @@ class DashboardController extends Controller
 
         // 4. Monthly Sales Data for Chart (Current Year)
         $monthly_sales = Sale::select(
-            DB::raw('SUM(total) as total_amount'),
+            DB::raw('SUM(grand_total) as total_amount'),
             DB::raw('MONTH(created_at) as month')
         )
             ->whereYear('created_at', date('Y'))

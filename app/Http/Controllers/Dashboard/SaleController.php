@@ -33,10 +33,10 @@ class SaleController extends Controller
         }
 
         $sales = QueryBuilder::for(Sale::class)
-            ->where('sale_status', 'pending')
+            ->where('sales.status', 'pending')
             ->allowedSorts([
                 'sale_date',
-                'total',
+                AllowedSort::field('total', 'grand_total'),
                 AllowedSort::callback('customer.name', function ($query, $descending) {
                     $query->join('customers', 'sales.customer_id', '=', 'customers.id')
                         ->orderBy('customers.name', $descending ? 'DESC' : 'ASC')
@@ -63,10 +63,10 @@ class SaleController extends Controller
         }
 
         $sales = QueryBuilder::for(Sale::class)
-            ->where('sale_status', 'complete')
+            ->where('sales.status', 'completed')
             ->allowedSorts([
                 'sale_date',
-                'total',
+                AllowedSort::field('total', 'grand_total'),
                 AllowedSort::callback('customer.name', function ($query, $descending) {
                     $query->join('customers', 'sales.customer_id', '=', 'customers.id')
                         ->orderBy('customers.name', $descending ? 'DESC' : 'ASC')
@@ -80,7 +80,6 @@ class SaleController extends Controller
             'sales' => $sales,
         ]);
     }
-
     /**
      * Store a newly created sale in storage.
      */
@@ -95,34 +94,34 @@ class SaleController extends Controller
             ]);
 
             $total = (float) Cart::total(null, null, '');
-            $pay_amount = $request->pay_amount;
+            $pay_amount = (float) $request->pay_amount;
             $due_amount = $total - $pay_amount;
+            $discount = Cart::content()->sum(fn($i) => (float) ($i->options->discount ?? 0) * $i->qty);
 
             $sale = Sale::create([
-                'customer_id' => $request->customer_id,
-                'invoice_no' => $invoice_no,
-                'sale_date' => Carbon::now(),
-                'sale_status' => 'pending',
-                'total_products' => Cart::count(),
-                'sub_total' => (float) Cart::subtotal(null, null, ''),
-                'vat' => (float) Cart::tax(null, null, ''),
-                'total' => $total,
-                'payment_type' => $request->payment_type,
-                'pay_amount' => $pay_amount,
-                'due_amount' => $due_amount,
+                'customer_id'    => $request->customer_id,
+                'branch_id'      => auth()->user()->branch_id ?? 1,
+                'user_id'        => auth()->id(),
+                'invoice_no'     => $invoice_no,
+                'sale_date'      => Carbon::now(),
+                'status'         => 'pending',
+                'subtotal'       => (float) Cart::subtotal(null, null, ''),
+                'discount'       => $discount,
+                'tax'            => (float) Cart::tax(null, null, ''),
+                'grand_total'    => $total,
+                'payment_method' => $request->payment_type,
+                'paid_amount'    => $pay_amount,
+                'due_amount'     => $due_amount,
             ]);
 
-            // Create Sale Details
             $contents = Cart::content();
             foreach ($contents as $content) {
                 SaleDetails::create([
-                    'sale_id' => $sale->id,
+                    'sale_id'    => $sale->id,
                     'product_id' => $content->id,
-                    'quantity' => $content->qty,
+                    'quantity'   => $content->qty,
                     'unit_price' => $content->price,
-                    'currency' => $content->options->currency ?? 'PKR',
-                    'discount' => (float) ($content->options->discount ?? 0) * $content->qty,
-                    'total' => $content->total,
+                    'total'      => $content->total,
                 ]);
             }
 
@@ -150,14 +149,14 @@ class SaleController extends Controller
     {
         $sale = Sale::with('customer')->findOrFail($sale_id);
         $saleDetails = SaleDetails::with('product')
-                        ->where('sale_id', $sale_id)
-                        ->orderBy('id', 'DESC')
-                        ->get();
+            ->where('sale_id', $sale_id)
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return view('sales.details-sale', [
             'sale' => $sale,
             'saleDetails' => $saleDetails,
-           
+
         ]);
     }
 
@@ -171,7 +170,7 @@ class SaleController extends Controller
         DB::transaction(function () use ($sale_id) {
             $sale = Sale::whereKey($sale_id)->lockForUpdate()->firstOrFail();
 
-            if ($sale->sale_status !== 'complete') {
+            if ($sale->status !== 'completed') {
                 $products = SaleDetails::where('sale_id', $sale_id)->with('product')->get();
 
                 foreach ($products as $detail) {
@@ -181,13 +180,12 @@ class SaleController extends Controller
                     $product->decrement('stock', $detail->quantity);
                 }
 
-                $sale->update(['sale_status' => 'complete']);
+                $sale->update(['status' => 'completed']);
             }
         });
 
         return Redirect::route('sale.pendingSales')->with('success', 'Sale has been completed!');
     }
-
     public function returnSale(Sale $sale)
     {
         DB::transaction(function () use ($sale): void {
@@ -209,7 +207,7 @@ class SaleController extends Controller
                     ->firstOrFail()
                     ->increment('stock', $item->quantity);
 
-                $item->update(['status' => 'returned']);
+                $sale->update(['status' => 'returned']);
             }
         });
 
@@ -227,7 +225,7 @@ class SaleController extends Controller
         return view('pos.print-invoice', [
             'sale' => $sale,
             'saleDetails' => $saleDetails,
-           
+
         ]);
     }
 
@@ -235,9 +233,9 @@ class SaleController extends Controller
     {
         $sale = Sale::with('customer')->findOrFail($sale_id);
         $saleDetails = SaleDetails::with('product')
-                        ->where('sale_id', $sale_id)
-                        ->orderBy('id', 'DESC')
-                        ->get();
+            ->where('sale_id', $sale_id)
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return view('pos.print-receipt', [
             'sale' => $sale,
@@ -258,7 +256,7 @@ class SaleController extends Controller
             ->allowedSorts([
                 'sale_date',
                 'due_amount',
-                'pay_amount',
+                AllowedSort::field('pay_amount', 'paid_amount'),
                 AllowedSort::callback('customer.name', function ($query, $descending) {
                     $query->join('customers', 'sales.customer_id', '=', 'customers.id')
                         ->orderBy('customers.name', $descending ? 'DESC' : 'ASC')
@@ -292,21 +290,17 @@ class SaleController extends Controller
         }
 
         $sale = Sale::findOrFail($sale_id);
-        $mainPay = $sale->pay_amount;
+        $mainPay = $sale->paid_amount;
         $mainDue = $sale->due_amount;
 
         $paid_due = $mainDue - $request->due_amount;
         $paid_pay = $mainPay + $request->due_amount;
 
         $sale->update([
-            'due_amount' => $paid_due,
-            'pay_amount' => $paid_pay,
+            'due_amount'  => $paid_due,
+            'paid_amount' => $paid_pay,
         ]);
 
         return Redirect::route('sale.pendingDue')->with('success', 'Due Amount Updated Successfully!');
     }
-
-   
-
-  
 }
