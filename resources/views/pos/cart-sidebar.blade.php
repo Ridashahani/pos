@@ -1,5 +1,6 @@
 <!-- Detailed POS cart table and payment summary. -->
 @php
+    $summaryPrice = 0.0;
     $summaryNetAmount = 0.0;
     $summaryTaxAmount = 0.0;
     $summaryDiscount = 0.0;
@@ -40,6 +41,7 @@
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - $discount);
+                            $summaryPrice += $originalPrice;
                             $summaryNetAmount += $netAmount;
                             $summaryTaxAmount += $taxAmount;
                             $summaryDiscount += $discount;
@@ -126,7 +128,7 @@
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
             <input class="form-control form-control-sm pos-summary-price"
-                value="{{ $cartCurrency }} {{ number_format($summaryNetAmount, 2) }}" readonly>
+                value="{{ $cartCurrency }} {{ number_format($summaryPrice, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>

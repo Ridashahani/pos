@@ -374,7 +374,7 @@ class PosControllerTest extends TestCase
             ->assertJsonPath('success', true);
         $this->assertStringContainsString('PKR 195.00', $response->json('cart_html'));
         $cartHtml = $response->json('cart_html');
-        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 195\.00"/', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 100\.00"/', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-tax"\s+value="PKR 20\.00"/', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-discount"\s+value="PKR 25\.00"/', $cartHtml);
         $updatedItem = Cart::content()->first();
