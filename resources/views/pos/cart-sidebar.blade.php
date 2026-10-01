@@ -10,6 +10,12 @@
         return (float) ($item->options->discount ?? 0) * $item->qty;
     });
     $cartGrandTotal = max(0, round($cartSubtotal - $cartDiscount + $cartTax, 2));
+
+    // Summary accumulators — must be initialized before the foreach loop
+    $summaryPrice     = 0;
+    $summaryNetAmount = 0;
+    $summaryTaxAmount = 0;
+    $summaryDiscount  = 0;
 @endphp
 <div class="cart-items-wrapper position-relative" style="height: 350px; overflow-y: auto; overflow-x: hidden;">
     @if ($productItem->count() > 0)
@@ -46,10 +52,10 @@
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - $discount);
-                            $summaryPrice += $originalPrice;
+                            $summaryPrice     += $originalPrice;
                             $summaryNetAmount += $netAmount;
                             $summaryTaxAmount += $taxAmount;
-                            $summaryDiscount += $discount;
+                            $summaryDiscount  += $discount;
                         @endphp
                         <tr data-row-id="{{ $item->rowId }}" data-item-id="{{ $item->id }}"
                             data-unit-price="{{ $originalPrice }}" data-currency="{{ $currency }}">
@@ -70,7 +76,20 @@
                                         data-saved="{{ $item->qty }}">
                                 </div>
                             </td>
-                            <td>{{ $currency }} {{ number_format(max(0, $originalPrice - $discount + $tax) * $item->qty, 2) }}</td>
+                            <td><span class="pos-gross-amount">{{ number_format($gross, 2) }}</span></td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm pos-tax-rate-input"
+                                    style="width: 65px;" value="{{ number_format($taxRate, 2) }}"
+                                    min="0" max="100" step="0.01">
+                            </td>
+                            <td><span class="pos-tax-amount">{{ number_format($taxAmount, 2) }}</span></td>
+                            <td><span class="pos-incl-tax-amount">{{ number_format($inclTax, 2) }}</span></td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm pos-discount-input"
+                                    style="width: 80px;" value="{{ number_format($discount, 2) }}"
+                                    min="0" step="0.01" max="{{ $inclTax }}">
+                            </td>
+                            <td><span class="pos-net-amount">{{ $currency }} {{ number_format($netAmount, 2) }}</span></td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     data-action="remove">

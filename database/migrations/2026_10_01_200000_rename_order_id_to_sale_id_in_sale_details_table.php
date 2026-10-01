@@ -8,8 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::rename('order_details', 'sale_details');
-
         Schema::table('sale_details', function (Blueprint $table) {
             $table->renameColumn('order_id', 'sale_id');
         });
@@ -20,7 +18,5 @@ return new class extends Migration
         Schema::table('sale_details', function (Blueprint $table) {
             $table->renameColumn('sale_id', 'order_id');
         });
-
-        Schema::rename('sale_details', 'order_details');
     }
 };
