@@ -15,6 +15,7 @@ class StockIn extends Model
         'purchase_id',
         'product_id',
         'variation_id',
+        'variation_details',
         'branch_id',
         'batch_no',
         'quantity',
@@ -24,6 +25,7 @@ class StockIn extends Model
 
     protected $casts = [
         'cost_price' => 'float',
+        'variation_details' => 'array',
     ];
 
     public function purchase()

@@ -33,13 +33,15 @@
                                 <form action="{{ route('pos.index') }}" method="get" class="mb-0" id="pos-search-form">
                                     <div class="input-group pos-search-box">
                                         <input type="text" class="form-control" name="search" id="pos_search"
-                                            placeholder="Search products..."
-                                            value="{{ request('search') }}" autocomplete="off" aria-label="Search products">
+                                            placeholder="Search products..." value="{{ request('search') }}"
+                                            autocomplete="off" aria-label="Search products">
                                         <div class="input-group-append">
                                             <button type="submit" class="btn btn-primary pos-search-btn" title="Search">
                                                 <x-heroicon-o-magnifying-glass class="w-5 h-5" />
                                             </button>
-                                            <button type="button" id="pos-search-clear" class="btn btn-danger pos-search-btn {{ request('search') || request('category_id') ? '' : 'd-none' }}" title="Clear search" aria-label="Clear search">
+                                            <button type="button" id="pos-search-clear"
+                                                class="btn btn-danger pos-search-btn {{ request('search') || request('category_id') ? '' : 'd-none' }}"
+                                                title="Clear search" aria-label="Clear search">
                                                 <x-heroicon-o-x-mark class="w-5 h-5" />
                                             </button>
                                         </div>
@@ -144,7 +146,13 @@
                                 <tr>
                                     <td class="text-muted font-weight-bold">Total Bill:</td>
                                     <td class="text-right font-weight-bold h5 text-primary" id="modal_total_display">
-                                        {{ Cart::total() }}
+                                        @php
+                                            $paymentItems = Cart::content();
+                                            $paymentSubtotal = $paymentItems->sum(fn ($item) => (float) ($item->options->original_price ?? $item->price) * $item->qty);
+                                            $paymentDiscount = $paymentItems->sum(fn ($item) => (float) ($item->options->discount ?? 0) * $item->qty);
+                                            $paymentTax = $paymentItems->sum(fn ($item) => (float) ($item->options->tax ?? 0) * $item->qty);
+                                        @endphp
+                                        {{ number_format(max(0, $paymentSubtotal - $paymentDiscount + $paymentTax), 2) }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -261,161 +269,322 @@
             return $('#customer_id').val();
         }
 
-        // Logic: Add Item to Cart (AJAX)
-        async function addToCart(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const customerId = getCustomerId();
-
-            if (customerId) formData.append('customer_id', customerId);
-
-            try {
-                const response = await fetch("{{ route('pos.addCart') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.success) {
-                    // Update Cart Sidebar HTML
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    // Update Cart Count Badge
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error adding to cart:', error);
-            }
-        }
-        async function addManualItem() {
-            const name = document.getElementById('manual_item_name').value.trim();
-            const price = parseFloat(document.getElementById('manual_item_price').value);
-            const tax = parseFloat(document.getElementById('manual_item_tax').value) || 0;
-            const discount = parseFloat(document.getElementById('manual_item_discount').value) || 0;
-
-            if (!name || isNaN(price) || price <= 0) {
-                alert('Please enter item name and valid price!');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('price', price);
-            formData.append('tax', tax);
-            formData.append('discount', discount);
-            formData.append('is_manual', 1);
-
-            const customerId = getCustomerId();
-            if (customerId) formData.append('customer_id', customerId);
-
-            try {
-                const response = await fetch("{{ route('pos.addCart') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                } else {
-                    alert(data.message || 'Failed to add item');
-                }
-            } catch (error) {
-                console.error('Error adding manual item:', error);
-            }
-        }
-
-        // Logic: Update Item Quantity (AJAX)
-        async function updateCart(rowId, qty) {
-            const customerId = getCustomerId();
-            try {
-                const response = await fetch("{{ url('pos/update') }}/" + rowId, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        qty: qty,
-                        customer_id: customerId
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error updating cart:', error);
-            }
-        }
-
-        async function updateDiscount(rowId, discount) {
-            try {
-                const response = await fetch("{{ url('pos/discount') }}/" + rowId, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        discount: discount
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error updating discount:', error);
-            }
-        }
-
-        function updateNetAmount(input) {
-            const row = input.closest('tr');
-            const inclTax = parseFloat(row.querySelector('.pos-incl-tax-amount').dataset.amount) || 0;
-            const quantity = parseFloat(row.querySelector('.pos-quantity-input').value) || 0;
-            const discount = parseFloat(input.value) || 0;
-            const currency = row.querySelector('.pos-net-amount').dataset.currency;
-            const netAmount = Math.max(0, inclTax - discount * quantity);
-
-            row.querySelector('.pos-net-amount').textContent = currency + ' ' + new Intl.NumberFormat('en-US', {
+        /* =====================================================================
+         * CART ENGINE (same look as before, only the behaviour is fixed)
+         * - spinner arrows / typing update the numbers instantly (local maths)
+         * - saves are debounced and sent ONE AT A TIME (no lost clicks)
+         * - the cart HTML is only re-rendered when nothing is being edited
+         * ===================================================================== */
+        (function () {
+            const container = document.getElementById('cart-sidebar-container');
+            const badge = document.getElementById('cart-count-badge');
+            const CSRF = '{{ csrf_token() }}';
+            const FIELDS = {
+                qty:      { sel: '.pos-quantity-input', url: "{{ url('pos/update') }}/",   key: 'qty' },
+                discount: { sel: '.pos-discount-input', url: "{{ url('pos/discount') }}/", key: 'discount' },
+                rate:     { sel: '.pos-tax-rate-input', url: "{{ url('pos/tax-rate') }}/", key: 'tax_rate' },
+            };
+            const ALL_FIELDS = Object.values(FIELDS).map(f => f.sel).join(',');
+            const fmt = n => new Intl.NumberFormat('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
-            }).format(netAmount);
-        }
+            }).format(n);
+            const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+            const rows = () => [...container.querySelectorAll('tr[data-item-id]')];
+            const rowFor = id => rows().find(tr => tr.dataset.itemId === String(id));
+            const fieldOf = input => Object.keys(FIELDS).find(k => input.matches(FIELDS[k].sel));
+            const isField = el => el instanceof Element && el.matches(ALL_FIELDS);
 
-        // Logic: Remove Item from Cart (AJAX)
-        async function deleteCart(rowId) {
-            const customerId = getCustomerId();
-            try {
-                const response = await fetch("{{ url('pos/delete') }}/" + rowId + "?customer_id=" + (customerId ||
-                    ''), {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error deleting cart:', error);
+            /* ---------- instant local calculation ---------- */
+            function recalcRow(tr) {
+                const qtyIn = tr.querySelector(FIELDS.qty.sel);
+                const max = qtyIn.max ? parseInt(qtyIn.max, 10) : Infinity;
+                const qty = Math.min(max, Math.max(0, parseInt(qtyIn.value, 10) || 0));
+                const rate = Math.min(100, Math.max(0, num(tr.querySelector(FIELDS.rate.sel).value)));
+                const discIn = tr.querySelector(FIELDS.discount.sel);
+                const unit = num(tr.dataset.unitPrice);
+                const gross = unit * qty;
+                const tax = gross * rate / 100;
+                const incl = gross + tax;
+                const discount = Math.min(Math.max(0, num(discIn.value)), incl);
+                const net = incl - discount;
+
+                tr.querySelector('.pos-gross-amount').textContent = fmt(gross);
+                tr.querySelector('.pos-tax-amount').textContent = fmt(tax);
+                tr.querySelector('.pos-incl-tax-amount').textContent = fmt(incl);
+                tr.querySelector('.pos-net-amount').textContent = tr.dataset.currency + ' ' + fmt(net);
+                discIn.max = incl.toFixed(2);
+                return { qty, unit, tax, discount, net, currency: tr.dataset.currency };
             }
-        }
+
+            function recalcSummary() {
+                const t = { items: 0, price: 0, tax: 0, discount: 0, net: 0 };
+                let currency = 'PKR';
+                rows().forEach(tr => {
+                    const c = recalcRow(tr);
+                    t.items += c.qty;
+                    t.price += c.unit;
+                    t.tax += c.tax;
+                    t.discount += c.discount;
+                    t.net += c.net;
+                    currency = c.currency;
+                });
+                const set = (sel, v) => { const el = container.querySelector(sel); if (el) el.value = v; };
+                set('.pos-summary-items', t.items);
+                set('.pos-summary-price', currency + ' ' + fmt(t.price));
+                set('.pos-summary-tax', currency + ' ' + fmt(t.tax));
+                set('.pos-summary-discount', currency + ' ' + fmt(t.discount));
+                const total = document.getElementById('cart-total');
+                if (total) {
+                    total.dataset.total = t.net;
+                    total.textContent = currency + ' ' + fmt(t.net);
+                }
+                badge.innerText = t.items + ' items';
+                if (typeof calculateChange === 'function') calculateChange();
+            }
+
+            function normalize(input) {
+                const field = fieldOf(input);
+                if (field === 'qty') {
+                    const max = input.max ? parseInt(input.max, 10) : Infinity;
+                    input.value = Math.min(max, Math.max(0, parseInt(input.value, 10) || 0));
+                } else if (field === 'rate') {
+                    input.value = Math.min(100, Math.max(0, num(input.value)));
+                } else if (field === 'discount') {
+                    input.value = recalcRow(input.closest('tr')).discount;
+                }
+                recalcSummary();
+            }
+
+            /* ---------- one request at a time ---------- */
+            let chain = Promise.resolve();
+            let inflight = 0;
+            let lastData = null;
+            const timers = new Map();
+
+            function enqueue(task) {
+                inflight++;
+                chain = chain.then(task)
+                    .catch(err => console.error(err))
+                    .finally(() => { if (--inflight === 0) settle(); });
+                return chain;
+            }
+
+            function schedule(tr, field, delay = 400) {
+                const id = tr.dataset.itemId;
+                const key = id + '|' + field;
+                clearTimeout(timers.get(key)?.t);
+                const run = () => { timers.delete(key); enqueue(() => saveField(id, field)); };
+                timers.set(key, { t: setTimeout(run, delay), run });
+            }
+
+            function flushTimers() {
+                [...timers.values()].forEach(x => { clearTimeout(x.t); x.run(); });
+            }
+
+            // rowId changes whenever options change; keep the live DOM pointing at the current ids.
+            function syncRowIds(html) {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                doc.querySelectorAll('tr[data-item-id]').forEach(n => {
+                    const live = rowFor(n.dataset.itemId);
+                    if (live) live.dataset.rowId = n.dataset.rowId;
+                });
+            }
+
+            async function saveField(itemId, field) {
+                const tr = rowFor(itemId);
+                if (!tr) return;
+                const f = FIELDS[field];
+                const input = tr.querySelector(f.sel);
+                const focused = document.activeElement === input;
+
+                // Still typing / still holding the spinner: wait for the final value.
+                if (focused && (input.value === '' || (field === 'qty' && num(input.value) === 0))) return;
+
+                normalize(input);
+                if (num(input.value) === num(input.dataset.saved)) return;
+
+                const value = input.value;
+                const res = await fetch(f.url + tr.dataset.rowId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ [f.key]: value }),
+                });
+                const data = await res.json().catch(() => null);
+
+                if (res.ok && data?.success) {
+                    input.dataset.saved = value;
+                    // No re-render: the numbers on screen were already calculated locally and
+                    // match the server. Only keep the row ids in sync so later saves hit the right row.
+                    syncRowIds(data.cart_html);
+                    if (field === 'qty' && num(value) === 0) render(data);   // line was removed, redraw once
+                } else if (data?.cart_html) {
+                    render(data);                         // e.g. 409: row vanished, show the real cart
+                } else {
+                    input.value = input.dataset.saved;    // validation/server error: roll back
+                    recalcSummary();
+                }
+            }
+
+            /* ---------- rendering (only when nothing is being edited) ---------- */
+            const KEEP = ['pay_amount', 'payment_type'];
+
+            function render(data) {
+                const wrap = container.querySelector('.cart-items-wrapper');
+                const top = wrap ? wrap.scrollTop : 0;
+                const kept = KEEP.map(id => [id, document.getElementById(id)?.value]);
+
+                container.innerHTML = data.cart_html;
+                badge.innerText = data.cart_count + ' items';
+
+                const newWrap = container.querySelector('.cart-items-wrapper');
+                if (newWrap) newWrap.scrollTop = top;
+                kept.forEach(([id, v]) => {
+                    const el = document.getElementById(id);
+                    if (el && v !== undefined) el.value = v;
+                });
+                lastData = null;
+            }
+
+            function settle() {
+                const a = document.activeElement;
+                const editing = a && container.contains(a) && a.matches('input, select');
+                if (inflight === 0 && timers.size === 0 && lastData && !editing) render(lastData);
+            }
+
+            /* ---------- native spinner arrows: don't leave the input "active" ---------- */
+            let spinnerPointer = null;
+
+            document.addEventListener('pointerdown', function (event) {
+                if (!(event.target instanceof Element)) return;
+                const input = event.target.closest(ALL_FIELDS);
+                if (!input || event.button !== 0 || !container.contains(input)) {
+                    spinnerPointer = null;
+                    return;
+                }
+
+                const bounds = input.getBoundingClientRect();
+                const spinnerWidth = 18;
+                const rtl = window.getComputedStyle(input).direction === 'rtl';
+                const clickedSpinner = rtl
+                    ? event.clientX <= bounds.left + spinnerWidth
+                    : event.clientX >= bounds.right - spinnerWidth;
+
+                if (clickedSpinner) input.classList.add('pos-quantity-spinner-active');
+                spinnerPointer = clickedSpinner ? { input, pointerId: event.pointerId } : null;
+            });
+
+            function releaseSpinner(event) {
+                const sp = spinnerPointer;
+                if (!sp || sp.pointerId !== event.pointerId) return;
+                spinnerPointer = null;
+                requestAnimationFrame(() => {
+                    if (!sp.input.isConnected) return;
+                    sp.input.classList.remove('pos-quantity-spinner-active');
+                    if (document.activeElement === sp.input) sp.input.blur();   // focusout saves the final value
+                });
+            }
+            document.addEventListener('pointerup', releaseSpinner);
+            document.addEventListener('pointercancel', releaseSpinner);
+
+            /* ---------- events (delegated, so they survive re-renders) ---------- */
+            container.addEventListener('click', e => {
+                const btn = e.target.closest('[data-action="remove"]');
+                const tr = btn?.closest('tr[data-item-id]');
+                if (!tr) return;
+
+                const id = tr.dataset.itemId;
+                tr.style.opacity = .4;
+                flushTimers();
+                enqueue(async () => {
+                    const row = rowFor(id);
+                    if (!row) return;
+                    const res = await fetch("{{ url('pos/delete') }}/" + row.dataset.rowId, {
+                        headers: { 'Accept': 'application/json' },
+                    });
+                    const data = await res.json();
+                    if (data.cart_html) render(data);
+                });
+            });
+
+            container.addEventListener('input', e => {
+                if (!isField(e.target)) return;
+                const field = fieldOf(e.target);
+                recalcSummary();                                    // instant numbers
+                if (e.target.value === '') return;                  // wait until a value is typed
+                if (field === 'qty' && num(e.target.value) === 0) return;   // 0 (= remove) only on commit
+                schedule(e.target.closest('tr'), field);
+            });
+
+            container.addEventListener('change', e => {
+                if (!isField(e.target)) return;
+                normalize(e.target);
+                schedule(e.target.closest('tr'), fieldOf(e.target), 150);
+            });
+
+            container.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && isField(e.target)) e.target.blur();
+            });
+
+            container.addEventListener('focusout', e => {
+                if (isField(e.target)) {
+                    const input = e.target;
+                    const tr = input.closest('tr');
+                    if (tr && num(input.value) !== num(input.dataset.saved)) {
+                        schedule(tr, fieldOf(input), 150);
+                    }
+                }
+                setTimeout(settle, 0);
+            });
+
+            /* ---------- add to cart ---------- */
+            function postAdd(formData) {
+                flushTimers();
+                const cid = getCustomerId();
+                if (cid) formData.append('customer_id', cid);
+                return enqueue(async () => {
+                    const res = await fetch("{{ route('pos.addCart') }}", {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                        body: formData,
+                    });
+                    const data = await res.json();
+                    if (data.success) render(data); else alert(data.message || 'Failed to add item');
+                });
+            }
+
+            window.addToCart = function (event) {
+                event.preventDefault();
+                return postAdd(new FormData(event.target));
+            };
+
+            window.addManualItem = function () {
+                const name = document.getElementById('manual_item_name').value.trim();
+                const price = parseFloat(document.getElementById('manual_item_price').value);
+                if (!name || isNaN(price) || price <= 0) {
+                    alert('Please enter item name and valid price!');
+                    return;
+                }
+
+                const fd = new FormData();
+                fd.append('name', name);
+                fd.append('price', price);
+                fd.append('tax', parseFloat(document.getElementById('manual_item_tax').value) || 0);
+                fd.append('discount', parseFloat(document.getElementById('manual_item_discount').value) || 0);
+                fd.append('is_manual', 1);
+                return postAdd(fd);
+            };
+
+            // Used by the payment flow: save everything pending and wait for the server.
+            window.posCartIdle = function () {
+                flushTimers();
+                return chain;
+            };
+        })();
 
         // Logic: Create New Customer (AJAX)
         async function storeCustomer(event) {
@@ -455,10 +624,11 @@
 
         // Logic: Real-time Change Calculation
         function calculateChange() {
-            const totalText = document.getElementById('cart-total').innerText;
-            const totalAmount = parseFloat(totalText.replace(/,/g, ''));
-            const payInput = parseFloat(document.getElementById('pay_amount').value);
             const changeElement = document.getElementById('change_amount');
+            if (!changeElement) return;   // the Change row is commented out in the partial
+
+            const totalAmount = parseFloat(document.getElementById('cart-total').dataset.total) || 0;
+            const payInput = parseFloat(document.getElementById('pay_amount').value);
 
             if (!isNaN(payInput) && payInput >= 0) {
                 const change = payInput - totalAmount;
@@ -488,8 +658,9 @@
             document.getElementById('modal_customer_id').value = customerId;
 
             // 2. Validate Payment Amount
-            const totalText = document.getElementById('cart-total').innerText;
-            const totalAmount = parseFloat(totalText.replace(/,/g, ''));
+            const totalEl = document.getElementById('cart-total');
+            const totalText = totalEl.innerText.trim();
+            const totalAmount = parseFloat(totalEl.dataset.total) || 0;
             const payElement = document.getElementById('pay_amount');
             const payAmount = parseFloat(payElement ? payElement.value : 0);
             const method = document.getElementById('payment_type').value;
@@ -504,15 +675,14 @@
                 return;
             }
 
+            // Make sure any pending quantity/tax/discount edits are saved.
+            if (window.posCartIdle) window.posCartIdle();
+
             // 3. Update Modal UI
             document.getElementById('modal_total_display').innerText = totalText;
             document.getElementById('modal_payment_method').innerText = method;
             document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
                 ",");
-
-            // const change = payAmount - totalAmount;
-            // document.getElementById('modal_change_amount').innerText = change.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
-            //     ",");
 
             // 4. Show Modal
             $('#paymentModal').modal('show');
@@ -521,6 +691,9 @@
         // Logic: Final Sale Submission (AJAX)
         async function submitOrder(event) {
             event.preventDefault();
+
+            // Wait until every pending cart edit has reached the server.
+            if (window.posCartIdle) await window.posCartIdle();
 
             // Construct FormData manually since inputs are in Sidebar, not in this Form
             const formData = new FormData();
@@ -562,11 +735,6 @@
                         document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
                     }
 
-                    // Optional: Reset Pay Input
-                    if (payAmountElem) payAmountElem.value = '';
-                    if (document.getElementById('change_amount')) document.getElementById('change_amount').innerText =
-                        '0.00';
-
                     alert('Sale Successful!');
 
                 } else {
@@ -592,7 +760,8 @@
                 let scannerTimeout;
 
                 function syncClearButton() {
-                    const hasFilters = posSearchField.value.trim() !== '' || new URLSearchParams(window.location.search).has('category_id');
+                    const hasFilters = posSearchField.value.trim() !== '' || new URLSearchParams(window.location.search)
+                        .has('category_id');
                     clearButton.classList.toggle('d-none', !hasFilters);
                 }
 
@@ -623,7 +792,9 @@
 
                     try {
                         const response = await fetch(url.toString(), {
-                            headers: { 'Accept': 'application/json' },
+                            headers: {
+                                'Accept': 'application/json'
+                            },
                             signal: requestController.signal
                         });
 
@@ -633,7 +804,8 @@
 
                         const data = await response.json();
                         resultsContainer.innerHTML = data.html;
-                        searchStatus.textContent = data.total + (data.total === 1 ? ' product found' : ' products found');
+                        searchStatus.textContent = data.total + (data.total === 1 ? ' product found' :
+                            ' products found');
 
                         if (window.location.href !== url.href) {
                             window.history[historyMode + 'State']({}, '', url);
@@ -727,6 +899,117 @@
 
     <!-- Page Specific Styles -->
     <style>
+        /* ---------- Cart table styles (moved verbatim from the partial so they are not re-injected on every render) ---------- */
+        .pos-cart-table {
+            min-width: 0;
+            width: 100%;
+            /* table-layout: fixed; */
+            font-size: 10px;
+
+        }
+
+        .pos-cart-product-name small {
+            display: block;
+            font-size: .70rem;
+        }
+
+        .pos-cart-table th {
+            background: #fafbfd;
+            border-top: 0;
+            color: #273142;
+            font-weight: 900;
+            padding: .55rem .4rem;
+            white-space: nowrap;
+        }
+
+        .pos-cart-table td {
+            border-top: 1px solid #edf0f4;
+            color: #536071;
+            padding: .45rem .4rem;
+            white-space: nowrap;
+        }
+
+        .pos-cart-product-image {
+            height: 30px;
+            width: 38px;
+            object-fit: contain;
+        }
+
+        .pos-cart-product-name {
+            color: #273142 !important;
+            font-weight: 600;
+            max-width: 115px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pos-quantity-control {
+            align-items: center;
+            display: flex;
+            gap: .25rem;
+        }
+
+        .pos-quantity-input.pos-quantity-spinner-active:focus,
+        .pos-tax-rate-input.pos-quantity-spinner-active:focus,
+        .pos-discount-input.pos-quantity-spinner-active:focus {
+            border-color: #ced4da;
+            box-shadow: none;
+            outline: 0;
+        }
+
+        .pos-quantity-control span {
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .pos-quantity-button {
+            background: #fff;
+            border: 1px solid #b9d5ff;
+            border-radius: 3px;
+            color: #2f80ed;
+            height: 16px;
+            line-height: 20px;
+            padding: 0;
+            width: 16px;
+        }
+
+        .pos-quantity-add {
+            background: #2f80ed;
+            color: #fff;
+        }
+
+        .pos-cart-summary label {
+            color: #273142;
+            display: block;
+            font-size: .70rem;
+            font-weight: 700;
+            margin-bottom: .25rem;
+        }
+
+        .pos-cart-summary .form-control {
+            border-color: #e1e6ed;
+            color: #8490a0;
+            font-size: .7rem;
+        }
+
+        .pos-discount-input {
+            min-width: 50px;
+            max-width: 60px;
+            padding: 0.25rem 0.3rem;
+        }
+
+        .pos-discount-control {
+            align-items: center;
+            display: flex;
+            gap: .20rem;
+        }
+
+        .pos-discount-apply {
+            font-size: .62rem;
+            padding: .2rem .35rem;
+        }
+
+        /* ---------- Product list ---------- */
         .product-grid .pos-product-row {
             display: flex;
             align-items: center;
@@ -862,19 +1145,23 @@
 
         .pos-category-tabs {
             display: flex;
-            flex-wrap: nowrap;      /* never wrap: always one row */
+            flex-wrap: nowrap;
+            /* never wrap: always one row */
             gap: .35rem;
         }
 
         .pos-tab {
-            flex: 1 1 0;            /* four equal-width tabs */
-            min-width: 0;           /* lets them shrink below their text width */
+            flex: 1 1 0;
+            /* four equal-width tabs */
+            min-width: 0;
+            /* lets them shrink below their text width */
             background: #2f80ed;
             border: 0;
             border-radius: 3px;
             color: #fff;
             font-weight: 700;
-            font-size: clamp(.6rem, 1.6vw, .72rem);   /* text scales down when tight */
+            font-size: clamp(.6rem, 1.6vw, .72rem);
+            /* text scales down when tight */
             padding: .5rem .25rem;
             white-space: nowrap;
             overflow: hidden;
@@ -882,7 +1169,9 @@
         }
 
         @media (min-width: 768px) {
-            .pos-tab { padding: .5rem .6rem; }
+            .pos-tab {
+                padding: .5rem .6rem;
+            }
         }
 
         .pos-tab:nth-child(2) {
@@ -898,35 +1187,35 @@
         }
 
         .pos-search-box {
-    flex-wrap: nowrap;
-}
+            flex-wrap: nowrap;
+        }
 
-.pos-search-box .form-control {
-    height: 38px;
-    font-size: .85rem;
-    padding: .4rem .75rem;
-    border-radius: 4px 0 0 4px;
-}
+        .pos-search-box .form-control {
+            height: 38px;
+            font-size: .85rem;
+            padding: .4rem .75rem;
+            border-radius: 4px 0 0 4px;
+        }
 
-.pos-search-box .pos-search-btn {
-    height: 38px;
-    width: 42px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0;
-    color: #fff;
-}
+        .pos-search-box .pos-search-btn {
+            height: 38px;
+            width: 42px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            color: #fff;
+        }
 
-.pos-search-box .input-group-append .pos-search-btn:last-child {
-    border-radius: 0 4px 4px 0;
-}
+        .pos-search-box .input-group-append .pos-search-btn:last-child {
+            border-radius: 0 4px 4px 0;
+        }
 
-.pos-search-box .pos-search-btn svg {
-    width: 18px;
-    height: 18px;
-}
+        .pos-search-box .pos-search-btn svg {
+            width: 18px;
+            height: 18px;
+        }
 
         .pos-cart .card {
             position: sticky;

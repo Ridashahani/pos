@@ -88,6 +88,11 @@
                                 <input type="text" class="form-control bg-white" value="{{  $product->selling_price }}"
                                     readonly>
                             </div>
+                            <div class="form-group col-md-6">
+                                <label>Price After GST ({{ number_format((float) $product->order_tax, 2) }}%)</label>
+                                <input type="text" class="form-control bg-white" value="{{ number_format($product->price_including_gst, 2) }}"
+                                    readonly>
+                            </div>
                         </div>
                         <!-- end: Show Data -->
 

@@ -55,8 +55,8 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $item->product->name ?? '-' }}</td>
                                     <td>{{ $item->quantity }}</td>
-                                    <td>PKR {{ number_format($item->unit_price, 2) }}</td>
-                                    <td>PKR {{ number_format($item->total_amount, 2) }}</td>
+                                    <td>PKR {{ number_format($item->unit_cost, 2) }}</td>
+                                    <td>PKR {{ number_format($item->total, 2) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

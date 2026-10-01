@@ -4,6 +4,17 @@ $field = fn ($name, $default = '') => old($name, $editing ? ($product->{$name} ?
 $variationTypes = $field('variation_types', []);
 $selectedVariationIds = old('variation_ids', $editing ? ($product->variation_ids ?: ($product->variation_id ? [$product->variation_id] : [])) : []);
 $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds : [$selectedVariationIds];
+$accessoriesCategory = $categories->first(fn ($category) => \Illuminate\Support\Str::slug($category->name) === 'accessories');
+$mobileCategory = $categories->first(fn ($category) => in_array(\Illuminate\Support\Str::slug($category->name), ['mobile', 'smart-phone', 'smartphone'], true));
+$storedCategoryId = (string) old('category_id', $editing ? ($product->category_id ?? '') : '');
+$selectedCategoryType = old('product_category_type', $storedCategoryId === (string) ($mobileCategory->id ?? '')
+    ? 'mobile'
+    : ($storedCategoryId === (string) ($accessoriesCategory->id ?? '')
+        ? 'accessories'
+        : ($editing && ($product->imei || $product->model || $product->condition) ? 'mobile' : 'accessories')));
+$selectedParentCategory = $selectedCategoryType === 'mobile' ? $mobileCategory : $accessoriesCategory;
+$selectedCategoryId = $storedCategoryId !== '' ? $storedCategoryId : (string) ($selectedParentCategory->id ?? '');
+$selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->subcategory_id ?? '') : '');
 @endphp
 
 <div class="container-fluid product-form-page">
@@ -13,7 +24,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     </div>
     <div class="card">
         <div class="card-body">
-            <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data"> 
                 @csrf
                 @if ($formMethod !== 'POST') @method($formMethod) @endif
                 <div class="form-section-heading">
@@ -22,38 +33,63 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                         <p>Set the details for this product.</p>
                     </div>
                 </div>
+                @if (session('error'))
+                    <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+                @endif
+                @if ($errors->any())
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Product could not be saved:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="row">
-                    <div class="form-group col-md-12 mb-3">
+                    <input type="hidden" name="category_id" id="selected_category_id" value="{{ $selectedCategoryId }}">
+                    <div class="form-group col-md-6">
                         <label class="font-weight-bold d-block mb-2">Category Type</label>
                         <div class="custom-control custom-radio custom-control-inline">
-                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model || $product->mobile_type)) ? 'mobile' : 'accessories') === 'accessories')>
+                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" data-category="{{ $accessoriesCategory->id ?? '' }}" class="custom-control-input" @checked($selectedCategoryType === 'accessories')>
                             <label class="custom-control-label" for="cat_type_accessories" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Accessories</label>
                         </div>
                         <div class="custom-control custom-radio custom-control-inline mr-4">
-                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" class="custom-control-input" @checked(old('product_category_type', ($editing && ($product->imei || $product->model || $product->mobile_type)) ? 'mobile' : 'accessories') === 'mobile')>
+                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" data-category="{{ $mobileCategory->id ?? '' }}" class="custom-control-input" @checked($selectedCategoryType === 'mobile')>
                             <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
                         </div>
                     </div>
-                    <div class="form-group col-md-4"><label>Product Category <span class="text-danger">*</span></label><select name="category_id" id="category_id" class="form-control" required>
-                            <option value="">Choose Product Category</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected($field('category_id')==$category->id)>{{ $category->name }}</option>@endforeach
+                    <div class="form-group col-md-6">
+                        <label class="font-weight-bold">Product Subcategory</label>
+                        <select name="subcategory_id" id="subcategory_select" class="form-control" @disabled(!$selectedCategoryId)>
+                            <option value="">{{ $selectedCategoryId ? 'Choose Product Subcategory' : 'Select a category first' }}</option>
+                            @foreach($subcategories as $subcategory)
+                                <option value="{{ $subcategory->id }}" data-category="{{ $subcategory->category_id }}" @selected($selectedSubcategoryId === (string) $subcategory->id && $selectedCategoryId === (string) $subcategory->category_id) @if((string) $subcategory->category_id !== $selectedCategoryId) hidden disabled @endif>{{ $subcategory->name }}</option>
+                            @endforeach
                         </select>
+                        @error('subcategory_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="form-group col-md-4"><label>Product Subcategory</label><select name="subcategory_id" id="subcategory_id" class="form-control">
-                            <option value="">-- Select a category first --</option>@foreach($subcategories as $subcategory)<option value="{{ $subcategory->id }}" data-category="{{ $subcategory->category_id }}" @selected($field('subcategory_id')==$subcategory->id)>{{ $subcategory->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
-                        <div class="form-group col-md-4"><label>Brand</label><select name="brand_id" class="form-control">
+                    <div class="form-group col-md-6"><label>Product Name <span class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}" class="form-control" placeholder="Enter Name" required></div>
+                    <div class="form-group col-md-6"><label>Brand</label><select name="brand_id" class="form-control">
                             <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string) $field('brand_id') === (string) $brand->id)>{{ $brand->name }}</option>@endforeach
                         </select>
                     </div>
-                    <div class="mobile-extra-fields form-group col-md-4"><label>IMEI</label><input name="imei" value="{{ $field('imei') }}" class="form-control" placeholder="Enter IMEI"></div>
                     <div class="mobile-extra-fields form-group col-md-4"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
-                    <div class="mobile-extra-fields form-group col-md-4"><label>Mobile Type</label><select name="mobile_type" class="form-control">
-                            <option value="">Choose Mobile Type</option>
-                            <option value="new" @selected($field('mobile_type')==='new')>New</option>
-                            <option value="used" @selected($field('mobile_type')==='used')>Used</option>
+                    <div class="mobile-extra-fields form-group col-md-4"><label>Condition</label><select name="condition" class="form-control">
+                            <option value="">Choose Condition</option>
+                            <option value="new" @selected($field('condition')==='new')>New</option>
+                            <option value="used" @selected($field('condition')==='used')>Used</option>
                         </select>
+                    </div>
+                   <div class="form-group col-md-6">
+    <label for="cost_price">Cost Price</label>
+    <input type="number" min="0" step="0.01" id="cost_price" name="cost_price" value="{{ $field('cost_price', 0) }}" class="form-control @error('cost_price') is-invalid @enderror" placeholder="Enter cost price">
+    @error('cost_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+</div>
+                    <div class="form-group col-md-6">
+                        <label for="selling_price">Sale Price</label>
+                        <input type="number" min="0" step="0.01" id="selling_price" name="selling_price" value="{{ $field('selling_price', 0) }}" class="form-control @error('selling_price') is-invalid @enderror" placeholder="Enter sale price">
+                        @error('selling_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="form-group col-md-6">
     <label>Status</label>
@@ -65,18 +101,19 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     </div>
 </div>
 
-                    <div class="form-group col-md-6">
+            <div class="form-group col-md-6">
     <label>GST (%)</label>
-    <input type="number" step="0.01" min="0" max="100" name="order_tax"
-           value="{{ $field('order_tax', $defaultGst ?? 0) }}"
-           class="form-control @error('order_tax') is-invalid @enderror"
+    <input type="number" step="0.01" min="0" max="100" name="gst_tax"
+           value="{{ $field('gst_tax', $defaultGst ?? 0) }}"
+           class="form-control @error('gst_tax') is-invalid @enderror"
            placeholder="Enter GST">
-    @error('order_tax')
+    @error('gst_tax')
         <div class="invalid-feedback">{{ $message }}</div>
     @enderror
+    <small class="form-text text-muted">Price after GST: <span id="price_including_gst">0.00</span></small>
 </div>
                     <div class="form-group col-md-6"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
-                    <div class="form-group col-md-6"><label>Note</label><textarea name="note" class="form-control" rows="0" placeholder="Enter Note">{{ $field('note') }}</textarea></div>
+                    <div class="form-group col-md-6"><label>Note</label><input type="text" name="note" value="{{ $field('note') }}" class="form-control @error('note') is-invalid @enderror" placeholder="Enter Note">@error('note')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                 </div>
                 <div class="d-flex justify-content-start mt-3">
                     <button type="submit" class="btn btn-save mr-2">
@@ -375,6 +412,49 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
 </style>
 <script>
 
+    (function () {
+        const categoryInput = document.getElementById('selected_category_id');
+        const subcategorySelect = document.getElementById('subcategory_select');
+        if (!categoryInput || !subcategorySelect) return;
+
+        const subcategoryOptions = Array.from(subcategorySelect.options).filter(function (option) {
+            return option.value !== '';
+        });
+        const placeholder = subcategorySelect.options[0];
+
+        function showSubcategories(categoryId) {
+            let visibleCount = 0;
+            let selectedOptionVisible = false;
+            categoryInput.value = categoryId || '';
+
+            subcategoryOptions.forEach(function (option) {
+                const matches = categoryId !== '' && option.dataset.category === categoryId;
+                option.hidden = !matches;
+                option.disabled = !matches;
+                if (matches) visibleCount += 1;
+                if (matches && option.selected) selectedOptionVisible = true;
+            });
+
+            if (!selectedOptionVisible) subcategorySelect.value = '';
+            placeholder.textContent = !categoryId
+                ? 'Select a category first'
+                : visibleCount
+                    ? 'Choose Product Subcategory'
+                    : 'No subcategories for this category';
+            subcategorySelect.disabled = !categoryId || visibleCount === 0;
+        }
+
+        const categoryTypeRadios = document.querySelectorAll('input[name="product_category_type"]');
+        categoryTypeRadios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                showSubcategories(radio.dataset.category);
+            });
+        });
+
+        const selectedCategoryType = document.querySelector('input[name="product_category_type"]:checked');
+        showSubcategories(selectedCategoryType ? selectedCategoryType.dataset.category : categoryInput.value);
+    }());
+
     // ── Mobile / Accessories toggle ──────────────────────────────────────────
     (function () {
         const mobileRadio = document.getElementById('cat_type_mobile');
@@ -430,5 +510,22 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
                 if (codeField) codeField.value = this.value;
             });
         }
+    }());
+
+    (function () {
+        const priceInput = document.getElementById('selling_price');
+        const taxInput = document.querySelector('[name="gst_tax"]');
+        const totalOutput = document.getElementById('price_including_gst');
+        if (!priceInput || !taxInput || !totalOutput) return;
+
+        function updatePriceIncludingGst() {
+            const price = Number(priceInput.value) || 0;
+            const taxRate = Number(taxInput.value) || 0;
+            totalOutput.textContent = (price * (1 + taxRate / 100)).toFixed(2);
+        }
+
+        priceInput.addEventListener('input', updatePriceIncludingGst);
+        taxInput.addEventListener('input', updatePriceIncludingGst);
+        updatePriceIncludingGst();
     }());
 </script>

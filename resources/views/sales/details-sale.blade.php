@@ -175,7 +175,7 @@
                                         <td class="font-weight-bold">{{ number_format($sale->subtotal, 2) }}</td>
                                     </tr>
                                     <tr>
-                                        <td colspan="6" class="text-right font-weight-bold">VAT</td>
+                                        <td colspan="6" class="text-right font-weight-bold">Tax</td>
                                         <td class="font-weight-bold">{{ number_format($sale->tax, 2) }}</td>
                                     </tr>
                                     <tr>

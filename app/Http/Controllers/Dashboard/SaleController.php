@@ -93,10 +93,20 @@ class SaleController extends Controller
                 'prefix' => 'INV-'
             ]);
 
-            $total = (float) Cart::total(null, null, '');
+            $contents = Cart::content();
+            $subtotal = $contents->sum(function ($item) {
+                return (float) ($item->options->original_price ?? $item->price) * $item->qty;
+            });
+            $tax = $contents->sum(function ($item) {
+                $price = (float) ($item->options->original_price ?? $item->price);
+                $taxRate = (float) ($item->options->tax_rate ?? 10);
+
+                return $price * $item->qty * $taxRate / 100;
+            });
+            $discount = $contents->sum(fn ($item) => (float) ($item->options->discount ?? 0));
+            $total = max(0, $subtotal + $tax - $discount);
             $pay_amount = (float) $request->pay_amount;
             $due_amount = $total - $pay_amount;
-            $discount = Cart::content()->sum(fn($i) => (float) ($i->options->discount ?? 0) * $i->qty);
 
             $sale = Sale::create([
                 'customer_id'    => $request->customer_id,
@@ -105,9 +115,9 @@ class SaleController extends Controller
                 'invoice_no'     => $invoice_no,
                 'sale_date'      => Carbon::now(),
                 'status'         => 'pending',
-                'subtotal'       => (float) Cart::subtotal(null, null, ''),
+                'subtotal'       => $subtotal,
                 'discount'       => $discount,
-                'tax'            => (float) Cart::tax(null, null, ''),
+                'tax'            => $tax,
                 'grand_total'    => $total,
                 'payment_method' => $request->payment_type,
                 'paid_amount'    => $pay_amount,
@@ -116,12 +126,16 @@ class SaleController extends Controller
 
             $contents = Cart::content();
             foreach ($contents as $content) {
+                $unitPrice = (float) ($content->options->original_price ?? $content->price);
+                $lineTax = $unitPrice * $content->qty * (float) ($content->options->tax_rate ?? 10) / 100;
+                $lineDiscount = (float) ($content->options->discount ?? 0);
+
                 SaleDetails::create([
                     'sale_id'    => $sale->id,
                     'product_id' => $content->id,
                     'quantity'   => $content->qty,
-                    'unit_price' => $content->price,
-                    'total'      => $content->total,
+                    'unit_price' => $unitPrice,
+                    'total'      => max(0, ($unitPrice * $content->qty) + $lineTax - $lineDiscount),
                 ]);
             }
 

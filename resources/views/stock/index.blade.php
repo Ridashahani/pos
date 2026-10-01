@@ -2,6 +2,13 @@
 
 @section('container')
     <div class="container-fluid">
+        @if (session('success'))
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+        @endif
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
@@ -94,14 +101,16 @@
                             </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                             <div class="d-flex align-items-center">
-                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2">
+                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2"
+                                    @if ($type === 'stock-in') id="stock-in-search-form" @endif>
                                     <input type="search" name="search" value="{{ request('search') }}"
+                                        @if ($type === 'stock-in') id="stock-in-search" @endif
                                         class="form-control mr-2" placeholder="Search product" aria-label="Search product">
                                     <button type="submit" class="btn btn-primary">Search</button>
                                 </form>
                                 @if (in_array($type, ['sold-items', 'out-of-stock']))
                                     <form method="POST" action="{{ route("stock.{$type}.clear") }}"
-                                        onsubmit="return confirm('Delete all records on this page?');">
+                                        onsubmit="return confirm('{{ $type === 'out-of-stock' ? 'Delete all out-of-stock records? Records linked to sales or transfers will be skipped.' : 'Delete all sold item records?' }}');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger">Clear All</button>
@@ -117,12 +126,12 @@
                                     <thead class="bg-white text-uppercase">
                                         <tr class="ligth ligth-data">
                                             <th>No</th>
-                                            <th>Product</th>
+                                            <th>Product_Name</th>
+                                            <th>Variation</th>
                                             <th>Branch</th>
-                                            <th>Purchase</th>
                                             <th>Purchase Price</th>
-                                            <th class="text-right text-nowrap">Purchased Qty</th>
                                             <th class="text-right text-nowrap">Available Qty</th>
+                                            <th>Low Stock</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -131,19 +140,27 @@
                                             <tr>
                                                 <td>{{ $pagination->firstItem() + $loop->index }}</td>
                                                 <td>{{ $row['product'] }}</td>
+                                                <td>{{ $row['variation'] }}</td>
                                                 <td>{{ $row['branch'] }}</td>
-                                                <td>{{ $row['purchase'] }}</td>
                                                 <td>{{ $row['currency'] }} {{ number_format($row['cost_price'], 2) }}</td>
-                                                <td class="text-right font-weight-bold">{{ number_format($row['quantity']) }}</td>
                                                 <td class="text-right">
                                                     <span class="badge {{ $row['remaining_quantity'] > 0 ? 'bg-success' : 'bg-danger' }}">
                                                         {{ number_format($row['remaining_quantity']) }}
                                                     </span>
                                                 </td>
                                                 <td>
+                                                    @if ($row['remaining_quantity'] < 5)
+                                                        <span class="text-danger d-inline-flex align-items-center">
+                                                            <x-heroicon-o-x-circle class="w-5 h-5 mr-1" /> Low Stock
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
                                                     <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
-                                                        class="btn btn-info" title="View details" aria-label="View details">
-                                                        <x-heroicon-o-eye class="w-5 h-5" />
+                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View details" aria-label="View details">
+                                                        <x-heroicon-o-eye class="w-4 h-4 mr-1" /> View Details
                                                     </a>
                                                 </td>
                                             </tr>
@@ -255,11 +272,13 @@
                                                 <td class="text-center">
                                                     <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
                                                         class="btn btn-primary btn-sm mr-1">Purchase again</a>
-                                                    <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
-                                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                                    </a>
+                                                    @can('access.products')
+                                                        <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
+                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                        </a>
+                                                    @endcan
                                                     <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this exhausted stock-in record?');">
+                                                        onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
@@ -307,4 +326,13 @@
             </div>
         </div>
     </div>
+    @if ($type === 'stock-in')
+        <script>
+            document.getElementById('stock-in-search')?.addEventListener('search', function () {
+                if (this.value.trim() === '') {
+                    document.getElementById('stock-in-search-form')?.requestSubmit();
+                }
+            });
+        </script>
+    @endif
 @endsection
