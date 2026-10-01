@@ -40,7 +40,7 @@
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - $discount);
-                            $summaryPrice += $originalPrice;
+                            $summaryPrice += $gross;
                             $summaryNetAmount += $netAmount;
                             $summaryTaxAmount += $taxAmount;
                             $summaryDiscount += $discount;
