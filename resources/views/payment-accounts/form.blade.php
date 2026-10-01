@@ -26,7 +26,7 @@
     </div>
     <div class="form-group col-md-6">
         <label for="opening_balance">Opening Balance <span class="text-danger">*</span></label>
-        <input type="number" step="0.01" min="0" id="opening_balance" name="opening_balance" value="{{ old('opening_balance', $account->opening_balance ?? 0) }}" class="form-control @error('opening_balance') is-invalid @enderror" required>
+        <input type="number" step="0.01" min="0" id="opening_balance" name="opening_balance" value="{{ old('opening_balance', $account->opening_balance ?? 0) }}" class="form-control no-spinner @error('opening_balance') is-invalid @enderror" required>
         @error('opening_balance') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
     <div class="form-group col-md-6">
@@ -38,3 +38,15 @@
         @error('status') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 </div>
+<style>
+    .no-spinner::-webkit-outer-spin-button,
+    .no-spinner::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .no-spinner {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+</style>
