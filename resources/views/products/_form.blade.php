@@ -13,7 +13,7 @@ $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds 
     </div>
     <div class="card">
         <div class="card-body">
-            <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data"> 
                 @csrf
                 @if ($formMethod !== 'POST') @method($formMethod) @endif
                 <div class="form-section-heading">

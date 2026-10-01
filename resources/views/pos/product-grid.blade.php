@@ -13,8 +13,8 @@
                 </div>
 
                 <div class="p-3 d-flex flex-column flex-grow-1">
-                    <h6 class="font-weight-bold text-dark text-truncate mb-2"
-                        title="{{ $product->name }}" style="font-size: 0.95rem;">
+                    <h6 class="font-weight-bold text-dark text-truncate mb-2" title="{{ $product->name }}"
+                        style="font-size: 0.95rem;">
                         {{ $product->name }}
                     </h6>
 

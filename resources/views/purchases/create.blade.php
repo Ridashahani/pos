@@ -438,11 +438,11 @@
                 <div class="pp-product-list" id="product-list">
                     @forelse ($products as $product)
                     <div class="pp-product" data-id="{{ $product->id }}" data-name="{{ $product->name }}"
-                        data-price="{{ $product->buying_price }}">
+                        data-price="{{ $product->cost_price }}">
                         <img src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
                             alt="{{ $product->name }}">
                         <div class="pp-p-name">{{ $product->name }}</div>
-                        <div class="pp-p-price">PKR {{ number_format($product->buying_price, 2) }}</div>
+                        <div class="pp-p-price">PKR {{ number_format($product->cost_price, 2) }}</div>
                     </div>
                     @empty
                     <div class="alert alert-info mb-0 text-center" style="grid-column:1/-1;">No products found.
