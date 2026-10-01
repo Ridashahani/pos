@@ -33,13 +33,15 @@
                                 <form action="{{ route('pos.index') }}" method="get" class="mb-0" id="pos-search-form">
                                     <div class="input-group pos-search-box">
                                         <input type="text" class="form-control" name="search" id="pos_search"
-                                            placeholder="Search products..."
-                                            value="{{ request('search') }}" autocomplete="off" aria-label="Search products">
+                                            placeholder="Search products..." value="{{ request('search') }}"
+                                            autocomplete="off" aria-label="Search products">
                                         <div class="input-group-append">
                                             <button type="submit" class="btn btn-primary pos-search-btn" title="Search">
                                                 <x-heroicon-o-magnifying-glass class="w-5 h-5" />
                                             </button>
-                                            <button type="button" id="pos-search-clear" class="btn btn-danger pos-search-btn {{ request('search') || request('category_id') ? '' : 'd-none' }}" title="Clear search" aria-label="Clear search">
+                                            <button type="button" id="pos-search-clear"
+                                                class="btn btn-danger pos-search-btn {{ request('search') || request('category_id') ? '' : 'd-none' }}"
+                                                title="Clear search" aria-label="Clear search">
                                                 <x-heroicon-o-x-mark class="w-5 h-5" />
                                             </button>
                                         </div>
@@ -592,7 +594,8 @@
                 let scannerTimeout;
 
                 function syncClearButton() {
-                    const hasFilters = posSearchField.value.trim() !== '' || new URLSearchParams(window.location.search).has('category_id');
+                    const hasFilters = posSearchField.value.trim() !== '' || new URLSearchParams(window.location.search)
+                        .has('category_id');
                     clearButton.classList.toggle('d-none', !hasFilters);
                 }
 
@@ -623,7 +626,9 @@
 
                     try {
                         const response = await fetch(url.toString(), {
-                            headers: { 'Accept': 'application/json' },
+                            headers: {
+                                'Accept': 'application/json'
+                            },
                             signal: requestController.signal
                         });
 
@@ -633,7 +638,8 @@
 
                         const data = await response.json();
                         resultsContainer.innerHTML = data.html;
-                        searchStatus.textContent = data.total + (data.total === 1 ? ' product found' : ' products found');
+                        searchStatus.textContent = data.total + (data.total === 1 ? ' product found' :
+                            ' products found');
 
                         if (window.location.href !== url.href) {
                             window.history[historyMode + 'State']({}, '', url);
@@ -862,19 +868,23 @@
 
         .pos-category-tabs {
             display: flex;
-            flex-wrap: nowrap;      /* never wrap: always one row */
+            flex-wrap: nowrap;
+            /* never wrap: always one row */
             gap: .35rem;
         }
 
         .pos-tab {
-            flex: 1 1 0;            /* four equal-width tabs */
-            min-width: 0;           /* lets them shrink below their text width */
+            flex: 1 1 0;
+            /* four equal-width tabs */
+            min-width: 0;
+            /* lets them shrink below their text width */
             background: #2f80ed;
             border: 0;
             border-radius: 3px;
             color: #fff;
             font-weight: 700;
-            font-size: clamp(.6rem, 1.6vw, .72rem);   /* text scales down when tight */
+            font-size: clamp(.6rem, 1.6vw, .72rem);
+            /* text scales down when tight */
             padding: .5rem .25rem;
             white-space: nowrap;
             overflow: hidden;
@@ -882,7 +892,9 @@
         }
 
         @media (min-width: 768px) {
-            .pos-tab { padding: .5rem .6rem; }
+            .pos-tab {
+                padding: .5rem .6rem;
+            }
         }
 
         .pos-tab:nth-child(2) {
@@ -898,35 +910,35 @@
         }
 
         .pos-search-box {
-    flex-wrap: nowrap;
-}
+            flex-wrap: nowrap;
+        }
 
-.pos-search-box .form-control {
-    height: 38px;
-    font-size: .85rem;
-    padding: .4rem .75rem;
-    border-radius: 4px 0 0 4px;
-}
+        .pos-search-box .form-control {
+            height: 38px;
+            font-size: .85rem;
+            padding: .4rem .75rem;
+            border-radius: 4px 0 0 4px;
+        }
 
-.pos-search-box .pos-search-btn {
-    height: 38px;
-    width: 42px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0;
-    color: #fff;
-}
+        .pos-search-box .pos-search-btn {
+            height: 38px;
+            width: 42px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            color: #fff;
+        }
 
-.pos-search-box .input-group-append .pos-search-btn:last-child {
-    border-radius: 0 4px 4px 0;
-}
+        .pos-search-box .input-group-append .pos-search-btn:last-child {
+            border-radius: 0 4px 4px 0;
+        }
 
-.pos-search-box .pos-search-btn svg {
-    width: 18px;
-    height: 18px;
-}
+        .pos-search-box .pos-search-btn svg {
+            width: 18px;
+            height: 18px;
+        }
 
         .pos-cart .card {
             position: sticky;

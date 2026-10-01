@@ -29,11 +29,11 @@
                             $image = $options->image ?? asset('assets/images/product/default.webp');
                         @endphp
                         @php
-                            $gross     = $originalPrice * $item->qty;
-                            $taxRate   = (float) ($options->tax_rate ?? 10);   // e.g. 17 for 17%
-                            $taxAmount = $gross * $taxRate / 100;
-                            $inclTax   = $gross + $taxAmount;
-                            $netAmount = max(0, $inclTax - ($discount * $item->qty));
+                            $gross = $originalPrice * $item->qty;
+                            $taxRate = (float) ($options->tax_rate ?? 10); // e.g. 17 for 17%
+                            $taxAmount = ($gross * $taxRate) / 100;
+                            $inclTax = $gross + $taxAmount;
+                            $netAmount = max(0, $inclTax - $discount * $item->qty);
                         @endphp
                         <tr>
                             <td>
@@ -50,32 +50,31 @@
                                 <!-- <small class="text-muted">Tax: {{ number_format($tax, 2) }}</small> -->
                             </td>
                             <td>
-                                 <div class="pos-quantity-control">
-                                     <input type="number" class="form-control form-control-sm pos-quantity-input"
-                                         style="width: 50px;"
-                                         value="{{ $item->qty }}" min="0" step="1" aria-label="Quantity"
-                                         onchange="updateCart('{{ $item->rowId }}', Math.max(0, parseInt(this.value) || 0))"
-                                         onkeydown="if (event.key === 'Enter') this.blur()"
-                                     >
-                                 </div>
+                                <div class="pos-quantity-control">
+                                    <input type="number" class="form-control form-control-sm pos-quantity-input"
+                                        style="width: 50px;" value="{{ $item->qty }}" min="0" step="1"
+                                        aria-label="Quantity"
+                                        onchange="updateCart('{{ $item->rowId }}', Math.max(0, parseInt(this.value) || 0))"
+                                        onkeydown="if (event.key === 'Enter') this.blur()">
+                                </div>
                             </td>
                             <td>{{ number_format($gross, 2) }}</td>
                             <td>{{ number_format($taxRate, 2) }}%</td>
                             <td>{{ number_format($taxAmount, 2) }}</td>
-                            <td class="pos-incl-tax-amount" data-amount="{{ $inclTax }}">{{ number_format($inclTax, 2) }}</td>
+                            <td class="pos-incl-tax-amount" data-amount="{{ $inclTax }}">
+                                {{ number_format($inclTax, 2) }}</td>
                             <td>
-    <div class="pos-discount-control">
-        <input type="number" class="form-control form-control-sm pos-discount-input"
-            style="width: 50px;"
-            value="{{ (int) $discount }}" min="0" max="{{ $originalPrice + $tax }}"
-            step="1" aria-label="Discount"
-            oninput="updateNetAmount(this)"
-            onchange="updateDiscount('{{ $item->rowId }}', this.value)"
-            onkeydown="if (event.key === 'Enter') this.blur()"
-        >
-    </div>
-</td>
-                            <td class="pos-net-amount" data-currency="{{ $currency }}">{{ $currency }} {{ number_format($netAmount, 2) }}</td>
+                                <div class="pos-discount-control">
+                                    <input type="number" class="form-control form-control-sm pos-discount-input"
+                                        style="width: 50px;" value="{{ (int) $discount }}" min="0"
+                                        max="{{ $originalPrice + $tax }}" step="1" aria-label="Discount"
+                                        oninput="updateNetAmount(this)"
+                                        onchange="updateDiscount('{{ $item->rowId }}', this.value)"
+                                        onkeydown="if (event.key === 'Enter') this.blur()">
+                                </div>
+                            </td>
+                            <td class="pos-net-amount" data-currency="{{ $currency }}">{{ $currency }}
+                                {{ number_format($netAmount, 2) }}</td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     onclick="deleteCart('{{ $item->rowId }}')">
