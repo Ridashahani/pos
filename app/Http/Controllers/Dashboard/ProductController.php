@@ -28,6 +28,13 @@ use App\Http\Requests\Product\UpdateProductRequest;
 
 class ProductController extends Controller
 {
+    private function normalizeGstRate($value): float
+    {
+        $rate = trim(str_replace('%', '', (string) $value));
+
+        return is_numeric($rate) ? (float) $rate : 0.0;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -73,28 +80,28 @@ class ProductController extends Controller
         'suppliers' => Supplier::orderBy('name')->get(),
 'brands' => Brand::orderBy('name')->get(),
         'variations' => Variation::orderBy('name')->get(),
-        'defaultGst' => (float) Setting::get('gst', 0),
+        'defaultGst' => $this->normalizeGstRate(Setting::get('gst', 0)),
     ]);
 }
-
-    public function store(StoreProductRequest $request)
+public function store(StoreProductRequest $request)
 {
     $validatedData = $request->validated();
-    $validatedData['product_type'] = $validatedData['product_type'] ?? 'single';
-    $validatedData['buying_price'] = $validatedData['buying_price'] ?? $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? 0;
-    $validatedData['selling_price'] = $validatedData['selling_price'] ?? $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? 0;
-    $validatedData['stock'] = $validatedData['stock'] ?? $validatedData['add_product_quantity'] ?? 0;
+
+    $validatedData['product_type']  = $validatedData['product_type'] ?? 'single';
+    $validatedData['cost_price']    = $validatedData['cost_price'] ?? 0;
+    $validatedData['selling_price'] = $validatedData['selling_price'] ?? 0;
+    $validatedData['stock']         = $validatedData['stock'] ?? 0;
 
     // GST: form se na aaye to settings wali default GST lagegi
-    $validatedData['order_tax'] = $validatedData['order_tax'] ?? Setting::get('gst', 0);
+    $validatedData['gst_tax'] = $validatedData['gst_tax'] ?? $this->normalizeGstRate(Setting::get('gst', 0));
 
     // Generate code only if not provided
-    if (!isset($validatedData['code']) || empty($validatedData['code'])) {
+    if (empty($validatedData['code'])) {
         $validatedData['code'] = IdGenerator::generate([
-            'table' => 'products',
-            'field' => 'code',
+            'table'  => 'products',
+            'field'  => 'code',
             'length' => 4,
-            'prefix' => 'PC'
+            'prefix' => 'PC',
         ]);
     }
 
@@ -104,16 +111,14 @@ class ProductController extends Controller
      * Handle upload image with Storage.
      */
     if ($file = $request->file('image')) {
-        $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
-        $path = 'public/products/';
-
-        $file->storeAs($path, $fileName);
+        $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('public/products/', $fileName);
         $validatedData['image'] = $fileName;
     }
 
     if ($files = $request->file('images')) {
         $validatedData['images'] = collect($files)->map(function ($file) {
-            $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
+            $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
             $file->storeAs('public/products', $fileName);
             return $fileName;
         })->values()->all();
@@ -159,58 +164,60 @@ public function edit(Product $product)
 
         'variations' => Variation::orderBy('name')->get(),
         'product' => $product,
-        'defaultGst' => (float) Setting::get('gst', 0),
+        'defaultGst' => $this->normalizeGstRate(Setting::get('gst', 0)),
     ]);
 }
 
     /**
      * Update the specified resource in storage.
-     */
-    public function update(UpdateProductRequest $request, Product $product)
-    {
-        $validatedData = $request->validated();
-        if (!empty($validatedData['variation_ids'])) {
-            $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
-            $validatedData['variation_id'] = $validatedData['variation_ids'][0];
-            $validatedData['variation'] = $variations->pluck('name')->implode(', ');
-            $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
-        }
-        $validatedData['buying_price'] = $validatedData['product_cost'] ?? $validatedData['single_product_cost'] ?? $validatedData['buying_price'];
-        $validatedData['selling_price'] = $validatedData['product_price'] ?? $validatedData['single_product_price'] ?? $validatedData['selling_price'];
-        $validatedData['stock'] = $validatedData['add_product_quantity'] ?? $validatedData['stock'];
-        unset($validatedData['product_cost'], $validatedData['product_price'], $validatedData['single_product_cost'], $validatedData['single_product_price'], $validatedData['add_product_quantity']);
-        $validatedData['slug'] = Str::slug($validatedData['name']);
+        */
+   public function update(UpdateProductRequest $request, Product $product)
+{
+    $validatedData = $request->validated();
 
-        /**
-         * Handle upload image with Storage.
-         */
-        if ($file = $request->file('image')) {
-            $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
-            $path = 'public/products/';
-
-            /**
-             * Delete photo if exists.
-             */
-            if ($product->image) {
-                Storage::delete($path . $product->image);
-            }
-
-            $file->storeAs($path, $fileName);
-            $validatedData['image'] = $fileName;
-        }
-
-        if ($files = $request->file('images')) {
-            $validatedData['images'] = collect($files)->map(function ($file) {
-                $fileName = hexdec(uniqid()).'.'.$file->getClientOriginalExtension();
-                $file->storeAs('public/products', $fileName);
-                return $fileName;
-            })->values()->all();
-        }
-
-        Product::where('id', $product->id)->update($validatedData);
-
-        return Redirect::route('products.index')->with('success', 'Product has been updated!');
+    $gstRate = $validatedData['gst_tax'] ?? $product->gst_tax;
+    if ($gstRate === null || $gstRate === '') {
+        $gstRate = Setting::get('gst', 0);
     }
+    $validatedData['gst_tax'] = $this->normalizeGstRate($gstRate);
+
+    if (!empty($validatedData['variation_ids'])) {
+        $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
+        $validatedData['variation_id']    = $validatedData['variation_ids'][0];
+        $validatedData['variation']       = $variations->pluck('name')->implode(', ');
+        $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
+    }
+
+    $validatedData['slug'] = Str::slug($validatedData['name']);
+
+    /**
+     * Handle upload image with Storage.
+     */
+    if ($file = $request->file('image')) {
+        $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
+        $path = 'public/products/';
+
+        // Purani photo delete karo
+        if ($product->image) {
+            Storage::delete($path . $product->image);
+        }
+
+        $file->storeAs($path, $fileName);
+        $validatedData['image'] = $fileName;
+    }
+
+    if ($files = $request->file('images')) {
+        $validatedData['images'] = collect($files)->map(function ($file) {
+            $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('public/products', $fileName);
+            return $fileName;
+        })->values()->all();
+    }
+
+    $product->update($validatedData);
+
+    return Redirect::route('products.index')->with('success', 'Product has been updated!');
+}
 
     /**
      * Remove the specified resource from storage.
@@ -265,7 +272,7 @@ public function edit(Product $product)
                     'stock' => $sheet->getCell('E' . $row)->getValue(),
                     'buying_date' => $sheet->getCell('F' . $row)->getValue(),
                     'expire_date' => $sheet->getCell('G' . $row)->getValue(),
-                    'buying_price' => $sheet->getCell('H' . $row)->getValue(),
+                    'cost_price' => $sheet->getCell('H' . $row)->getValue(),
                     'selling_price' => $sheet->getCell('I' . $row)->getValue(),
                 ];
                 $startcount++;
@@ -317,7 +324,7 @@ public function edit(Product $product)
             'Stock',
             'Buying Date',
             'Expire Date',
-            'Buying Price',
+            'Cost Price',
             'Selling Price',
         );
 
@@ -330,7 +337,7 @@ public function edit(Product $product)
                 'Stock' => $product->stock,
                 'Buying Date' => $product->buying_date,
                 'Expire Date' => $product->expire_date,
-                'Buying Price' => $product->buying_price,
+                'Cost Price' => $product->cost_price,
                 'Selling Price' => $product->selling_price,
             );
         }

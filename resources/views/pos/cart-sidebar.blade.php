@@ -1,4 +1,16 @@
 <!-- Detailed POS cart table and payment summary. -->
+@php
+    $cartSubtotal = (float) $productItem->sum(function ($item) {
+        return (float) ($item->options->original_price ?? $item->price) * $item->qty;
+    });
+    $cartTax = (float) $productItem->sum(function ($item) {
+        return (float) ($item->options->tax ?? 0) * $item->qty;
+    });
+    $cartDiscount = (float) $productItem->sum(function ($item) {
+        return (float) ($item->options->discount ?? 0) * $item->qty;
+    });
+    $cartGrandTotal = max(0, round($cartSubtotal - $cartDiscount + $cartTax, 2));
+@endphp
 <div class="cart-items-wrapper position-relative" style="height: 350px; overflow-y: auto; overflow-x: hidden;">
     @if ($productItem->count() > 0)
         <div class="table-responsive pos-cart-table-wrap">
@@ -58,7 +70,7 @@
                                     </button>
                                 </div>
                             </td>
-                            <td>{{ $currency }} {{ number_format($item->subtotal, 2) }}</td>
+                            <td>{{ $currency }} {{ number_format(max(0, $originalPrice - $discount + $tax) * $item->qty, 2) }}</td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     onclick="deleteCart('{{ $item->rowId }}')">
@@ -91,24 +103,24 @@
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
             <input class="form-control form-control-sm"
-                value="{{ $cartCurrency }} {{ number_format((float) Cart::subtotal(), 2) }}" readonly>
+                value="{{ $cartCurrency }} {{ number_format($cartSubtotal, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>
             <input class="form-control form-control-sm"
-                value="{{ $cartCurrency }} {{ number_format((float) Cart::tax(), 2) }}" readonly>
+                value="{{ $cartCurrency }} {{ number_format($cartTax, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group">
             <label>Discount</label>
             <input class="form-control form-control-sm"
-                value="{{ $cartCurrency }} {{ number_format($productItem->sum(function ($item) {return (float) ($item->options->discount ?? 0) * $item->qty;}),2) }}"
+                value="{{ $cartCurrency }} {{ number_format($cartDiscount, 2) }}"
                 readonly>
         </div>
     </div>
     <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
         <span class="font-weight-bold">Grand Total</span>
         <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
-            {{ number_format((float) Cart::total(), 2) }}</span>
+            {{ number_format($cartGrandTotal, 2) }}</span>
     </div>
 </div>
 

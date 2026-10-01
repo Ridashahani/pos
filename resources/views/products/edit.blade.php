@@ -155,6 +155,18 @@
     </div>
 
     <div class="form-group col-md-6">
+        <label for="gst_tax">GST (%)</label>
+        <input type="number" step="0.01" min="0" max="100"
+            class="form-control @error('gst_tax') is-invalid @enderror" id="gst_tax" name="gst_tax"
+            value="{{ old('gst_tax', $product->gst_tax ?? $defaultGst) }}">
+        @error('gst_tax')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+        @enderror
+    </div>
+
+    <div class="form-group col-md-6">
         <label for="buying_date">Buying Date</label>
         <input id="buying_date" class="form-control @error('buying_date') is-invalid @enderror" name="buying_date"
             value="{{ old('buying_date', $product->buying_date) }}" />

@@ -13,6 +13,7 @@ class Product extends Model
         'name',
         'brand_id',
         'model',
+        'condition',
         'imei',
         'slug',
         'code',
@@ -22,11 +23,11 @@ class Product extends Model
         'variation', 'variation_types', 'variation_type',
         'variation_id', 'variation_ids',
         'stock',
-        'buying_price',
+        'cost_price',
         'selling_price',
         'currency',
         'product_cost', 'product_price', 'wholesale_price', 'special_price', 'stock_alert',
-        'order_tax', 'tax_type', 'add_product_quantity',
+        'gst_tax', 'tax_type', 'add_product_quantity',
         'status',
         'image',
         'images',
@@ -41,16 +42,24 @@ class Product extends Model
         'variation_types' => 'array',
         'variation_ids' => 'array',
         'images' => 'array',
-        'buying_price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'selling_price' => 'decimal:2',
         'product_cost' => 'decimal:2',
         'product_price' => 'decimal:2',
         'wholesale_price' => 'decimal:2',
         'special_price' => 'decimal:2',
-        'order_tax' => 'decimal:2',
+        'gst_tax' => 'decimal:2',
         'buying_date' => 'date:Y-m-d',
         'expire_date' => 'date:Y-m-d',
     ];
+
+    public function getPriceIncludingGstAttribute(): float
+    {
+        $price = (float) ($this->selling_price ?? 0);
+        $taxRate = (float) ($this->gst_tax ?? 0);
+
+        return round($price * (1 + ($taxRate / 100)), 2);
+    }
 
     public function category(){
         return $this->belongsTo(Category::class, 'category_id');

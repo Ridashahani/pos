@@ -19,8 +19,8 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             // Stock & Pricing
             $table->integer('stock')->default(0);
-            $table->integer('cost_price')->nullable();
-            $table->integer('selling_price')->nullable();
+           $table->decimal('cost_price', 12, 2)->nullable();
+$table->decimal('selling_price', 12, 2)->nullable();
             // Details
             $table->string('image')->nullable();
             $table->date('buying_date')->nullable();
