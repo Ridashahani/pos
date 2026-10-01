@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordLinkNotification;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -55,6 +56,11 @@ class User extends Authenticatable
     public function getRouteKeyName()
     {
         return 'username';
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordLinkNotification($token));
     }
 
     public function scopeFilter($query, array $filters)
