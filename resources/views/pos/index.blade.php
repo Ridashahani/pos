@@ -101,11 +101,20 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-2">
-                                    <label class="pos-field-label">Branches</label>
-                                    <select class="form-control">
-                                        <option>Main Branch</option>
-                                        <option>Mobile Store</option>
+                                    <label class="pos-field-label" for="branch_id">Branch</label>
+                                    <select class="form-control" id="branch_id" name="branch_id" @if ($branches->isEmpty()) disabled @else required @endif>
+                                        @if ($branches->isEmpty())
+                                            <option value="" selected>No active branches available</option>
+                                        @else
+                                            <option value="" disabled @if (!$selectedBranchId) selected @endif>Select a branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}" @if ((string) $selectedBranchId === (string) $branch->id) selected @endif>{{ $branch->name }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
+                                    @if ($branches->isEmpty())
+                                        <small class="form-text text-danger">Create an active branch and assign it to your account before making a sale.</small>
+                                    @endif
                                 </div>
                                 <div class="col-md-6 form-group mb-2">
                                     <label class="pos-field-label">Reference No</label>
@@ -651,6 +660,12 @@
             }
             document.getElementById('modal_customer_id').value = customerId;
 
+            const branchSelect = document.getElementById('branch_id');
+            if (!branchSelect?.value) {
+                alert(branchSelect?.options.length > 1 ? 'Please select a branch first.' : 'No active branch is available for this account.');
+                return;
+            }
+
             // 2. Validate Payment Amount
             const totalEl = document.getElementById('cart-total');
             const totalText = totalEl.innerText.trim();
@@ -693,6 +708,7 @@
             const formData = new FormData();
             formData.append('_token', '{{ csrf_token() }}');
             formData.append('customer_id', document.getElementById('modal_customer_id').value);
+            formData.append('branch_id', document.getElementById('branch_id').value);
 
             const paymentTypeElem = document.getElementById('payment_type');
             const payAmountElem = document.getElementById('pay_amount');

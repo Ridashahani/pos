@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Product;
+use App\Models\Branch;
 use App\Models\Category;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -82,6 +84,61 @@ class PosControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('pos.index');
+    }
+
+    public function test_pos_branch_selector_contains_the_users_active_branches(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'Assigned POS Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+
+        $response = $this->actingAs($user)->get('/pos');
+
+        $response->assertOk()
+            ->assertSee('id="branch_id" name="branch_id"', false)
+            ->assertSee('value="' . $branch->id . '"', false)
+            ->assertSee('Assigned POS Branch', false);
+    }
+
+    public function test_sale_is_created_with_the_selected_assigned_branch(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'Sale Test Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $customer = Customer::factory()->create();
+        $product = $this->createProductWithCode('Branch Sale Product', 'BRANCH-SALE-001');
+        Cart::add([
+            'id' => $product->id,
+            'name' => $product->name,
+            'qty' => 1,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'tax_rate' => 0,
+                'discount' => 0,
+                'currency' => 'PKR',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/pos/sale', [
+            'customer_id' => $customer->id,
+            'branch_id' => $branch->id,
+            'payment_type' => 'Cash',
+            'pay_amount' => 100,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertDatabaseHas('sales', ['branch_id' => $branch->id]);
     }
 
     public function test_pos_product_results_keep_a_stable_order(): void
