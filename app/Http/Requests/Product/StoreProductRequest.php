@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Product;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -19,10 +20,9 @@ class StoreProductRequest extends FormRequest
         $this->merge([
             'product_type' => $this->input('product_type', 'single'),
             'currency' => $this->input('currency', 'PKR'),
-            'buying_price' => $this->input('buying_price', 0),
+            'cost_price' => $this->input('cost_price', 0),
             'selling_price' => $this->input('selling_price', 0),
             'stock' => $this->input('stock', 0),
-            'order_tax' => 'nullable|numeric|min:0|max:100',
         ]);
     }
 
@@ -41,16 +41,23 @@ class StoreProductRequest extends FormRequest
             'brand_id' => 'nullable|integer|exists:brands,id',
             'model' => 'nullable|string|max:100',
             'imei' => 'nullable|string|max:100',
+            'condition' => 'nullable|string|in:new,used',
             'mobile_type' => 'nullable|string|in:new,used',
             'code' => 'nullable|string|unique:products,code|max:50',
             'category_id' => 'nullable|integer|exists:categories,id',
-            'subcategory_id' => 'nullable|integer|exists:subcategories,id',
+            'subcategory_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('subcategories', 'id')->where('category_id', $this->input('category_id')),
+            ],
             'branch_id' => 'nullable|integer|exists:branches,id',
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
             'note' => 'nullable|string|max:5000',
             'product_type' => 'nullable|string|max:50',
-            'buying_price' => 'nullable|numeric|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
             'selling_price' => 'nullable|numeric|min:0',
+            'gst_tax' => 'nullable|numeric|min:0|max:100',
+            'status' => 'required|boolean',
             'stock' => 'nullable|integer|min:0',
             'currency' => 'nullable|string|in:PKR,USD',
             'buying_date' => 'date_format:Y-m-d|nullable',

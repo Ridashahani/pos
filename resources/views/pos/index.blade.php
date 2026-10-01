@@ -146,7 +146,13 @@
                                 <tr>
                                     <td class="text-muted font-weight-bold">Total Bill:</td>
                                     <td class="text-right font-weight-bold h5 text-primary" id="modal_total_display">
-                                        {{ Cart::total() }}
+                                        @php
+                                            $paymentItems = Cart::content();
+                                            $paymentSubtotal = $paymentItems->sum(fn ($item) => (float) ($item->options->original_price ?? $item->price) * $item->qty);
+                                            $paymentDiscount = $paymentItems->sum(fn ($item) => (float) ($item->options->discount ?? 0) * $item->qty);
+                                            $paymentTax = $paymentItems->sum(fn ($item) => (float) ($item->options->tax ?? 0) * $item->qty);
+                                        @endphp
+                                        {{ number_format(max(0, $paymentSubtotal - $paymentDiscount + $paymentTax), 2) }}
                                     </td>
                                 </tr>
                                 <tr>
