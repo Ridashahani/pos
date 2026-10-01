@@ -94,8 +94,10 @@
                             </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                             <div class="d-flex align-items-center">
-                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2">
+                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2"
+                                    @if ($type === 'stock-in') id="stock-in-search-form" @endif>
                                     <input type="search" name="search" value="{{ request('search') }}"
+                                        @if ($type === 'stock-in') id="stock-in-search" @endif
                                         class="form-control mr-2" placeholder="Search product" aria-label="Search product">
                                     <button type="submit" class="btn btn-primary">Search</button>
                                 </form>
@@ -117,12 +119,12 @@
                                     <thead class="bg-white text-uppercase">
                                         <tr class="ligth ligth-data">
                                             <th>No</th>
-                                            <th>Product</th>
+                                            <th>Product_Name</th>
+                                            <th>Variation</th>
                                             <th>Branch</th>
-                                            <th>Purchase</th>
                                             <th>Purchase Price</th>
-                                            <th class="text-right text-nowrap">Purchased Qty</th>
                                             <th class="text-right text-nowrap">Available Qty</th>
+                                            <th>Low Stock</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -131,19 +133,27 @@
                                             <tr>
                                                 <td>{{ $pagination->firstItem() + $loop->index }}</td>
                                                 <td>{{ $row['product'] }}</td>
+                                                <td>{{ $row['variation'] }}</td>
                                                 <td>{{ $row['branch'] }}</td>
-                                                <td>{{ $row['purchase'] }}</td>
                                                 <td>{{ $row['currency'] }} {{ number_format($row['cost_price'], 2) }}</td>
-                                                <td class="text-right font-weight-bold">{{ number_format($row['quantity']) }}</td>
                                                 <td class="text-right">
                                                     <span class="badge {{ $row['remaining_quantity'] > 0 ? 'bg-success' : 'bg-danger' }}">
                                                         {{ number_format($row['remaining_quantity']) }}
                                                     </span>
                                                 </td>
                                                 <td>
+                                                    @if ($row['remaining_quantity'] < 5)
+                                                        <span class="text-danger d-inline-flex align-items-center">
+                                                            <x-heroicon-o-x-circle class="w-5 h-5 mr-1" /> Low Stock
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
                                                     <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
-                                                        class="btn btn-info" title="View details" aria-label="View details">
-                                                        <x-heroicon-o-eye class="w-5 h-5" />
+                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View details" aria-label="View details">
+                                                        <x-heroicon-o-eye class="w-4 h-4 mr-1" /> View Details
                                                     </a>
                                                 </td>
                                             </tr>
@@ -307,4 +317,13 @@
             </div>
         </div>
     </div>
+    @if ($type === 'stock-in')
+        <script>
+            document.getElementById('stock-in-search')?.addEventListener('search', function () {
+                if (this.value.trim() === '') {
+                    document.getElementById('stock-in-search-form')?.requestSubmit();
+                }
+            });
+        </script>
+    @endif
 @endsection

@@ -46,7 +46,7 @@ class PurchaseController extends Controller
     public function create()
     {
         return view('purchases.create', [
-            'products' => Product::select(['id', 'name', 'buying_price','image'])->orderBy('name')->get(),
+            'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
             'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => Branch::orderBy('name')->get(),
@@ -94,7 +94,7 @@ class PurchaseController extends Controller
 
         return view('purchases.edit', [
             'purchase' => $purchase,
-            'products' => Product::select(['id', 'name', 'buying_price','image'])->orderBy('name')->get(),
+            'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
             'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => Branch::orderBy('name')->get(),
@@ -114,7 +114,7 @@ class PurchaseController extends Controller
             $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
             $stockIns = $this->lockPurchaseStockIns($purchase);
 
-            if ($stockIns->contains(fn (StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
+            if ($stockIns->contains(fn(StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
                 throw ValidationException::withMessages([
                     'purchase' => 'This purchase cannot be edited because stock from it has sale history.',
                 ]);
@@ -146,7 +146,7 @@ class PurchaseController extends Controller
             $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
             $stockIns = $this->lockPurchaseStockIns($purchase);
 
-            if ($stockIns->contains(fn (StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
+            if ($stockIns->contains(fn(StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
                 return false;
             }
 
@@ -183,6 +183,7 @@ class PurchaseController extends Controller
             $purchase->stockIns()->create([
                 'product_id' => $product->id,
                 'variation_id' => $variationId,
+                'variation_details' => $item['variations'] ?? [],
                 'branch_id' => $purchase->branch_id,
                 'batch_no' => $purchase->purchase_no,
                 'quantity' => $item['quantity'],
