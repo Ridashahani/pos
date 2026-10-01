@@ -16,6 +16,19 @@ class EnsureActiveBranch
         'branch.select',
         'branch.set-active',
         'logout',
+        'login',
+        'register',
+        'password.request',
+        'password.email',
+        'password.reset',
+        'password.update',
+        'verification.notice',
+        'verification.verify',
+        'verification.send',
+        'profile',
+        'profile.edit',
+        'profile.update',
+        'profile.change-password',
     ];
 
     /**

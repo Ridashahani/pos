@@ -114,6 +114,20 @@ class User extends Authenticatable
         });
     }
 
+    /**
+     * Returns the branch_id to filter data by, or null if user can see all branches.
+     * Admin → null (no filter, see all)
+     * Manager/Cashier → active_branch_id (only their branch)
+     */
+    public function activeBranchFilter(): ?int
+    {
+        if ($this->isAdmin()) {
+            return null; // no restriction
+        }
+
+        return $this->active_branch_id;
+    }
+
     public function allowedBranches()
     {
         if ($this->isAdmin()) {

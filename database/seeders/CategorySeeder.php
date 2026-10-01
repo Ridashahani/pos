@@ -14,14 +14,9 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Smartphones',
-            'Mobile Accessories',
-            'Chargers & Cables',
-            'Mobile Covers & Cases',
-            'Screen Protectors',
-            'Power Banks',
-            'Earbuds & Headphones',
-            'Smartwatches'
+            'Accessories',
+            'Mobile',
+           
         ];
 
         foreach ($categories as $category) {

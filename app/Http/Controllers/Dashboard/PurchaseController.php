@@ -19,7 +19,12 @@ class PurchaseController extends Controller
 {
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $branchFilter = $user->activeBranchFilter();
+
         $purchases = Purchase::with(['supplier', 'branch', 'items.product'])
+            ->when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))
             ->when($request->filled('search') && $request->filled('search_by'), function ($q) use ($request) {
                 $search = $request->search;
                 $searchBy = $request->search_by;
@@ -36,20 +41,23 @@ class PurchaseController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $totalPurchases = Purchase::sum('total_amount');
-        $itemsReceived = PurchaseItem::sum('quantity');
-        $pendingPayments = Purchase::sum('due_amount');
+        $totalPurchases = Purchase::when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))->sum('total_amount');
+        $itemsReceived = PurchaseItem::when($branchFilter, fn($q) => $q->whereHas('purchase', fn($q2) => $q2->where('branch_id', $branchFilter)))->sum('quantity');
+        $pendingPayments = Purchase::when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))->sum('due_amount');
 
         return view('purchases.index', compact('purchases', 'totalPurchases', 'itemsReceived', 'pendingPayments'));
     }
 
     public function create()
     {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
         return view('purchases.create', [
             'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
             'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => $user->allowedBranches(),
         ]);
     }
 
@@ -92,12 +100,15 @@ class PurchaseController extends Controller
     {
         $purchase->load('items');
 
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
         return view('purchases.edit', [
             'purchase' => $purchase,
             'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
             'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
-            'branches' => Branch::orderBy('name')->get(),
+            'branches' => $user->allowedBranches(),
         ]);
     }
 

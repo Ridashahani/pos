@@ -55,6 +55,11 @@ class BranchSelectionController extends Controller
             ->first();
 
         if (!$assignedBranch) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'message' => 'The selected branch is not assigned to your account.',
+                ], 422);
+            }
             return back()->withErrors([
                 'branch_id' => 'The selected branch is not assigned to your account or is inactive.',
             ])->withInput();
@@ -62,6 +67,13 @@ class BranchSelectionController extends Controller
 
         $user->active_branch_id = $assignedBranch->id;
         $user->save();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Active branch set to {$assignedBranch->name}.",
+            ]);
+        }
 
         return redirect()->intended(route('dashboard'))
             ->with('success', "Active branch set to {$assignedBranch->name}.");
