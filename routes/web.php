@@ -22,6 +22,7 @@ use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\Dashboard\UnitController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentAccountController;
+use App\Http\Controllers\BranchSelectionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserBranchController;
 use Illuminate\Support\Facades\Route;
@@ -32,7 +33,11 @@ Route::get('/', function () {
 });
 // DEFAULT DASHBOARD & PROFILE
 Route::middleware('auth')->group(function () {
-     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
+    // Active Branch Selection Routes
+    Route::get('/select-branch', [BranchSelectionController::class, 'select'])->name('branch.select');
+    Route::post('/select-branch', [BranchSelectionController::class, 'setActive'])->name('branch.set-active');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
     Route::prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
