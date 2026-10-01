@@ -197,7 +197,7 @@
                                                 <tr>
                                                     <td class="text-muted">Subtotal</td>
                                                     <td class="text-right font-weight-bold">
-                                                        {{ number_format($sale->sub_total, 2) }}</td>
+                                                        {{ number_format($sale->subtotal, 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Discount</td>
@@ -207,17 +207,17 @@
                                                 <tr>
                                                     <td class="text-muted">Tax (VAT)</td>
                                                     <td class="text-right font-weight-bold">
-                                                        {{ number_format($sale->vat, 2) }}</td>
+                                                        {{ number_format($sale->tax, 2) }}</td>
                                                 </tr>
                                                 <tr class="border-top">
                                                     <td class="text-dark font-weight-bold pt-3 h5">Total</td>
                                                     <td class="text-primary font-weight-bold text-right pt-3 h5">
-                                                        {{ number_format($sale->total, 2) }}</td>
+                                                        {{ number_format($sale->grand_total, 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Paid</td>
                                                     <td class="text-success text-right font-weight-bold">
-                                                        {{ number_format($sale->pay_amount, 2) }}</td>
+                                                        {{ number_format($sale->paid_amount, 2) }}</td>
                                                 </tr>
                                             </table>
                                         </div>

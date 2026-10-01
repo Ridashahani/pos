@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Category;
 use Carbon\Carbon;
+use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -81,6 +82,23 @@ class PosControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('pos.index');
+    }
+
+    public function test_pos_product_results_keep_a_stable_order(): void
+    {
+        $user = $this->createAuthenticatedUser();
+        $products = collect([
+            $this->createProductWithCode('Stable Product A', 'STABLE-001'),
+            $this->createProductWithCode('Stable Product B', 'STABLE-002'),
+            $this->createProductWithCode('Stable Product C', 'STABLE-003'),
+        ]);
+        $products->each->update(['stock' => 5, 'selling_price' => 100]);
+
+        $response = $this->actingAs($user)->getJson('/pos?search=Stable');
+
+        $response->assertOk();
+        preg_match_all('/name="id" value="(\d+)"/', $response->json('html'), $matches);
+        $this->assertSame($products->pluck('id')->all(), array_map('intval', $matches[1]));
     }
 
     public function test_pos_search_by_product_name(): void
@@ -280,5 +298,241 @@ class PosControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Search by name or barcode...', false);
+    }
+
+    public function test_product_search_matches_category_name(): void
+    {
+        $category = $this->createCategory();
+        $product = $this->createProductWithCode('Category Search Product', 'CATEGORY-SEARCH-001', $category);
+
+        $productsByName = Product::filter(['search' => $product->name])->get();
+        $products = Product::filter(['search' => $category->name])->get();
+
+        $this->assertTrue($productsByName->contains('id', $product->id));
+        $this->assertTrue($products->contains('id', $product->id));
+    }
+
+    public function test_pos_search_returns_json_product_fragment(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $category = $this->createCategory();
+        $product = Product::factory()->create([
+            'name' => 'AJAX Search Product',
+            'code' => 'AJAX-SEARCH-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'expire_date' => Carbon::now()->addYear(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/pos?search=AJAX+Search+Product');
+
+        $response->assertOk()
+            ->assertJsonStructure(['html', 'total'])
+            ->assertJsonPath('total', 1);
+        $this->assertStringContainsString($product->name, $response->json('html'));
+    }
+
+    public function test_pos_does_not_show_products_before_a_search(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $category = $this->createCategory();
+        $product = Product::factory()->create([
+            'name' => 'Initial Catalog Product',
+            'code' => 'INITIAL-CATALOG-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'expire_date' => Carbon::now()->addYear(),
+        ]);
+
+        $response = $this->actingAs($user)->get('/pos');
+
+        $response->assertOk()
+            ->assertDontSee($product->name, false)
+            ->assertSee('Search by product name, barcode, or category to view products.', false);
+    }
+
+    public function test_updating_cart_discount_refreshes_net_amount(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $item = Cart::add([
+            'id' => 'discount-test',
+            'name' => 'Discount Test Item',
+            'qty' => 2,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'tax' => 0,
+                'discount' => 0,
+                'currency' => 'PKR',
+                'manual' => true,
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/pos/discount/{$item->rowId}", [
+            'discount' => 25,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true);
+        $this->assertStringContainsString('PKR 195.00', $response->json('cart_html'));
+        $cartHtml = $response->json('cart_html');
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 100\.00"/', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-tax"\s+value="PKR 20\.00"/', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-discount"\s+value="PKR 25\.00"/', $cartHtml);
+        $updatedItem = Cart::content()->first();
+        $this->assertSame(25.0, (float) $updatedItem->options->discount);
+        $this->assertEquals(195.0, (float) Cart::total(null, null, ''));
+
+        $quantityResponse = $this->actingAs($user)->postJson("/pos/update/{$updatedItem->rowId}", [
+            'qty' => 3,
+        ]);
+
+        $quantityResponse->assertOk()->assertJsonPath('success', true);
+        $this->assertStringContainsString('PKR 305.00', $quantityResponse->json('cart_html'));
+        $this->assertEquals(305.0, (float) Cart::total(null, null, ''));
+        $this->assertSame(25.0, (float) Cart::content()->first()->options->discount);
+    }
+
+    public function test_adding_product_uses_its_gst_rate_in_the_cart(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $product = $this->createProductWithCode('GST Rate Item', 'GST-RATE-001');
+        $product->update([
+            'selling_price' => 100,
+            'order_tax' => 17.5,
+        ]);
+
+        $response = $this->actingAs($user)->postJson('/pos/add', [
+            'id' => $product->id,
+            'name' => $product->name,
+            'price' => 100,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $cartItem = Cart::content()->first();
+        $this->assertSame(17.5, (float) $cartItem->options->tax_rate);
+        $this->assertSame(17.5, (float) $cartItem->taxRate);
+        $this->assertEquals(17.5, (float) Cart::tax(2, '.', ''));
+        $this->assertStringContainsString('value="17.50"', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">17.50</td>', $response->json('cart_html'));
+    }
+
+    public function test_updates_for_removed_cart_rows_return_the_current_cart(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+
+        $requests = [
+            ['/pos/update/%s', ['qty' => 2]],
+            ['/pos/discount/%s', ['discount' => 10]],
+            ['/pos/tax-rate/%s', ['tax_rate' => 18]],
+        ];
+
+        foreach ($requests as [$endpoint, $payload]) {
+            $item = Cart::add([
+                'id' => uniqid('removed-row-', true),
+                'name' => 'Removed Cart Item',
+                'qty' => 1,
+                'price' => 100,
+                'options' => ['original_price' => 100, 'currency' => 'PKR'],
+            ]);
+            Cart::remove($item->rowId);
+
+            $response = $this->actingAs($user)->postJson(sprintf($endpoint, $item->rowId), $payload);
+
+            $response->assertStatus(409)
+                ->assertJsonPath('success', false)
+                ->assertJsonStructure(['cart_html', 'cart_count']);
+        }
+    }
+
+    public function test_cart_quantity_is_limited_to_current_product_stock(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $product = $this->createProductWithCode('Stock Limit Item', 'STOCK-LIMIT-001');
+        $product->update(['stock' => 5]);
+        $item = Cart::add([
+            'id' => $product->id,
+            'name' => $product->name,
+            'qty' => 1,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'currency' => 'PKR',
+                'stock' => $product->stock,
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/pos/update/{$item->rowId}", [
+            'qty' => 8,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $updatedItem = Cart::content()->first();
+        $this->assertSame(5, (int) $updatedItem->qty);
+        $this->assertSame(5, (int) $updatedItem->options->stock);
+        $this->assertStringContainsString('max="5"', $response->json('cart_html'));
+    }
+
+    public function test_updating_cart_tax_rate_persists_and_recalculates_tax(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $item = Cart::add([
+            'id' => 'tax-rate-test',
+            'name' => 'Tax Rate Test Item',
+            'qty' => 2,
+            'price' => 100,
+            'options' => [
+                'original_price' => 100,
+                'discount' => 0,
+                'currency' => 'PKR',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->postJson("/pos/tax-rate/{$item->rowId}", [
+            'tax_rate' => 18,
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $updatedItem = Cart::content()->first();
+        $this->assertSame(18.0, (float) $updatedItem->options->tax_rate);
+        $this->assertSame(18.0, (float) $updatedItem->taxRate);
+        $this->assertEquals(36.0, (float) Cart::tax(2, '.', ''));
+        $this->assertStringContainsString('value="18.00"', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">36.00</td>', $response->json('cart_html'));
     }
 }

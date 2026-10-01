@@ -14,15 +14,19 @@
 <div class="cart-items-wrapper position-relative" style="height: 350px; overflow-y: auto; overflow-x: hidden;">
     @if ($productItem->count() > 0)
         <div class="table-responsive pos-cart-table-wrap">
-            <table class="table table-sm mb-0 pos-cart-table">
+            <table class="table table-sm mb-0 pos-cart-table rounded-0 mt-0">
                 <thead>
                     <tr>
                         <th>Image</th>
                         <th>Product</th>
-                        <th>Price</th>
-                        <th>Discount</th>
+                        <th>Price (PKR)</th>
                         <th>Quantity</th>
-                        <th>Sub Total</th>
+                        <th>Gross Amount (PKR)</th>
+                        <th>Tax Rate(%)</th>
+                        <th>Tax Amount</th>
+                        <th>Amount Incl. Tax</th>
+                        <th>Discount (PKR)</th>
+                        <th>Net Amount</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -30,50 +34,46 @@
                     @foreach ($productItem as $item)
                         @php
                             $options = $item->options;
-                            $tax = (float) ($options->tax ?? 0);
                             $discount = (float) ($options->discount ?? 0);
                             $originalPrice = (float) ($options->original_price ?? $item->price);
+                            $stock = $options->stock ?? null;
                             $currency = $options->currency ?? 'PKR';
                             $image = $options->image ?? asset('assets/images/product/default.webp');
                         @endphp
-                        <tr>
+                        @php
+                            $gross     = $originalPrice * $item->qty;
+                            $taxRate   = (float) ($options->tax_rate ?? 10);
+                            $taxAmount = $gross * $taxRate / 100;
+                            $inclTax   = $gross + $taxAmount;
+                            $netAmount = max(0, $inclTax - $discount);
+                            $summaryPrice += $originalPrice;
+                            $summaryNetAmount += $netAmount;
+                            $summaryTaxAmount += $taxAmount;
+                            $summaryDiscount += $discount;
+                        @endphp
+                        <tr data-row-id="{{ $item->rowId }}" data-item-id="{{ $item->id }}"
+                            data-unit-price="{{ $originalPrice }}" data-currency="{{ $currency }}">
                             <td>
                                 <img class="pos-cart-product-image" src="{{ $image }}" alt="{{ $item->name }}">
                             </td>
                             <td class="pos-cart-product-name">
                                 <div>{{ $item->name }}</div>
-                                <small
-                                    class="text-muted">{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}</small>
                             </td>
                             <td>
-                                <div>{{ $currency }} {{ number_format($originalPrice, 2) }}</div>
-                                <small class="text-muted">Tax: {{ number_format($tax, 2) }}</small>
-                            </td>
-                            <td>
-                                <div class="pos-discount-control">
-                                    <input type="number" class="form-control form-control-sm pos-discount-input"
-                                        value="{{ (int) $discount }}" min="0" max="{{ $originalPrice + $tax }}"
-                                        step="0.01" aria-label="Discount">
-                                    <button type="button" class="btn btn-primary btn-sm pos-discount-apply"
-                                        onclick="applyDiscount('{{ $item->rowId }}', this)">Apply</button>
-                                </div>
+                                <div>{{ number_format($originalPrice, 2) }}</div>
                             </td>
                             <td>
                                 <div class="pos-quantity-control">
-                                    <button type="button" class="pos-quantity-button"
-                                        onclick="updateCart('{{ $item->rowId }}', {{ max(0, $item->qty - 1) }})">&minus;</button>
-                                    <span>{{ $item->qty }}</span>
-                                    <button type="button" class="pos-quantity-button pos-quantity-add"
-                                        onclick="updateCart('{{ $item->rowId }}', {{ $item->qty + 1 }})"
-                                        aria-label="Increase quantity">
-                                        <x-heroicon-o-plus class="w-5 h-5" />
-                                    </button>
+                                    <input type="number" class="form-control form-control-sm pos-quantity-input"
+                                        style="width: 50px;"
+                                        value="{{ $item->qty }}" min="0" @if ($stock !== null) max="{{ $stock }}" @endif step="1" aria-label="Quantity"
+                                        data-saved="{{ $item->qty }}">
                                 </div>
                             </td>
                             <td>{{ $currency }} {{ number_format(max(0, $originalPrice - $discount + $tax) * $item->qty, 2) }}</td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
-                                    onclick="deleteCart('{{ $item->rowId }}')">
+                                    data-action="remove">
                                     <x-heroicon-o-trash class="w-5 h-4" />
                                 </button>
                             </td>
@@ -98,7 +98,7 @@
     <div class="row">
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Item</label>
-            <input class="form-control form-control-sm" value="{{ Cart::count() }}" readonly>
+            <input class="form-control form-control-sm pos-summary-items" value="{{ Cart::count() }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
@@ -155,106 +155,3 @@
             Sale</button>
     @endif
 </div>
-
-<style>
-    .pos-cart-table {
-        min-width: 0;
-        width: 100%;
-        table-layout: fixed;
-        font-size: 10px;
-
-    }
-
-    .pos-cart-product-name small {
-        display: block;
-        font-size: .70rem;
-    }
-
-    .pos-cart-table th {
-        background: #fafbfd;
-        border-top: 0;
-        color: #273142;
-        font-weight: 900;
-        padding: .55rem .4rem;
-        white-space: nowrap;
-    }
-
-    .pos-cart-table td {
-        border-top: 1px solid #edf0f4;
-        color: #536071;
-        padding: .45rem .4rem;
-        white-space: nowrap;
-    }
-
-    .pos-cart-product-image {
-        height: 30px;
-        width: 38px;
-        object-fit: contain;
-    }
-
-    .pos-cart-product-name {
-        color: #273142 !important;
-        font-weight: 600;
-        max-width: 115px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .pos-quantity-control {
-        align-items: center;
-        display: flex;
-        gap: .25rem;
-    }
-
-    .pos-quantity-control span {
-        min-width: 20px;
-        text-align: center;
-    }
-
-    .pos-quantity-button {
-        background: #fff;
-        border: 1px solid #b9d5ff;
-        border-radius: 3px;
-        color: #2f80ed;
-        height: 16px;
-        line-height: 20px;
-        padding: 0;
-        width: 16px;
-    }
-
-    .pos-quantity-add {
-        background: #2f80ed;
-        color: #fff;
-    }
-
-    .pos-cart-summary label {
-        color: #273142;
-        display: block;
-        font-size: .70rem;
-        font-weight: 700;
-        margin-bottom: .25rem;
-    }
-
-    .pos-cart-summary .form-control {
-        border-color: #e1e6ed;
-        color: #8490a0;
-        font-size: .7rem;
-    }
-
-    .pos-discount-input {
-        min-width: 50px;
-        max-width: 60px;
-        padding: 0.25rem 0.3rem;
-    }
-
-    .pos-discount-control {
-        align-items: center;
-        display: flex;
-        gap: .20rem;
-    }
-
-    .pos-discount-apply {
-        font-size: .62rem;
-        padding: .2rem .35rem;
-    }
-</style>
