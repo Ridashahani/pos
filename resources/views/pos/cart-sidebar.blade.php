@@ -28,7 +28,6 @@
                     @foreach ($productItem as $item)
                         @php
                             $options = $item->options;
-                            $tax = (float) ($options->tax ?? 0);
                             $discount = (float) ($options->discount ?? 0);
                             $originalPrice = (float) ($options->original_price ?? $item->price);
                             $stock = $options->stock ?? null;
@@ -46,59 +45,47 @@
                             $summaryTaxAmount += $taxAmount;
                             $summaryDiscount += $discount;
                         @endphp
-                        <tr>
+                        <tr data-row-id="{{ $item->rowId }}" data-item-id="{{ $item->id }}"
+                            data-unit-price="{{ $originalPrice }}" data-currency="{{ $currency }}">
                             <td>
                                 <img class="pos-cart-product-image" src="{{ $image }}" alt="{{ $item->name }}">
                             </td>
                             <td class="pos-cart-product-name">
                                 <div>{{ $item->name }}</div>
-                                <!-- <small
-                                    class="text-muted">{{ $options->code ?? 'PRD-' . str_pad($item->id, 6, '0', STR_PAD_LEFT) }}
-                                </small> -->
                             </td>
                             <td>
                                 <div>{{ number_format($originalPrice, 2) }}</div>
-                                <!-- <small class="text-muted">Tax: {{ number_format($tax, 2) }}</small> -->
                             </td>
                             <td>
-                                 <div class="pos-quantity-control">
-                                     <input type="number" class="form-control form-control-sm pos-quantity-input"
-                                         style="width: 50px;"
-                                         value="{{ $item->qty }}" min="0" @if ($stock !== null) max="{{ $stock }}" @endif step="1" aria-label="Quantity"
-                                         data-row-id="{{ $item->rowId }}" data-saved-qty="{{ $item->qty }}"
-                                         oninput="scheduleCartQuantityUpdate(this)"
-                                         onchange="commitCartQuantity(this)"
-                                         onkeydown="if (event.key === 'Enter') this.blur()"
-                                     >
-                                 </div>
+                                <div class="pos-quantity-control">
+                                    <input type="number" class="form-control form-control-sm pos-quantity-input"
+                                        style="width: 50px;"
+                                        value="{{ $item->qty }}" min="0" @if ($stock !== null) max="{{ $stock }}" @endif step="1" aria-label="Quantity"
+                                        data-saved="{{ $item->qty }}">
+                                </div>
                             </td>
-                            <td class="pos-gross-amount" data-amount="{{ $gross }}">{{ number_format($gross, 2) }}</td>
+                            <td class="pos-gross-amount">{{ number_format($gross, 2) }}</td>
                             <td>
                                 <input type="number" class="form-control form-control-sm pos-tax-rate-input"
                                     style="width: 64px;" value="{{ number_format($taxRate, 2, '.', '') }}"
                                     min="0" max="100" step="1" aria-label="Tax Rate"
-                                    oninput="updateTaxAmounts(this)"
-                                    onchange="updateTaxRate('{{ $item->rowId }}', this.value)"
-                                    onkeydown="if (event.key === 'Enter') this.blur()">
+                                    data-saved="{{ $taxRate }}">
                             </td>
                             <td class="pos-tax-amount">{{ number_format($taxAmount, 2) }}</td>
-                            <td class="pos-incl-tax-amount" data-amount="{{ $inclTax }}">{{ number_format($inclTax, 2) }}</td>
+                            <td class="pos-incl-tax-amount">{{ number_format($inclTax, 2) }}</td>
                             <td>
-    <div class="pos-discount-control">
-        <input type="number" class="form-control form-control-sm pos-discount-input"
-            style="width: 50px;"
-            value="{{ (int) $discount }}" min="0" max="{{ $inclTax }}"
-            step="1" aria-label="Discount"
-            oninput="updateNetAmount(this)"
-            onchange="updateDiscount('{{ $item->rowId }}', this.value)"
-            onkeydown="if (event.key === 'Enter') this.blur()"
-        >
-    </div>
-</td>
-                            <td class="pos-net-amount" data-currency="{{ $currency }}">{{ $currency }} {{ number_format($netAmount, 2) }}</td>
+                                <div class="pos-discount-control">
+                                    <input type="number" class="form-control form-control-sm pos-discount-input"
+                                        style="width: 50px;"
+                                        value="{{ round($discount, 2) }}" min="0" max="{{ $inclTax }}"
+                                        step="1" aria-label="Discount"
+                                        data-saved="{{ $discount }}">
+                                </div>
+                            </td>
+                            <td class="pos-net-amount">{{ $currency }} {{ number_format($netAmount, 2) }}</td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
-                                    onclick="deleteCart('{{ $item->rowId }}')">
+                                    data-action="remove">
                                     <x-heroicon-o-trash class="w-5 h-4" />
                                 </button>
                             </td>
@@ -123,7 +110,7 @@
     <div class="row">
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Item</label>
-            <input class="form-control form-control-sm" value="{{ Cart::count() }}" readonly>
+            <input class="form-control form-control-sm pos-summary-items" value="{{ Cart::count() }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
@@ -143,8 +130,8 @@
     </div>
     <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
         <span class="font-weight-bold">Grand Total</span>
-        <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
-            {{ number_format($summaryNetAmount, 2) }}</span>
+        <span class="font-weight-bold text-primary" id="cart-total"
+            data-total="{{ $summaryNetAmount }}">{{ $cartCurrency }} {{ number_format($summaryNetAmount, 2) }}</span>
     </div>
 </div>
 
@@ -179,106 +166,3 @@
             Sale</button>
     @endif
 </div>
-
-<style>
-    .pos-cart-table {
-        min-width: 0;
-        width: 100%;
-        /* table-layout: fixed; */
-        font-size: 10px;
-
-    }
-
-    .pos-cart-product-name small {
-        display: block;
-        font-size: .70rem;
-    }
-
-    .pos-cart-table th {
-        background: #fafbfd;
-        border-top: 0;
-        color: #273142;
-        font-weight: 900;
-        padding: .55rem .4rem;
-        white-space: nowrap;
-    }
-
-    .pos-cart-table td {
-        border-top: 1px solid #edf0f4;
-        color: #536071;
-        padding: .45rem .4rem;
-        white-space: nowrap;
-    }
-
-    .pos-cart-product-image {
-        height: 30px;
-        width: 38px;
-        object-fit: contain;
-    }
-
-    .pos-cart-product-name {
-        color: #273142 !important;
-        font-weight: 600;
-        max-width: 115px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .pos-quantity-control {
-        align-items: center;
-        display: flex;
-        gap: .25rem;
-    }
-
-    .pos-quantity-control span {
-        min-width: 20px;
-        text-align: center;
-    }
-
-    .pos-quantity-button {
-        background: #fff;
-        border: 1px solid #b9d5ff;
-        border-radius: 3px;
-        color: #2f80ed;
-        height: 16px;
-        line-height: 20px;
-        padding: 0;
-        width: 16px;
-    }
-
-    .pos-quantity-add {
-        background: #2f80ed;
-        color: #fff;
-    }
-
-    .pos-cart-summary label {
-        color: #273142;
-        display: block;
-        font-size: .70rem;
-        font-weight: 700;
-        margin-bottom: .25rem;
-    }
-
-    .pos-cart-summary .form-control {
-        border-color: #e1e6ed;
-        color: #8490a0;
-        font-size: .7rem;
-    }
-
-    .pos-discount-input {
-        min-width: 50px;
-        max-width: 60px;
-        padding: 0.25rem 0.3rem;
-    }
-
-    .pos-discount-control {
-        align-items: center;
-        display: flex;
-        gap: .20rem;
-    }
-
-    .pos-discount-apply {
-        font-size: .62rem;
-        padding: .2rem .35rem;
-    }
-</style>

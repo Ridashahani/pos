@@ -84,6 +84,23 @@ class PosControllerTest extends TestCase
         $response->assertViewIs('pos.index');
     }
 
+    public function test_pos_product_results_keep_a_stable_order(): void
+    {
+        $user = $this->createAuthenticatedUser();
+        $products = collect([
+            $this->createProductWithCode('Stable Product A', 'STABLE-001'),
+            $this->createProductWithCode('Stable Product B', 'STABLE-002'),
+            $this->createProductWithCode('Stable Product C', 'STABLE-003'),
+        ]);
+        $products->each->update(['stock' => 5, 'selling_price' => 100]);
+
+        $response = $this->actingAs($user)->getJson('/pos?search=Stable');
+
+        $response->assertOk();
+        preg_match_all('/name="id" value="(\d+)"/', $response->json('html'), $matches);
+        $this->assertSame($products->pluck('id')->all(), array_map('intval', $matches[1]));
+    }
+
     public function test_pos_search_by_product_name(): void
     {
         $user = $this->createAuthenticatedUser();
@@ -418,6 +435,39 @@ class PosControllerTest extends TestCase
         $this->assertEquals(17.5, (float) Cart::tax(2, '.', ''));
         $this->assertStringContainsString('value="17.50"', $response->json('cart_html'));
         $this->assertStringContainsString('class="pos-tax-amount">17.50</td>', $response->json('cart_html'));
+    }
+
+    public function test_updates_for_removed_cart_rows_return_the_current_cart(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+
+        $requests = [
+            ['/pos/update/%s', ['qty' => 2]],
+            ['/pos/discount/%s', ['discount' => 10]],
+            ['/pos/tax-rate/%s', ['tax_rate' => 18]],
+        ];
+
+        foreach ($requests as [$endpoint, $payload]) {
+            $item = Cart::add([
+                'id' => uniqid('removed-row-', true),
+                'name' => 'Removed Cart Item',
+                'qty' => 1,
+                'price' => 100,
+                'options' => ['original_price' => 100, 'currency' => 'PKR'],
+            ]);
+            Cart::remove($item->rowId);
+
+            $response = $this->actingAs($user)->postJson(sprintf($endpoint, $item->rowId), $payload);
+
+            $response->assertStatus(409)
+                ->assertJsonPath('success', false)
+                ->assertJsonStructure(['cart_html', 'cart_count']);
+        }
     }
 
     public function test_cart_quantity_is_limited_to_current_product_stock(): void
