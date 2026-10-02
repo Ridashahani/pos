@@ -4,16 +4,10 @@ $field = fn ($name, $default = '') => old($name, $editing ? ($product->{$name} ?
 $variationTypes = $field('variation_types', []);
 $selectedVariationIds = old('variation_ids', $editing ? ($product->variation_ids ?: ($product->variation_id ? [$product->variation_id] : [])) : []);
 $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds : [$selectedVariationIds];
-$accessoriesCategory = $categories->first(fn ($category) => \Illuminate\Support\Str::slug($category->name) === 'accessories');
-$mobileCategory = $categories->first(fn ($category) => in_array(\Illuminate\Support\Str::slug($category->name), ['mobile', 'smart-phone', 'smartphone'], true));
-$storedCategoryId = (string) old('category_id', $editing ? ($product->category_id ?? '') : '');
-$selectedCategoryType = old('product_category_type', $storedCategoryId === (string) ($mobileCategory->id ?? '')
-    ? 'mobile'
-    : ($storedCategoryId === (string) ($accessoriesCategory->id ?? '')
-        ? 'accessories'
-        : ($editing && ($product->imei || $product->model || $product->condition) ? 'mobile' : 'accessories')));
-$selectedParentCategory = $selectedCategoryType === 'mobile' ? $mobileCategory : $accessoriesCategory;
-$selectedCategoryId = $storedCategoryId !== '' ? $storedCategoryId : (string) ($selectedParentCategory->id ?? '');
+$selectedCategoryId = (string) old('category_id', $editing ? ($product->category_id ?? '') : '');
+if ($selectedCategoryId === '' && $categories->isNotEmpty()) {
+    $selectedCategoryId = (string) $categories->first()->id;
+}
 $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->subcategory_id ?? '') : '');
 @endphp
 
@@ -50,14 +44,12 @@ $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->su
                     <input type="hidden" name="category_id" id="selected_category_id" value="{{ $selectedCategoryId }}">
                     <div class="form-group col-md-6">
                         <label class="font-weight-bold d-block mb-2">Category Type</label>
-                        <div class="custom-control custom-radio custom-control-inline">
-                            <input type="radio" id="cat_type_accessories" name="product_category_type" value="accessories" data-category="{{ $accessoriesCategory->id ?? '' }}" class="custom-control-input" @checked($selectedCategoryType === 'accessories')>
-                            <label class="custom-control-label" for="cat_type_accessories" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Accessories</label>
-                        </div>
-                        <div class="custom-control custom-radio custom-control-inline mr-4">
-                            <input type="radio" id="cat_type_mobile" name="product_category_type" value="mobile" data-category="{{ $mobileCategory->id ?? '' }}" class="custom-control-input" @checked($selectedCategoryType === 'mobile')>
-                            <label class="custom-control-label" for="cat_type_mobile" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">Mobile</label>
-                        </div>
+                        @foreach($categories as $category)
+                            <div class="custom-control custom-radio custom-control-inline mr-3">
+                                <input type="radio" id="category_type_{{ $category->id }}" name="product_category_type" value="{{ $category->id }}" data-category="{{ $category->id }}" data-mobile-fields="{{ \Illuminate\Support\Str::slug($category->name) === 'mobile' ? '1' : '0' }}" class="custom-control-input" @checked($selectedCategoryId === (string) $category->id)>
+                                <label class="custom-control-label" for="category_type_{{ $category->id }}" style="cursor: pointer; font-size: 0.84rem; font-weight: 600;">{{ $category->name }}</label>
+                            </div>
+                        @endforeach
                     </div>
                     <div class="form-group col-md-6">
                         <label class="font-weight-bold">Product Subcategory</label>
@@ -172,6 +164,27 @@ $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->su
         font-size: .84rem;
         box-shadow: none;
         transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .product-form-page .select2-container {
+        width: 100% !important;
+    }
+
+    .product-form-page .select2-container--default .select2-selection--single {
+        height: 42px;
+        border: 1px solid #d9e0ea;
+        border-radius: 6px;
+    }
+
+    .product-form-page .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-left: 12px;
+        line-height: 40px;
+        color: #26364f;
+        font-size: .84rem;
+    }
+
+    .product-form-page .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px;
     }
 
     .product-form-page .form-control-file {
@@ -417,18 +430,34 @@ $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->su
         const subcategorySelect = document.getElementById('subcategory_select');
         if (!categoryInput || !subcategorySelect) return;
 
+        const $subcategorySelect = window.jQuery && window.jQuery.fn.select2
+            ? window.jQuery(subcategorySelect).select2({
+                width: '100%',
+                placeholder: 'Choose Product Subcategory',
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                templateResult: function (option) {
+                    if (option.element && option.element.hidden) return null;
+                    return option.text;
+                }
+            })
+            : null;
+
         const subcategoryOptions = Array.from(subcategorySelect.options).filter(function (option) {
             return option.value !== '';
         });
         const placeholder = subcategorySelect.options[0];
 
-        function showSubcategories(categoryId) {
+        function filterSubcategories(categoryId) {
             let visibleCount = 0;
+            let categorySubcategoryCount = 0;
             let selectedOptionVisible = false;
             categoryInput.value = categoryId || '';
 
             subcategoryOptions.forEach(function (option) {
-                const matches = categoryId !== '' && option.dataset.category === categoryId;
+                const belongsToCategory = categoryId !== '' && option.dataset.category === categoryId;
+                const matches = belongsToCategory;
+                if (belongsToCategory) categorySubcategoryCount += 1;
                 option.hidden = !matches;
                 option.disabled = !matches;
                 if (matches) visibleCount += 1;
@@ -438,31 +467,34 @@ $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->su
             if (!selectedOptionVisible) subcategorySelect.value = '';
             placeholder.textContent = !categoryId
                 ? 'Select a category first'
-                : visibleCount
-                    ? 'Choose Product Subcategory'
-                    : 'No subcategories for this category';
-            subcategorySelect.disabled = !categoryId || visibleCount === 0;
+                : categorySubcategoryCount === 0
+                    ? 'No subcategories for this category'
+                    : visibleCount === 0
+                        ? 'No matching subcategories'
+                        : 'Choose Product Subcategory';
+            subcategorySelect.disabled = !categoryId || categorySubcategoryCount === 0;
+            if ($subcategorySelect) $subcategorySelect.trigger('change.select2');
         }
 
         const categoryTypeRadios = document.querySelectorAll('input[name="product_category_type"]');
         categoryTypeRadios.forEach(function (radio) {
             radio.addEventListener('change', function () {
-                showSubcategories(radio.dataset.category);
+                filterSubcategories(radio.dataset.category);
             });
         });
 
         const selectedCategoryType = document.querySelector('input[name="product_category_type"]:checked');
-        showSubcategories(selectedCategoryType ? selectedCategoryType.dataset.category : categoryInput.value);
+        filterSubcategories(selectedCategoryType ? selectedCategoryType.dataset.category : categoryInput.value);
     }());
 
     // ── Mobile / Accessories toggle ──────────────────────────────────────────
     (function () {
-        const mobileRadio = document.getElementById('cat_type_mobile');
-        const accessoriesRadio = document.getElementById('cat_type_accessories');
+        const categoryTypeRadios = document.querySelectorAll('input[name="product_category_type"]');
         const mobileFields = document.querySelectorAll('.mobile-extra-fields');
 
         function toggleMobileFields() {
-            const isMobile = mobileRadio && mobileRadio.checked;
+            const selectedCategory = document.querySelector('input[name="product_category_type"]:checked');
+            const isMobile = selectedCategory && selectedCategory.dataset.mobileFields === '1';
             mobileFields.forEach(function (fieldGroup) {
                 if (isMobile) {
                     fieldGroup.style.display = 'block';
@@ -476,10 +508,8 @@ $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->su
             });
         }
 
-        const categoryTypeRadios = document.querySelectorAll('input[name="product_category_type"]');
         categoryTypeRadios.forEach(function(radio) {
             radio.addEventListener('change', toggleMobileFields);
-            radio.addEventListener('click', toggleMobileFields);
         });
 
         toggleMobileFields();
