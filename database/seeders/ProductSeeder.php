@@ -177,7 +177,7 @@ class ProductSeeder extends Seeder
                 'stock' => $product['stock'],
                 'cost_price' => $product['cost_price'],
                 'selling_price' => $product['selling_price'],
-                'order_tax' => 17,
+                'gst_tax' => 17,
                 'status' => 1,
                 'buying_date' => now()->subDays(rand(1, 30)),
                 'expire_date' => now()->addYear(),

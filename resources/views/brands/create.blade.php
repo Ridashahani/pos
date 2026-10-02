@@ -5,9 +5,17 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Add New Brand</h4>
+
+                   <div class="card-header d-flex align-items-center justify-content-between">
+                <h4 class="card-title mb-0">Add New Brand</h4>
+
+               <a href="{{ route('brands.index') }}"
+                class="btn btn-secondary d-flex align-items-center text-nowrap">
+               <x-heroicon-o-arrow-left class="w-5 h-5 mr-2" />
+                 Back to Brands
+                    </a>
                     </div>
+    
                     <div class="card-body">
                         <form action="{{ route('brands.store') }}" method="POST">
                             @csrf

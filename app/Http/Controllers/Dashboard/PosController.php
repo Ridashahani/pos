@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use Carbon\Carbon;
+use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Customer;
@@ -94,8 +95,16 @@ class PosController extends Controller
             ]);
         }
 
+        $user = $request->user();
+        $isAdmin = $user->roles()->whereRaw('LOWER(name) = ?', ['admin'])->exists();
+        $branches = $isAdmin
+            ? Branch::where('status', 'Active')->orderBy('name')->get()
+            : $user->branches()->where('branches.status', 'Active')->orderBy('branches.name')->get();
+
         return view('pos.index', [
             'categories' => Category::orderBy('name')->get(),
+            'branches' => $branches,
+            'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
             'productItem' => $this->cartContent(),
             'products' => QueryBuilder::for(Product::class)
                 ->whereHas('stockIns', fn ($query) => $query->where('remaining_quantity', '>', 0))

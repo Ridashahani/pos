@@ -101,11 +101,20 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6 form-group mb-2">
-                                    <label class="pos-field-label">Branches</label>
-                                    <select class="form-control">
-                                        <option>Main Branch</option>
-                                        <option>Mobile Store</option>
+                                    <label class="pos-field-label" for="branch_id">Branch</label>
+                                    <select class="form-control" id="branch_id" name="branch_id" @if ($branches->isEmpty()) disabled @else required @endif>
+                                        @if ($branches->isEmpty())
+                                            <option value="" selected>No active branches available</option>
+                                        @else
+                                            <option value="" disabled @if (!$selectedBranchId) selected @endif>Select a branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}" @if ((string) $selectedBranchId === (string) $branch->id) selected @endif>{{ $branch->name }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
+                                    @if ($branches->isEmpty())
+                                        <small class="form-text text-danger">Create an active branch and assign it to your account before making a sale.</small>
+                                    @endif
                                 </div>
                                 <div class="col-md-6 form-group mb-2">
                                     <label class="pos-field-label">Reference No</label>
@@ -164,11 +173,10 @@
                                     <td class="text-right font-weight-bold h5 text-success" id="modal_pay_amount">0.00
                                     </td>
                                 </tr>
-                                {{-- <tr class="border-top">
-                                <td class="text-muted font-weight-bold">Change:</td>
-                                <td class="text-right font-weight-bold h5 text-danger" id="modal_change_amount">0.00
-                                </td>
-                            </tr> --}}
+                                <tr class="border-top" id="modal_due_row">
+                                    <td class="text-muted font-weight-bold">Due Amount:</td>
+                                    <td class="text-right font-weight-bold h5 text-danger" id="modal_due_amount">0.00</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -323,7 +331,7 @@
                 rows().forEach(tr => {
                     const c = recalcRow(tr);
                     t.items += c.qty;
-                    t.price += c.unit;
+                    t.price += c.unit * c.qty;
                     t.tax += c.tax;
                     t.discount += c.discount;
                     t.net += c.net;
@@ -657,6 +665,12 @@
             }
             document.getElementById('modal_customer_id').value = customerId;
 
+            const branchSelect = document.getElementById('branch_id');
+            if (!branchSelect?.value) {
+                alert(branchSelect?.options.length > 1 ? 'Please select a branch first.' : 'No active branch is available for this account.');
+                return;
+            }
+
             // 2. Validate Payment Amount
             const totalEl = document.getElementById('cart-total');
             const totalText = totalEl.innerText.trim();
@@ -665,13 +679,8 @@
             const payAmount = parseFloat(payElement ? payElement.value : 0);
             const method = document.getElementById('payment_type').value;
 
-            if (isNaN(payAmount) || payAmount <= 0) {
+            if (isNaN(payAmount) || payAmount < 0) {
                 alert('Please enter a valid amount!');
-                return;
-            }
-
-            if (payAmount < totalAmount) {
-                alert('Insufficient payment! Total amount is ' + totalText);
                 return;
             }
 
@@ -681,8 +690,14 @@
             // 3. Update Modal UI
             document.getElementById('modal_total_display').innerText = totalText;
             document.getElementById('modal_payment_method').innerText = method;
-            document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
-                ",");
+            document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+            // Due amount
+            const due = Math.max(0, totalAmount - payAmount);
+            const dueRow = document.getElementById('modal_due_row');
+            const dueEl = document.getElementById('modal_due_amount');
+            dueEl.innerText = due.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            dueRow.style.display = due > 0 ? '' : 'none';
 
             // 4. Show Modal
             $('#paymentModal').modal('show');
@@ -699,6 +714,7 @@
             const formData = new FormData();
             formData.append('_token', '{{ csrf_token() }}');
             formData.append('customer_id', document.getElementById('modal_customer_id').value);
+            formData.append('branch_id', document.getElementById('branch_id').value);
 
             const paymentTypeElem = document.getElementById('payment_type');
             const payAmountElem = document.getElementById('pay_amount');
