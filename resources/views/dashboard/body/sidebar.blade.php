@@ -56,12 +56,12 @@
                                 <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
                             </a>
                         </li>
-                        <li
+                        <!-- <li
                             class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
                             <a href="{{ route('products.create') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="{{ Request::is('categories*') ? 'active' : '' }}">
                             <a href="{{ route('categories.index') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
