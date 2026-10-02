@@ -2,6 +2,13 @@
 
 @section('container')
     <div class="container-fluid">
+        @if (session('success'))
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+        @endif
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
@@ -103,7 +110,7 @@
                                 </form>
                                 @if (in_array($type, ['sold-items', 'out-of-stock']))
                                     <form method="POST" action="{{ route("stock.{$type}.clear") }}"
-                                        onsubmit="return confirm('Delete all records on this page?');">
+                                        onsubmit="return confirm('{{ $type === 'out-of-stock' ? 'Delete all out-of-stock records? Records linked to sales or transfers will be skipped.' : 'Delete all sold item records?' }}');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger">Clear All</button>
@@ -265,11 +272,13 @@
                                                 <td class="text-center">
                                                     <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
                                                         class="btn btn-primary btn-sm mr-1">Purchase again</a>
-                                                    <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
-                                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                                    </a>
+                                                    @can('access.products')
+                                                        <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
+                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                        </a>
+                                                    @endcan
                                                     <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this exhausted stock-in record?');">
+                                                        onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">

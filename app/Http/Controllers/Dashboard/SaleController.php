@@ -110,7 +110,7 @@ class SaleController extends Controller
 
             $sale = Sale::create([
                 'customer_id'    => $request->customer_id,
-                'branch_id'      => auth()->user()->branch_id ?? 1,
+                'branch_id'      => auth()->user()->active_branch_id ?? 1,
                 'user_id'        => auth()->id(),
                 'invoice_no'     => $invoice_no,
                 'sale_date'      => Carbon::now(),

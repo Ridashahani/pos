@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetPasswordLinkNotification;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'email_verified_at',
         'job_description',
         'location',
+        'active_branch_id',
     ];
 
     /**
@@ -55,6 +57,11 @@ class User extends Authenticatable
     public function getRouteKeyName()
     {
         return 'username';
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordLinkNotification($token));
     }
 
     public function scopeFilter($query, array $filters)
@@ -94,5 +101,56 @@ class User extends Authenticatable
     public function branches()
     {
         return $this->belongsToMany(Branch::class, 'user_branch', 'user_id', 'branch_id');
+    }
+
+    public function activeBranch()
+    {
+        return $this->belongsTo(Branch::class, 'active_branch_id');
+    }
+
+    public function getBranchIdAttribute()
+    {
+        return $this->active_branch_id;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->roles->contains(function ($role) {
+            return strtolower($role->name) === 'admin';
+        });
+    }
+
+    /**
+     *  
+     * Admin → null (no filter, see all)
+     * Manager/Cashier → active_branch_id (only their branch)
+     */
+    public function activeBranchFilter(): ?int
+    {
+        if ($this->isAdmin()) {
+            return null; // no restriction
+        }
+
+        return $this->active_branch_id;
+    }
+
+    public function allowedBranches()
+    {
+        if ($this->isAdmin()) {
+            return Branch::where(function ($query) {
+                $query->where('status', 'Active')
+                    ->orWhere('status', 1)
+                    ->orWhere('status', true);
+            })->orderBy('name')->get();
+        }
+
+        return $this->branches()
+            ->where(function ($query) {
+                $query->where('status', 'Active')
+                    ->orWhere('status', 1)
+                    ->orWhere('status', true);
+            })
+            ->orderBy('name')
+            ->get();
     }
 }
