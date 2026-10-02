@@ -155,7 +155,13 @@
                                 <tr>
                                     <td class="text-muted font-weight-bold">Total Bill:</td>
                                     <td class="text-right font-weight-bold h5 text-primary" id="modal_total_display">
-                                        {{ Cart::total() }}
+                                        @php
+                                            $paymentItems = Cart::content();
+                                            $paymentSubtotal = $paymentItems->sum(fn ($item) => (float) ($item->options->original_price ?? $item->price) * $item->qty);
+                                            $paymentDiscount = $paymentItems->sum(fn ($item) => (float) ($item->options->discount ?? 0) * $item->qty);
+                                            $paymentTax = $paymentItems->sum(fn ($item) => (float) ($item->options->tax ?? 0) * $item->qty);
+                                        @endphp
+                                        {{ number_format(max(0, $paymentSubtotal - $paymentDiscount + $paymentTax), 2) }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -167,11 +173,10 @@
                                     <td class="text-right font-weight-bold h5 text-success" id="modal_pay_amount">0.00
                                     </td>
                                 </tr>
-                                {{-- <tr class="border-top">
-                                <td class="text-muted font-weight-bold">Change:</td>
-                                <td class="text-right font-weight-bold h5 text-danger" id="modal_change_amount">0.00
-                                </td>
-                            </tr> --}}
+                                <tr class="border-top" id="modal_due_row">
+                                    <td class="text-muted font-weight-bold">Due Amount:</td>
+                                    <td class="text-right font-weight-bold h5 text-danger" id="modal_due_amount">0.00</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -326,7 +331,7 @@
                 rows().forEach(tr => {
                     const c = recalcRow(tr);
                     t.items += c.qty;
-                    t.price += c.unit;
+                    t.price += c.unit * c.qty;
                     t.tax += c.tax;
                     t.discount += c.discount;
                     t.net += c.net;
@@ -674,13 +679,8 @@
             const payAmount = parseFloat(payElement ? payElement.value : 0);
             const method = document.getElementById('payment_type').value;
 
-            if (isNaN(payAmount) || payAmount <= 0) {
+            if (isNaN(payAmount) || payAmount < 0) {
                 alert('Please enter a valid amount!');
-                return;
-            }
-
-            if (payAmount < totalAmount) {
-                alert('Insufficient payment! Total amount is ' + totalText);
                 return;
             }
 
@@ -690,8 +690,14 @@
             // 3. Update Modal UI
             document.getElementById('modal_total_display').innerText = totalText;
             document.getElementById('modal_payment_method').innerText = method;
-            document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
-                ",");
+            document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+            // Due amount
+            const due = Math.max(0, totalAmount - payAmount);
+            const dueRow = document.getElementById('modal_due_row');
+            const dueEl = document.getElementById('modal_due_amount');
+            dueEl.innerText = due.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            dueRow.style.display = due > 0 ? '' : 'none';
 
             // 4. Show Modal
             $('#paymentModal').modal('show');

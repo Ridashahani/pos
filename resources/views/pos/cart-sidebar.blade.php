@@ -7,6 +7,10 @@
     $summaryNetAmount = 0.0;
     $summaryTaxAmount = 0.0;
     $summaryDiscount = 0.0;
+    $cartSubtotal = 0.0;
+    $cartTax = 0.0;
+    $cartDiscount = 0.0;
+    $cartGrandTotal = 0.0;
 @endphp
 <div class="cart-items-wrapper position-relative" style="height: 350px; overflow-y: auto; overflow-x: hidden;">
     @if ($productItem->count() > 0)
@@ -44,11 +48,11 @@
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - $discount);
                             $summaryUnitPrice += $originalPrice;
-                            $summaryPrice += $gross;
-                            $summaryInclTax += $inclTax;
+                            $summaryPrice     += $gross;
+                            $summaryInclTax   += $inclTax;
                             $summaryNetAmount += $netAmount;
                             $summaryTaxAmount += $taxAmount;
-                            $summaryDiscount += $discount;
+                            $summaryDiscount  += $discount;
                         @endphp
                         <tr data-row-id="{{ $item->rowId }}" data-item-id="{{ $item->id }}"
                             data-unit-price="{{ $originalPrice }}" data-currency="{{ $currency }}">
@@ -69,25 +73,20 @@
                                         data-saved="{{ $item->qty }}">
                                 </div>
                             </td>
-                            <td class="pos-gross-amount">{{ number_format($gross, 2) }}</td>
+                            <td><span class="pos-gross-amount">{{ number_format($gross, 2) }}</span></td>
                             <td>
                                 <input type="number" class="form-control form-control-sm pos-tax-rate-input"
-                                    style="width: 64px;" value="{{ number_format($taxRate, 2, '.', '') }}"
-                                    min="0" max="100" step="1" aria-label="Tax Rate"
-                                    data-saved="{{ $taxRate }}">
+                                    style="width: 65px;" value="{{ number_format($taxRate, 2) }}"
+                                    min="0" max="100" step="0.01">
                             </td>
-                            <td class="pos-tax-amount">{{ number_format($taxAmount, 2) }}</td>
-                            <td class="pos-incl-tax-amount">{{ number_format($inclTax, 2) }}</td>
+                            <td><span class="pos-tax-amount">{{ number_format($taxAmount, 2) }}</span></td>
+                            <td><span class="pos-incl-tax-amount">{{ number_format($inclTax, 2) }}</span></td>
                             <td>
-                                <div class="pos-discount-control">
-                                    <input type="number" class="form-control form-control-sm pos-discount-input"
-                                        style="width: 50px;"
-                                        value="{{ round($discount, 2) }}" min="0" max="{{ $inclTax }}"
-                                        step="1" aria-label="Discount"
-                                        data-saved="{{ $discount }}">
-                                </div>
+                                <input type="number" class="form-control form-control-sm pos-discount-input"
+                                    style="width: 80px;" value="{{ number_format($discount, 2) }}"
+                                    min="0" step="0.01" max="{{ $inclTax }}">
                             </td>
-                            <td class="pos-net-amount">{{ $currency }} {{ number_format($netAmount, 2) }}</td>
+                            <td><span class="pos-net-amount">{{ $currency }} {{ number_format($netAmount, 2) }}</span></td>
                             <td>
                                 <button type="button" class="btn btn-link text-danger p-0" title="Remove product"
                                     data-action="remove">
@@ -124,6 +123,12 @@
     @endif
 </div>
 
+@php
+    $cartSubtotal = $summaryPrice;
+    $cartTax = $summaryTaxAmount;
+    $cartDiscount = $summaryDiscount;
+    $cartGrandTotal = $summaryNetAmount;
+@endphp
 <div class="pos-cart-summary p-3 bg-white border-top">
     <div class="row">
         <div class="col-md-3 col-6 form-group mb-2">
@@ -133,23 +138,24 @@
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
             <input class="form-control form-control-sm pos-summary-price"
-                value="{{ $cartCurrency }} {{ number_format($summaryPrice, 2) }}" readonly>
+                value="{{ $cartCurrency }} {{ number_format($cartSubtotal, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>
             <input class="form-control form-control-sm pos-summary-tax"
-                value="{{ $cartCurrency }} {{ number_format($summaryTaxAmount, 2) }}" readonly>
+                value="{{ $cartCurrency }} {{ number_format($cartTax, 2) }}" readonly>
         </div>
         <div class="col-md-3 col-6 form-group">
             <label>Discount</label>
             <input class="form-control form-control-sm pos-summary-discount"
-                value="{{ $cartCurrency }} {{ number_format($summaryDiscount, 2) }}" readonly>
+                value="{{ $cartCurrency }} {{ number_format($cartDiscount, 2) }}"
+                readonly>
         </div>
     </div>
     <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
         <span class="font-weight-bold">Grand Total</span>
-        <span class="font-weight-bold text-primary" id="cart-total"
-            data-total="{{ $summaryNetAmount }}">{{ $cartCurrency }} {{ number_format($summaryNetAmount, 2) }}</span>
+        <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
+            {{ number_format($cartGrandTotal, 2) }}</span>
     </div>
 </div>
 

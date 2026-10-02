@@ -172,6 +172,16 @@ class UserController extends Controller
         $isAdmin = $role && strtolower($role->name) === 'admin';
 
         // Admin has access to all branches, other roles sync selected branches
-        $user->branches()->sync($isAdmin ? [] : ($request->branch_ids ?? []));
+        $branchIds = $isAdmin ? [] : ($request->branch_ids ?? []);
+        $user->branches()->sync($branchIds);
+
+        // Reset active_branch_id if user no longer has access to it
+        $user->unsetRelation('branches');
+        $user->unsetRelation('roles');
+        $allowedBranchIds = $user->allowedBranches()->pluck('id')->toArray();
+        if ($user->active_branch_id && !in_array($user->active_branch_id, $allowedBranchIds)) {
+            $user->active_branch_id = null;
+            $user->save();
+        }
     }
 }

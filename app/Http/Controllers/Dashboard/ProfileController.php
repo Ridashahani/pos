@@ -70,10 +70,22 @@ class ProfileController extends Controller
             'email' => 'required|email|max:50|unique:users,email,' . $user->id,
             'username' => 'required|min:4|max:25|alpha_dash:ascii|unique:users,username,' . $user->id,
             'job_description' => 'nullable|string|max:255',
-            'location' => 'nullable|string|max:255',
         ];
 
+        // Only non-admin users need to select a branch
+        if (!$user->isAdmin()) {
+            $rules['active_branch_id'] = 'required|exists:branches,id';
+        }
+
         $validatedData = $request->validate($rules);
+
+        // Validate branch belongs to user's assigned branches (non-admin only)
+        if (!$user->isAdmin() && isset($validatedData['active_branch_id'])) {
+            $assignedBranchIds = $user->branches()->pluck('branches.id')->toArray();
+            if (!in_array((int) $validatedData['active_branch_id'], $assignedBranchIds)) {
+                return back()->withErrors(['active_branch_id' => 'The selected branch is not assigned to your account.'])->withInput();
+            }
+        }
 
         if ($validatedData['email'] != $user->email) {
             $validatedData['email_verified_at'] = null;

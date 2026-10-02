@@ -30,12 +30,25 @@ class UserBranchController extends Controller
 
         $user->branches()->sync($data['branch_ids'] ?? []);
 
+        $user->unsetRelation('branches');
+        $user->unsetRelation('roles');
+        $allowedBranchIds = $user->allowedBranches()->pluck('id')->toArray();
+        if ($user->active_branch_id && !in_array($user->active_branch_id, $allowedBranchIds)) {
+            $user->active_branch_id = null;
+            $user->save();
+        }
+
         return redirect()->route('user-branch.index')
             ->with('success', 'Branches assign ho gayi.');
     }
     public function destroy(User $user, Branch $branch)
     {
         $user->branches()->detach($branch->id);
+
+        if ($user->active_branch_id == $branch->id) {
+            $user->active_branch_id = null;
+            $user->save();
+        }
 
         return back()->with('success', 'Branch remove ho gayi.');
     }
