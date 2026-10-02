@@ -32,6 +32,12 @@ return new class extends Migration
             });
         }
 
+        if (! Schema::hasColumn('sales', 'user_id')) {
+            Schema::table('sales', function (Blueprint $table): void {
+                $table->unsignedBigInteger('user_id')->nullable();
+            });
+        }
+
         Schema::table('sales', function (Blueprint $table): void {
             $table->string('sale_status')->default('pending')->change();
             $table->unsignedBigInteger('branch_id')->nullable()->change();
