@@ -1,6 +1,9 @@
 <!-- Detailed POS cart table and payment summary. -->
 @php
+    $cartCurrency = $productItem->first()?->options?->currency ?? 'PKR';
+    $summaryUnitPrice = 0.0;
     $summaryPrice = 0.0;
+    $summaryInclTax = 0.0;
     $summaryNetAmount = 0.0;
     $summaryTaxAmount = 0.0;
     $summaryDiscount = 0.0;
@@ -40,7 +43,9 @@
                             $taxAmount = $gross * $taxRate / 100;
                             $inclTax   = $gross + $taxAmount;
                             $netAmount = max(0, $inclTax - $discount);
+                            $summaryUnitPrice += $originalPrice;
                             $summaryPrice += $gross;
+                            $summaryInclTax += $inclTax;
                             $summaryNetAmount += $netAmount;
                             $summaryTaxAmount += $taxAmount;
                             $summaryDiscount += $discount;
@@ -92,6 +97,20 @@
                         </tr>
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr class="bg-light font-weight-bold">
+                        <td colspan="2" class="text-right">Total</td>
+                        <td class="pos-footer-price">{{ $cartCurrency }} {{ number_format($summaryUnitPrice, 2) }}</td>
+                        <td></td>
+                        <td class="pos-footer-gross">{{ $cartCurrency }} {{ number_format($summaryPrice, 2) }}</td>
+                        <td></td>
+                        <td class="pos-footer-tax">{{ $cartCurrency }} {{ number_format($summaryTaxAmount, 2) }}</td>
+                        <td class="pos-footer-incl-tax">{{ $cartCurrency }} {{ number_format($summaryInclTax, 2) }}</td>
+                        <td></td>
+                        <td class="pos-footer-net">{{ $cartCurrency }} {{ number_format($summaryNetAmount, 2) }}</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     @else
@@ -106,7 +125,6 @@
 </div>
 
 <div class="pos-cart-summary p-3 bg-white border-top">
-    @php($cartCurrency = $productItem->first()?->options?->currency ?? 'PKR')
     <div class="row">
         <div class="col-md-3 col-6 form-group mb-2">
             <label>Item</label>

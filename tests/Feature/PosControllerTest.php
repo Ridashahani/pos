@@ -449,6 +449,11 @@ class PosControllerTest extends TestCase
         $this->assertStringContainsString('PKR 195.00', $response->json('cart_html'));
         $cartHtml = $response->json('cart_html');
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 200\.00"/', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-price">PKR 100.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-gross">PKR 200.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax">PKR 20.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 220.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-net">PKR 195.00', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-tax"\s+value="PKR 20\.00"/', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-discount"\s+value="PKR 25\.00"/', $cartHtml);
         $updatedItem = Cart::content()->first();
@@ -461,6 +466,10 @@ class PosControllerTest extends TestCase
 
         $quantityResponse->assertOk()->assertJsonPath('success', true);
         $this->assertStringContainsString('PKR 305.00', $quantityResponse->json('cart_html'));
+        $this->assertStringContainsString('class="pos-footer-gross">PKR 300.00', $quantityResponse->json('cart_html'));
+        $this->assertStringContainsString('class="pos-footer-tax">PKR 30.00', $quantityResponse->json('cart_html'));
+        $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 330.00', $quantityResponse->json('cart_html'));
+        $this->assertStringContainsString('class="pos-footer-net">PKR 305.00', $quantityResponse->json('cart_html'));
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 300\.00"/', $quantityResponse->json('cart_html'));
         $this->assertEquals(305.0, (float) Cart::total(null, null, ''));
         $this->assertSame(25.0, (float) Cart::content()->first()->options->discount);
