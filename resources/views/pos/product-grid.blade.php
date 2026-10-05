@@ -7,8 +7,8 @@
                         class="product-image" alt="{{ $product->name }}">
 
                     <span class="badge position-absolute shadow-sm"
-                        style="top: 12px; right: 12px; font-size: 0.75rem; padding: 0.5em 0.8em; {{ $product->stock > 10 ? 'background-color: #10b981; color: white;' : 'background-color: #ef4444; color: white;' }}">
-                        Stock: {{ $product->stock }}
+                        style="top: 12px; right: 12px; font-size: 0.75rem; padding: 0.5em 0.8em; {{ $product->branch_stock > 10 ? 'background-color: #10b981; color: white;' : 'background-color: #ef4444; color: white;' }}">
+                        Stock: {{ (int) $product->branch_stock }}
                     </span>
                 </div>
 
@@ -46,7 +46,7 @@
                 @if (request()->filled('search'))
                     No products found.
                 @else
-                    Search by product name or category to view products.
+                    No in-stock products are available in the selected branch.
                 @endif
             </div>
         </div>

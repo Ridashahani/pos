@@ -182,27 +182,61 @@ class StockController extends Controller
 
     public function soldItems(Request $request)
     {
-        $query = SoldItem::with(['product', 'sale']);
+        $groups = SoldItem::query()
+            ->join('stock_in', 'stock_in.id', '=', 'sold_items.stock_in_id')
+            ->join('products', 'products.id', '=', 'sold_items.product_id')
+            ->join('branches', 'branches.id', '=', 'stock_in.branch_id')
+            ->where('sold_items.status', 'sold')
+            ->where('products.name', 'like', '%' . $request->input('search', '') . '%')
+            ->selectRaw('
+                MIN(sold_items.id) as id,
+                DATE(sold_items.created_at) as sold_date,
+                sold_items.product_id,
+                stock_in.branch_id,
+                products.name as product,
+                products.currency,
+                branches.name as branch,
+                SUM(sold_items.quantity) as quantity,
+                SUM(sold_items.cost_price * sold_items.quantity) / NULLIF(SUM(sold_items.quantity), 0) as unit_buying_price,
+                SUM(sold_items.sale_price * sold_items.quantity) / NULLIF(SUM(sold_items.quantity), 0) as unit_price,
+                SUM(sold_items.sale_price * sold_items.quantity - sold_items.discount) as net_sold_price,
+                GROUP_CONCAT(DISTINCT sold_items.id) as sold_item_ids
+            ')
+            ->groupByRaw('DATE(sold_items.created_at), sold_items.product_id, stock_in.branch_id, products.name, products.currency, branches.name')
+            ->orderByDesc('sold_date')
+            ->paginate(10)
+            ->withQueryString();
 
-        $soldItems = $this->searchByProduct($query, $request)
-            ->latest()->paginate(10)->withQueryString();
+        $soldItemIds = $groups->getCollection()
+            ->flatMap(fn ($group) => explode(',', $group->sold_item_ids))
+            ->unique()
+            ->values();
+        $soldItemRecords = SoldItem::with('sale')
+            ->whereIn('id', $soldItemIds)
+            ->get()
+            ->keyBy('id');
 
-        $rows = $soldItems->getCollection()->map(fn (SoldItem $i) => [
-            'date'              => $i->created_at->format('d M Y'),
-            'sold_item_id'      => $i->id,
-            'sale_id'           => $i->sale_id,
-            'reference'         => $i->sale->invoice_no,
-            'product'           => $i->product->name,
-            'quantity'          => $i->quantity,
-            'unit_buying_price' => $i->cost_price,
-            'unit_price'        => $i->sale_price,
-            'net_sold_price'    => ($i->sale_price * $i->quantity) - $i->discount,
-            'currency'          => $i->product->currency ?: 'PKR',
-            'destination'       => 'POS Counter',
-            'status'            => $i->status,
-        ])->all();
+        $rows = $groups->getCollection()->map(function ($group) use ($soldItemRecords) {
+            $transactions = collect(explode(',', $group->sold_item_ids))
+                ->map(fn ($id) => $soldItemRecords->get($id))
+                ->filter()
+                ->values();
 
-        return $this->page('Sold Items', 'sold-items', $soldItems, $rows);
+            return [
+                'date'              => \Illuminate\Support\Carbon::parse($group->sold_date)->format('d M Y'),
+                'reference'         => $transactions->pluck('sale.invoice_no')->filter()->unique()->implode(', '),
+                'product'           => $group->product,
+                'quantity'          => (int) $group->quantity,
+                'unit_buying_price' => (float) $group->unit_buying_price,
+                'unit_price'        => (float) $group->unit_price,
+                'net_sold_price'    => (float) $group->net_sold_price,
+                'currency'          => $group->currency ?: 'PKR',
+                'destination'       => $group->branch,
+                'transactions'      => $transactions,
+            ];
+        });
+
+        return $this->page('Sold Items', 'sold-items', $groups, $rows->all());
     }
 
     // NOTE: asal code ki tarah yeh stock wapis add nahi karta
@@ -227,7 +261,8 @@ class StockController extends Controller
 
     public function outOfStock(Request $request)
     {
-        $query = StockIn::with(['product', 'purchase'])->where('remaining_quantity', '<=', 0);
+        $query = StockIn::with(['product', 'purchase', 'branch', 'variation'])
+            ->where('remaining_quantity', '<=', 0);
 
         $stockIns = $this->searchByProduct($query, $request)
             ->latest()->paginate(10)->withQueryString();
@@ -236,6 +271,8 @@ class StockController extends Controller
             'date'        => $s->purchase?->purchase_date?->format('d M Y') ?: $s->created_at->format('d M Y'),
             'reference'   => $s->batch_no,
             'product'     => $s->product->name,
+            'variation'   => $this->variationLabel($s),
+            'branch'      => $s->branch?->name ?: 'Unknown branch',
             'quantity'    => $s->remaining_quantity,
             'currency'    => $s->product->currency ?: 'PKR',
             'stock_in_id' => $s->id,

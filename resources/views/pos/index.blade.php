@@ -413,6 +413,7 @@
                 if (num(input.value) === num(input.dataset.saved)) return;
 
                 const value = input.value;
+                const branchId = document.getElementById('branch_id')?.value;
                 const res = await fetch(f.url + tr.dataset.rowId, {
                     method: 'POST',
                     headers: {
@@ -420,7 +421,7 @@
                         'X-CSRF-TOKEN': CSRF,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ [f.key]: value }),
+                    body: JSON.stringify({ [f.key]: value, branch_id: branchId }),
                 });
                 const data = await res.json().catch(() => null);
 
@@ -554,6 +555,8 @@
                 flushTimers();
                 const cid = getCustomerId();
                 if (cid) formData.append('customer_id', cid);
+                const branchId = document.getElementById('branch_id')?.value;
+                if (branchId) formData.append('branch_id', branchId);
                 return enqueue(async () => {
                     const res = await fetch("{{ route('pos.addCart') }}", {
                         method: 'POST',
@@ -767,6 +770,7 @@
             const posSearchField = document.getElementById('pos_search');
             const searchForm = posSearchField ? posSearchField.closest('form') : null;
             const resultsContainer = document.getElementById('pos-product-results');
+            const branchSelect = document.getElementById('branch_id');
             const clearButton = document.getElementById('pos-search-clear');
             const searchStatus = document.getElementById('pos-search-status');
 
@@ -791,8 +795,20 @@
                         url.searchParams.delete('search');
                     }
 
+                    if (branchSelect?.value) {
+                        url.searchParams.set('branch_id', branchSelect.value);
+                    } else {
+                        url.searchParams.delete('branch_id');
+                    }
+
                     url.searchParams.delete('page');
                     return url;
+                }
+
+                if (branchSelect?.value) {
+                    const initialUrl = new URL(window.location.href);
+                    initialUrl.searchParams.set('branch_id', branchSelect.value);
+                    window.history.replaceState({}, '', initialUrl);
                 }
 
                 async function loadProducts(url, historyMode = 'replace') {
@@ -848,6 +864,11 @@
                     loadProducts(getSearchUrl(), 'push');
                 });
 
+                branchSelect?.addEventListener('change', function() {
+                    window.clearTimeout(debounceTimeout);
+                    loadProducts(getSearchUrl(), 'push');
+                });
+
                 posSearchField.addEventListener('input', function() {
                     syncClearButton();
                     window.clearTimeout(debounceTimeout);
@@ -858,8 +879,7 @@
 
                 clearButton.addEventListener('click', function() {
                     posSearchField.value = '';
-                    const url = new URL(searchForm.action);
-                    loadProducts(url, 'push');
+                    loadProducts(getSearchUrl(), 'push');
                 });
 
                 resultsContainer.addEventListener('click', function(event) {
@@ -877,6 +897,7 @@
                 window.addEventListener('popstate', function() {
                     const url = new URL(window.location.href);
                     posSearchField.value = url.searchParams.get('search') || '';
+                    if (branchSelect) branchSelect.value = url.searchParams.get('branch_id') || '';
                     loadProducts(url, 'replace');
                 });
 
