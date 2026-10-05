@@ -66,46 +66,58 @@ $selectedSubcategoryId = (string) old('subcategory_id', $editing ? ($product->su
                             <option value="">Choose Brand</option>@foreach($brands as $brand)<option value="{{ $brand->id }}" @selected((string) $field('brand_id') === (string) $brand->id)>{{ $brand->name }}</option>@endforeach
                         </select>
                     </div>
-                    <div class="mobile-extra-fields form-group col-md-4"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
-                    <div class="mobile-extra-fields form-group col-md-4"><label>Condition</label><select name="condition" class="form-control">
+                    <div class="mobile-extra-fields form-group col-md-6"><label>Model</label><input name="model" value="{{ $field('model') }}" class="form-control" placeholder="Enter Model"></div>
+                    <div class="mobile-extra-fields form-group col-md-6"><label>Condition</label><select name="condition" class="form-control">
                             <option value="">Choose Condition</option>
                             <option value="new" @selected($field('condition')==='new')>New</option>
                             <option value="used" @selected($field('condition')==='used')>Used</option>
                         </select>
                     </div>
                    <div class="form-group col-md-6">
-    <label for="cost_price">Cost Price</label>
-    <input type="number" min="0" step="0.01" id="cost_price" name="cost_price" value="{{ $field('cost_price', 0) }}" class="form-control @error('cost_price') is-invalid @enderror" placeholder="Enter cost price">
-    @error('cost_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
-</div>
+                        <label for="cost_price">Cost Price</label>
+                        <input type="number" min="0" step="0.01" id="cost_price" name="cost_price" value="{{ $field('cost_price', 0) }}" class="form-control @error('cost_price') is-invalid @enderror" placeholder="Enter cost price">
+                        @error('cost_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
                     <div class="form-group col-md-6">
                         <label for="selling_price">Sale Price</label>
                         <input type="number" min="0" step="0.01" id="selling_price" name="selling_price" value="{{ $field('selling_price', 0) }}" class="form-control @error('selling_price') is-invalid @enderror" placeholder="Enter sale price">
                         @error('selling_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="form-group col-md-6">
-    <label>Status</label>
-    <div class="custom-control custom-switch mt-2">
-        <input type="hidden" name="status" value="0">
-        <input type="checkbox" class="custom-control-input" id="status" name="status" value="1"
-               @checked($field('status', true))>
-        <label class="custom-control-label" for="status">Active</label>
-    </div>
-</div>
+                    
 
-            <div class="form-group col-md-6">
-    <label>GST (%)</label>
-    <input type="number" step="0.01" min="0" max="100" name="gst_tax"
-           value="{{ $field('gst_tax', $defaultGst ?? 0) }}"
-           class="form-control @error('gst_tax') is-invalid @enderror"
-           placeholder="Enter GST">
-    @error('gst_tax')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-    <small class="form-text text-muted">Price after GST: <span id="price_including_gst">0.00</span></small>
-</div>
-                    <div class="form-group col-md-6"><label>Multiple Images</label><input name="images[]" type="file" multiple accept="image/*" class="form-control-file"></div>
-                    <div class="form-group col-md-6"><label>Note</label><input type="text" name="note" value="{{ $field('note') }}" class="form-control @error('note') is-invalid @enderror" placeholder="Enter Note">@error('note')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                    <div class="form-group col-md-6">
+                        <label>GST (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="gst_tax"
+                            value="{{ $field('gst_tax', $defaultGst ?? 0) }}"
+                            class="form-control @error('gst_tax') is-invalid @enderror"
+                            placeholder="Enter GST">
+                        @error('gst_tax')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="form-text text-muted">Price after GST: <span id="price_including_gst">0.00</span></small>
+                    </div>
+                    
+
+                    <div class="form-group col-md-6">
+                        <label>Multiple Images</label>
+                        <input name="images[]" type="file" multiple accept="image/*" class="form-control-file">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Note</label>
+                        <input type="text" name="note" value="{{ $field('note') }}" class="form-control @error('note') is-invalid @enderror" placeholder="Enter Note">
+                        @error('note')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Status</label>
+                        <div class="custom-control custom-switch mt-2">
+                            <input type="hidden" name="status" value="0">
+                            <input type="checkbox" class="custom-control-input" id="status" name="status" value="1"
+                                @checked($field('status', true))>
+                            <label class="custom-control-label" for="status">Active</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="d-flex justify-content-start mt-3">
                     <button type="submit" class="btn btn-save mr-2">
