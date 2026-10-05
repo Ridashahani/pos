@@ -147,8 +147,9 @@
                                             <th>Product_Name</th>
                                             <th>Variation</th>
                                             <th>Branch</th>
-                                            <th>Purchase Price</th>
+                                            <th>Average Unit Cost</th>
                                             <th class="text-right text-nowrap">Available Qty</th>
+                                            <th>Batches</th>
                                             <th>Low Stock</th>
                                             <th>Action</th>
                                         </tr>
@@ -166,6 +167,7 @@
                                                         {{ number_format($row['remaining_quantity']) }}
                                                     </span>
                                                 </td>
+                                                <td>{{ number_format($row['batch_count']) }}</td>
                                                 <td>
                                                     @if ($row['remaining_quantity'] < 5)
                                                         <span class="text-danger d-inline-flex align-items-center">
@@ -177,14 +179,14 @@
                                                 </td>
                                                 <td>
                                                     <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
-                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View details" aria-label="View details">
+                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View batch details" aria-label="View batch details">
                                                         <x-heroicon-o-eye class="w-4 h-4 mr-1" /> View Details
                                                     </a>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                                <td colspan="9" class="text-center text-muted py-4">No stock records found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>

@@ -1,3 +1,5 @@
+@extends('dashboard.body.main')
+
 @section('container')
     <style>
         .purchase-list-table th,
@@ -38,9 +40,6 @@
     </style>
 
 
-    @extends('dashboard.body.main')
-
-@section('container')
     <div @class(['container-fluid'])>
         @if (session('error'))
             <div class="alert alert-danger" role="alert">{{ session('error') }}</div>

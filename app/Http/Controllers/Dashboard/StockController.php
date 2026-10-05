@@ -65,31 +65,58 @@ class StockController extends Controller
     // Woh batches jin mein maal bacha hai
     public function in(Request $request)
     {
-        $query = StockIn::with(['product.category', 'purchase.supplier', 'branch', 'variation'])
-            ->where('remaining_quantity', '>', 0);
+        $variationDetailsGroup = DB::connection()->getDriverName() === 'mysql'
+            ? "COALESCE(CAST(variation_details AS CHAR), '[]')"
+            : "COALESCE(CAST(variation_details AS TEXT), '[]')";
 
-        $stockIns = $this->searchByProduct($query, $request)
-            ->latest()->paginate(10)->withQueryString();
+        $groups = $this->searchByProduct(
+            StockIn::query()->where('remaining_quantity', '>', 0),
+            $request
+        )
+            ->selectRaw('
+                MIN(id) as stock_in_id,
+                product_id,
+                branch_id,
+                variation_id,
+                SUM(quantity) as quantity,
+                SUM(remaining_quantity) as remaining_quantity,
+                SUM(cost_price * remaining_quantity) / NULLIF(SUM(remaining_quantity), 0) as cost_price,
+                COUNT(*) as batch_count,
+                MAX(created_at) as latest_received_at
+            ')
+            ->groupBy('product_id', 'branch_id', 'variation_id')
+            ->groupByRaw($variationDetailsGroup);
 
-        $rows = $stockIns->getCollection()->map(fn (StockIn $s) => [
-            'id'                 => $s->id,
-            'stock_in_id'        => $s->id,
-            'product_id'         => $s->product_id,
-            'product'            => $s->product->name,
-            'variation'          => $this->variationLabel($s),
-            'variation_id'       => $s->variation_id,
-            'currency'           => $s->product->currency ?: 'PKR',
-            'branch_id'          => $s->branch_id,
-            'branch'             => $s->branch->name,
-            'purchase_id'        => $s->purchase_id,
-            'purchase'           => $s->purchase?->purchase_no ?: 'Manual',
-            'batch_no'           => $s->batch_no,
-            'cost_price'         => $s->cost_price,
-            'quantity'           => $s->quantity,
-            'remaining_quantity' => $s->remaining_quantity,
-            'created_at'         => $s->created_at->format('Y-m-d H:i:s'),
-            'updated_at'         => $s->updated_at->format('Y-m-d H:i:s'),
-        ])->all();
+        $stockIns = DB::query()
+            ->fromSub($groups, 'stock_in_groups')
+            ->orderByDesc('latest_received_at')
+            ->paginate(10)
+            ->withQueryString();
+
+        $representativeStockIns = StockIn::with(['product', 'branch', 'variation'])
+            ->whereIn('id', $stockIns->getCollection()->pluck('stock_in_id'))
+            ->get()
+            ->keyBy('id');
+
+        $rows = $stockIns->getCollection()->map(function ($group) use ($representativeStockIns) {
+            $stockIn = $representativeStockIns->get($group->stock_in_id);
+
+            return [
+                'id'                 => $stockIn->id,
+                'stock_in_id'        => $stockIn->id,
+                'product_id'         => $stockIn->product_id,
+                'product'            => $stockIn->product->name,
+                'variation'          => $this->variationLabel($stockIn),
+                'variation_id'       => $stockIn->variation_id,
+                'currency'           => $stockIn->product->currency ?: 'PKR',
+                'branch_id'          => $stockIn->branch_id,
+                'branch'             => $stockIn->branch->name,
+                'cost_price'         => (float) $group->cost_price,
+                'quantity'           => (int) $group->quantity,
+                'remaining_quantity' => (int) $group->remaining_quantity,
+                'batch_count'        => (int) $group->batch_count,
+            ];
+        })->all();
 
         return $this->page('Stock-In', 'stock-in', $stockIns, $rows, [
             'total_units' => StockIn::where('remaining_quantity', '>', 0)->sum('remaining_quantity'),
@@ -112,6 +139,25 @@ class StockController extends Controller
             'variation',
         ]);
 
+        $variationDetailsGroup = DB::connection()->getDriverName() === 'mysql'
+            ? "COALESCE(CAST(variation_details AS CHAR), '[]')"
+            : "COALESCE(CAST(variation_details AS TEXT), '[]')";
+
+        $stockInGroup = StockIn::query()
+            ->where('remaining_quantity', '>', 0)
+            ->where('product_id', $stockIn->product_id)
+            ->where('branch_id', $stockIn->branch_id)
+            ->where('variation_id', $stockIn->variation_id)
+            ->selectRaw('
+                MIN(id) as stock_in_id,
+                SUM(quantity) as quantity,
+                SUM(remaining_quantity) as remaining_quantity,
+                COUNT(*) as batch_count
+            ')
+            ->groupByRaw($variationDetailsGroup)
+            ->havingRaw('MIN(id) = ?', [$stockIn->id])
+            ->firstOrFail();
+
         $barcodeGenerator = new BarcodeGeneratorHTML();
         $barcode = $stockIn->product?->code
             ? $barcodeGenerator->getBarcode($stockIn->product->code, $barcodeGenerator::TYPE_CODE_128)
@@ -119,6 +165,7 @@ class StockController extends Controller
 
         return view('stock.details', [
             'purchaseItem'   => $stockIn,
+            'stockInGroup'   => $stockInGroup,
             'variationLabel' => $this->variationLabel($stockIn),
             'barcode'        => $barcode,
         ]);
