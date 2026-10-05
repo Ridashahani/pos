@@ -46,6 +46,24 @@
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
                             </a>
                         </li>
+                        <li class="{{ Request::is('categories*') ? 'active' : '' }}">
+                            <a href="{{ route('categories.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('subcategories*') ? 'active' : '' }}">
+                            <a href="{{ route('subcategories.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Subcategories</span>
+                            </a>
+                        </li>
+                        @if (auth()->user()->can('access.categories'))
+                            <li class="{{ Request::is('brands*') ? 'active' : '' }}">
+                                <a href="{{ route('brands.index') }}" class="svg-icon">
+                                    <x-heroicon-o-tag class="w-6 h-6" />
+                                    <span class="">Brands</span>
+                                </a>
+                            </li>
+                        @endif
                         <li class="{{ Request::is('variations*') ? 'active' : '' }}">
                             <a href="{{ route('variations.index') }}">
                                 <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
@@ -62,24 +80,6 @@
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
                             </a>
                         </li> -->
-                        <li class="{{ Request::is('categories*') ? 'active' : '' }}">
-                            <a href="{{ route('categories.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('subcategories*') ? 'active' : '' }}">
-                            <a href="{{ route('subcategories.index') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Subcategories</span>
-                            </a>
-                        </li>
-                        @if (auth()->user()->can('access.categories'))
-                            <li class="{{ Request::is('brands*') ? 'active' : '' }}">
-                                <a href="{{ route('brands.index') }}" class="svg-icon">
-                                    <x-heroicon-o-tag class="w-6 h-6" />
-                                    <span class="ml-3">Brands</span>
-                                </a>
-                            </li>
-                        @endif
                     </ul>
                 </li>
                 @endif
