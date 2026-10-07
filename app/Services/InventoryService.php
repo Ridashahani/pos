@@ -16,6 +16,7 @@ class InventoryService
         $discountPerUnit = $remaining > 0 ? (float) $detail->discount / $remaining : 0;
 
         $stockRows = StockIn::where('product_id', $detail->product_id)
+            ->where('branch_id', $sale->branch_id)
             ->where('remaining_quantity', '>', 0)
             ->orderBy('id')
             ->lockForUpdate()
@@ -23,7 +24,7 @@ class InventoryService
 
         if ($stockRows->sum('remaining_quantity') < $remaining) {
             throw ValidationException::withMessages([
-                'stock' => "Insufficient stock for {$detail->product->name}.",
+                'stock' => "Insufficient stock for {$detail->product->name} in the selected branch.",
             ]);
         }
 

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Setting;
+use App\Models\StockIn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
@@ -61,6 +62,12 @@ class PosController extends Controller
         ]);
     }
 
+    private function userCanUseBranch(int $branchId): bool
+    {
+        return auth()->user()->allowedBranches()
+            ->contains(fn (Branch $branch): bool => (int) $branch->id === $branchId);
+    }
+
     /**
      * Display the POS interface.
      */
@@ -68,23 +75,51 @@ class PosController extends Controller
     {
         $todayDate = Carbon::today();
         $row = (int) $request->input('row', 10);
-        $search = trim((string) $request->input('search', ''));
 
         if ($row < 1 || $row > 100) {
             abort(400, 'The per-page parameter must be an integer between 1 and 100.');
         }
 
-        $products = QueryBuilder::for(Product::class)
-            ->where('products.stock', '>', 0)
+        $user = $request->user();
+        $branches = $user->allowedBranches();
+        $selectedBranchId = $request->query('branch_id');
+
+        if ($selectedBranchId === null) {
+            $activeBranchId = $user->active_branch_id;
+            $selectedBranchId = $branches->contains(
+                fn (Branch $branch): bool => (int) $branch->id === (int) $activeBranchId
+            )
+                ? $activeBranchId
+                : ($branches->count() === 1 ? $branches->first()->id : null);
+        } elseif (! $branches->contains(
+            fn (Branch $branch): bool => (int) $branch->id === (int) $selectedBranchId
+        )) {
+            abort(403, 'The selected branch is not available to your account.');
+        }
+
+        $productsQuery = Product::query()
+            ->when(
+                $selectedBranchId,
+                fn ($query) => $query->whereHas('stockIns', fn ($stockQuery) => $stockQuery
+                    ->where('branch_id', $selectedBranchId)
+                    ->where('remaining_quantity', '>', 0)),
+                fn ($query) => $query->whereRaw('1 = 0')
+            )
+            ->withSum(
+                ['stockIns as branch_stock' => fn ($stockQuery) => $stockQuery
+                    ->where('branch_id', $selectedBranchId)],
+                'remaining_quantity'
+            )
             ->where(function ($query) use ($todayDate) {
                 $query->whereNull('expire_date')
                     ->orWhereDate('expire_date', '>=', $todayDate);
-            })
+            });
+
+        $products = QueryBuilder::for($productsQuery)
             ->allowedSorts(['name', 'selling_price'])
             ->allowedFilters(['name', 'category_id'])
             ->filter($request->only(['search', 'category_id']))
             ->orderBy('products.id')
-            ->when($search === '', fn ($query) => $query->whereIn('products.id', []))
             ->paginate($row)
             ->appends($request->query());
 
@@ -95,26 +130,12 @@ class PosController extends Controller
             ]);
         }
 
-        $user = $request->user();
-        $isAdmin = $user->roles()->whereRaw('LOWER(name) = ?', ['admin'])->exists();
-        $branches = $isAdmin
-            ? Branch::where('status', 'Active')->orderBy('name')->get()
-            : $user->branches()->where('branches.status', 'Active')->orderBy('branches.name')->get();
-
         return view('pos.index', [
             'categories' => Category::orderBy('name')->get(),
             'branches' => $branches,
-            'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
+            'selectedBranchId' => $selectedBranchId,
             'productItem' => $this->cartContent(),
-            'products' => QueryBuilder::for(Product::class)
-                ->whereHas('stockIns', fn ($query) => $query->where('remaining_quantity', '>', 0))
-                ->where('expire_date', '>', $todayDate)
-                ->allowedSorts(['name', 'selling_price'])
-                ->allowedFilters(['name', 'category_id'])
-                ->filter(request(['search', 'category_id']))
-                ->orderBy('products.id')
-                ->paginate($row)
-                ->appends(request()->query()),
+            'products' => $products,
         ]);
     }
 
@@ -161,7 +182,24 @@ class PosController extends Controller
             ]);
 
             $product = Product::findOrFail($data['id']);
-            $stock   = max(0, (int) $product->stock);
+            $branchData = $request->validate([
+                'branch_id' => 'required|integer',
+            ]);
+            $branchId = (int) $branchData['branch_id'];
+
+            if (! $this->userCanUseBranch($branchId)) {
+                abort(403, 'The selected branch is not available to your account.');
+            }
+
+            $stock = (int) StockIn::where('product_id', $product->id)
+                ->where('branch_id', $branchId)
+                ->sum('remaining_quantity');
+
+            if ($stock < 1) {
+                return $request->wantsJson()
+                    ? $this->cartJson('This product is out of stock in the selected branch.', 422)
+                    : Redirect::back()->with('error', 'This product is out of stock in the selected branch.');
+            }
 
             // Adding the same product again increments the existing line.
             $existing = Cart::search(
@@ -171,6 +209,7 @@ class PosController extends Controller
             if ($existing) {
                 $options = $existing->options->toArray();
                 $options['stock'] = $stock;
+                $options['branch_id'] = $branchId;
                 $this->applyLine($existing->rowId, min($existing->qty + 1, max(1, $stock)), $options);
             } else {
                 $taxRate = (float) ($product->order_tax ?? Setting::get('gst', 0));
@@ -190,6 +229,7 @@ class PosController extends Controller
                         'original_price' => $data['price'],
                         'currency'       => $product->currency ?: 'PKR',
                         'stock'          => $stock,
+                        'branch_id'      => $branchId,
                         'added_at'       => microtime(true),
                     ],
                 ]);
@@ -229,9 +269,23 @@ class PosController extends Controller
         $options = $item->options->toArray();
 
         if (empty($options['manual'])) {
-            $stock = max(0, (int) Product::findOrFail($item->id)->stock);
+            $branchId = (int) ($request->input('branch_id') ?: ($options['branch_id'] ?? 0));
+            if ($branchId < 1 || ! $this->userCanUseBranch($branchId)) {
+                abort(403, 'Select a branch available to your account before changing product quantities.');
+            }
+
+            $stock = (int) StockIn::where('product_id', $item->id)
+                ->where('branch_id', $branchId)
+                ->sum('remaining_quantity');
+            if ($stock < 1 && $qty > 0) {
+                return $request->wantsJson()
+                    ? $this->cartJson('This product is out of stock in the selected branch.', 422)
+                    : Redirect::back()->with('error', 'This product is out of stock in the selected branch.');
+            }
+
             $qty = min($qty, $stock);
             $options['stock'] = $stock;
+            $options['branch_id'] = $branchId;
         }
 
         if ($qty === 0) {

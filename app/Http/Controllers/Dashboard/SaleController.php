@@ -110,7 +110,7 @@ class SaleController extends Controller
 
             $sale = Sale::create([
                 'customer_id'    => $request->customer_id,
-                'branch_id'      => auth()->user()->active_branch_id ?? 1,
+                'branch_id'      => $request->branch_id,
                 'user_id'        => auth()->id(),
                 'invoice_no'     => $invoice_no,
                 'sale_date'      => Carbon::now(),
@@ -135,6 +135,7 @@ class SaleController extends Controller
                     'product_id' => $content->id,
                     'quantity'   => $content->qty,
                     'unit_price' => $unitPrice,
+                    'discount'   => $lineDiscount,
                     'total'      => max(0, ($unitPrice * $content->qty) + $lineTax - $lineDiscount),
                 ]);
             }
@@ -202,13 +203,17 @@ class SaleController extends Controller
     }
     public function returnSale(Sale $sale)
     {
-        DB::transaction(function () use ($sale): void {
-            Sale::whereKey($sale->id)->lockForUpdate()->firstOrFail();
+        $returned = DB::transaction(function () use ($sale): bool {
+            $sale = Sale::whereKey($sale->id)->lockForUpdate()->firstOrFail();
 
             $items = SoldItem::where('sale_id', $sale->id)
                 ->where('status', 'sold')
                 ->lockForUpdate()
                 ->get();
+
+            if ($sale->status !== 'completed' || $items->isEmpty()) {
+                return false;
+            }
 
             foreach ($items as $item) {
                 StockIn::whereKey($item->stock_in_id)
@@ -221,11 +226,18 @@ class SaleController extends Controller
                     ->firstOrFail()
                     ->increment('stock', $item->quantity);
 
-                $sale->update(['status' => 'returned']);
+                $item->update(['status' => 'returned']);
             }
+
+            $sale->update(['status' => 'returned']);
+
+            return true;
         });
 
-        return Redirect::route('sale.saleDetails', $sale->id)->with('success', 'Sale items returned to stock.');
+        return Redirect::route('sale.saleDetails', $sale->id)->with(
+            $returned ? 'success' : 'error',
+            $returned ? 'Sale items returned to stock.' : 'This sale has no items available to return.'
+        );
     }
 
     public function invoiceDownload(int $sale_id)

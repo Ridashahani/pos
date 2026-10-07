@@ -29,6 +29,11 @@ class StockTransfer extends Model
         return $this->belongsTo(StockIn::class);
     }
 
+    public function allocations()
+    {
+        return $this->hasMany(StockTransferAllocation::class);
+    }
+
     public function fromBranch()
     {
         return $this->belongsTo(Branch::class, 'from_branch_id');

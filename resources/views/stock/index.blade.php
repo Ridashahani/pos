@@ -147,8 +147,9 @@
                                             <th>Product_Name</th>
                                             <th>Variation</th>
                                             <th>Branch</th>
-                                            <th>Purchase Price</th>
+                                            <th>Average Unit Cost</th>
                                             <th class="text-right text-nowrap">Available Qty</th>
+                                            <th>Batches</th>
                                             <th>Low Stock</th>
                                             <th>Action</th>
                                         </tr>
@@ -166,6 +167,7 @@
                                                         {{ number_format($row['remaining_quantity']) }}
                                                     </span>
                                                 </td>
+                                                <td>{{ number_format($row['batch_count']) }}</td>
                                                 <td>
                                                     @if ($row['remaining_quantity'] < 5)
                                                         <span class="text-danger d-inline-flex align-items-center">
@@ -177,14 +179,14 @@
                                                 </td>
                                                 <td>
                                                     <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
-                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View details" aria-label="View details">
+                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View batch details" aria-label="View batch details">
                                                         <x-heroicon-o-eye class="w-4 h-4 mr-1" /> View Details
                                                     </a>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                                <td colspan="9" class="text-center text-muted py-4">No stock records found.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
@@ -201,6 +203,12 @@
                                             <th>Photo</th>
                                         @endif
                                         <th>Product</th>
+                                        @if (in_array($type, ['out-of-stock', 'stock-transfer']))
+                                            <th>Variation</th>
+                                        @endif
+                                        @if ($type === 'out-of-stock')
+                                            <th>Branch</th>
+                                        @endif
                                         <th>Quantity</th>
                                         @if ($type === 'stock-in')
                                             <th>Unit Cost</th>
@@ -210,10 +218,7 @@
                                             <th>Unit Buying Price</th>
                                             <th>Unit Sold Price</th>
                                             <th>Net Sold Price</th>
-                                            <th>Destination</th>
-                                            @if ($type === 'sold-items')
-                                                <th>Status</th>
-                                            @endif
+                                            <th>{{ $type === 'sold-items' ? 'Branch' : 'Destination' }}</th>
                                         @elseif ($type === 'out-of-stock')
                                         @else
                                             <th>From</th>
@@ -231,7 +236,13 @@
                                     @forelse ($rows as $row)
                                         <tr>
                                             <td>{{ $row['date'] }}</td>
-                                            <td><span class="font-weight-bold">{{ $row['reference'] }}</span></td>
+                                            <td>
+                                                @if ($type === 'sold-items')
+                                                    <span class="font-weight-bold">{{ $row['reference'] ?: 'Sale' }}</span>
+                                                @else
+                                                    <span class="font-weight-bold">{{ $row['reference'] }}</span>
+                                                @endif
+                                            </td>
                                             @if ($type === 'stock-in')
                                                 <td>
                                                     <img class="avatar-60 rounded"
@@ -240,6 +251,12 @@
                                                 </td>
                                             @endif
                                             <td>{{ $row['product'] }}</td>
+                                            @if (in_array($type, ['out-of-stock', 'stock-transfer']))
+                                                <td>{{ $row['variation'] }}</td>
+                                            @endif
+                                            @if ($type === 'out-of-stock')
+                                                <td>{{ $row['branch'] }}</td>
+                                            @endif
                                             <td>{{ number_format($row['quantity']) }}</td>
                                             @if ($type === 'stock-in')
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_cost'], 2) }}</td>
@@ -250,9 +267,6 @@
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_price'], 2) }}</td>
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['net_sold_price'], 2) }}</td>
                                                 <td>{{ $row['destination'] }}</td>
-                                                @if ($type === 'sold-items')
-                                                    <td><span class="badge {{ $row['status'] === 'returned' ? 'bg-warning' : 'bg-success' }}">{{ ucfirst($row['status']) }}</span></td>
-                                                @endif
                                             @elseif ($type === 'out-of-stock')
                                             @else
                                                 <td>{{ $row['from'] }}</td>
@@ -273,36 +287,53 @@
                                                 </td>
                                             @elseif ($type === 'sold-items')
                                                 <td class="text-center">
-                                                    <a href="{{ route('sale.saleDetails', $row['sale_id']) }}"
-                                                        class="btn btn-light btn-sm mr-1" title="Edit sale" aria-label="Edit sale">
-                                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                                    </a>
-                                                    <form action="{{ route('stock.sold-items.destroy', $row['sold_item_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this sold item record?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete sold item" aria-label="Delete sold item">
-                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                                        </button>
-                                                    </form>
+                                                    <details class="text-left">
+                                                        <summary class="btn btn-light btn-sm border">Transactions ({{ $row['transactions']->count() }})</summary>
+                                                        <div class="bg-white border rounded p-2 mt-1 position-absolute" style="z-index: 2; min-width: 220px;">
+                                                            @foreach ($row['transactions'] as $transaction)
+                                                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                    <a href="{{ route('sale.saleDetails', $transaction->sale_id) }}">
+                                                                        {{ $transaction->sale?->invoice_no ?: 'Sale #' . $transaction->sale_id }}
+                                                                    </a>
+                                                                    <form action="{{ route('stock.sold-items.destroy', $transaction) }}" method="POST"
+                                                                        onsubmit="return confirm('Delete this sold item record?');">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete sold item" aria-label="Delete sold item">
+                                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                                        </button>
+                                                                    </form>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </details>
                                                 </td>
                                             @elseif ($type === 'out-of-stock')
-                                                <td class="text-center">
-                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
-                                                        class="btn btn-primary btn-sm mr-1">Purchase again</a>
-                                                    @can('access.products')
-                                                        <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
-                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                <td class="text-nowrap">
+                                                    <div class="d-flex flex-nowrap align-items-center justify-content-center">
+                                                        <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
+                                                            class="btn btn-primary btn-sm d-inline-flex align-items-center mr-1 px-2 py-1"
+                                                            title="Purchase this product again">
+                                                            Buy again
                                                         </a>
-                                                    @endcan
-                                                    <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
-                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                                        </button>
-                                                    </form>
+                                                        @can('access.products')
+                                                            <a href="{{ route('products.edit', $row['product_id']) }}"
+                                                                class="btn btn-light btn-sm d-inline-flex align-items-center mr-1 px-2 py-1"
+                                                                title="Edit product" aria-label="Edit product">
+                                                                <x-heroicon-o-pencil-square class="w-4 h-4 mr-1" /> Edit
+                                                            </a>
+                                                        @endcan
+                                                        <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST"
+                                                            class="d-inline-flex"
+                                                            onsubmit="return confirm('Delete all exhausted batches for this product, variation, and branch? Batches linked to sales or transfers will be kept.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-light btn-sm d-inline-flex align-items-center px-2 py-1"
+                                                                title="Delete exhausted batches" aria-label="Delete exhausted batches">
+                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger mr-1" /> Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </td>
                                             @elseif ($type === 'stock-transfer')
                                                 <td class="text-center">
@@ -326,7 +357,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                            <td colspan="{{ $type === 'stock-transfer' ? 9 : 8 }}" class="text-center text-muted py-4">No stock records found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
