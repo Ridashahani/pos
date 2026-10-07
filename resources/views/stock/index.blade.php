@@ -203,8 +203,10 @@
                                             <th>Photo</th>
                                         @endif
                                         <th>Product</th>
-                                        @if ($type === 'out-of-stock')
+                                        @if (in_array($type, ['out-of-stock', 'stock-transfer']))
                                             <th>Variation</th>
+                                        @endif
+                                        @if ($type === 'out-of-stock')
                                             <th>Branch</th>
                                         @endif
                                         <th>Quantity</th>
@@ -249,8 +251,10 @@
                                                 </td>
                                             @endif
                                             <td>{{ $row['product'] }}</td>
-                                            @if ($type === 'out-of-stock')
+                                            @if (in_array($type, ['out-of-stock', 'stock-transfer']))
                                                 <td>{{ $row['variation'] }}</td>
+                                            @endif
+                                            @if ($type === 'out-of-stock')
                                                 <td>{{ $row['branch'] }}</td>
                                             @endif
                                             <td>{{ number_format($row['quantity']) }}</td>
@@ -305,22 +309,31 @@
                                                     </details>
                                                 </td>
                                             @elseif ($type === 'out-of-stock')
-                                                <td class="text-center">
-                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
-                                                        class="btn btn-primary btn-sm mr-1">Purchase again</a>
-                                                    @can('access.products')
-                                                        <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
-                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                <td class="text-nowrap">
+                                                    <div class="d-flex flex-nowrap align-items-center justify-content-center">
+                                                        <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
+                                                            class="btn btn-primary btn-sm d-inline-flex align-items-center mr-1 px-2 py-1"
+                                                            title="Purchase this product again">
+                                                            Buy again
                                                         </a>
-                                                    @endcan
-                                                    <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
-                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                                        </button>
-                                                    </form>
+                                                        @can('access.products')
+                                                            <a href="{{ route('products.edit', $row['product_id']) }}"
+                                                                class="btn btn-light btn-sm d-inline-flex align-items-center mr-1 px-2 py-1"
+                                                                title="Edit product" aria-label="Edit product">
+                                                                <x-heroicon-o-pencil-square class="w-4 h-4 mr-1" /> Edit
+                                                            </a>
+                                                        @endcan
+                                                        <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST"
+                                                            class="d-inline-flex"
+                                                            onsubmit="return confirm('Delete all exhausted batches for this product, variation, and branch? Batches linked to sales or transfers will be kept.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-light btn-sm d-inline-flex align-items-center px-2 py-1"
+                                                                title="Delete exhausted batches" aria-label="Delete exhausted batches">
+                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger mr-1" /> Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </td>
                                             @elseif ($type === 'stock-transfer')
                                                 <td class="text-center">
@@ -344,7 +357,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                            <td colspan="{{ $type === 'stock-transfer' ? 9 : 8 }}" class="text-center text-muted py-4">No stock records found.</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

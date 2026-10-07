@@ -23,19 +23,8 @@
                                     <select id="stock_in_id" name="stock_in_id" class="form-control @error('stock_in_id') is-invalid @enderror" required>
                                         <option value="">Select stock-in item and source branch</option>
                                         @foreach ($stockIns as $stockIn)
-                                            @php
-                                                $variationLabel = collect($stockIn->variation_details ?? [])
-                                                    ->map(fn (array $variation): string => trim(($variation['name'] ?? '') . ': ' . ($variation['value'] ?? ''), ': '))
-                                                    ->filter()
-                                                    ->implode(', ');
-                                                $variationLabel = $variationLabel ?: ($stockIn->variation?->name ?? '');
-                                            @endphp
-                                            @php
-                                                $availableQuantity = $stockIn->remaining_quantity
-                                                    + (isset($transfer) && (int) $transfer->stock_in_id === (int) $stockIn->id ? $transfer->quantity : 0);
-                                            @endphp
-                                            <option value="{{ $stockIn->id }}" @selected(old('stock_in_id', $transfer->stock_in_id ?? '') == $stockIn->id)>
-                                                {{ $stockIn->product->name }}{{ $variationLabel ? ' - ' . $variationLabel : '' }} | {{ $stockIn->branch->name }} | {{ number_format($availableQuantity) }} available
+                                            <option value="{{ $stockIn['stock_in_id'] }}" @selected(old('stock_in_id', $transfer->stock_in_id ?? '') == $stockIn['stock_in_id'])>
+                                                {{ $stockIn['product'] }}{{ $stockIn['variation'] !== '-' ? ' - ' . $stockIn['variation'] : '' }} | {{ $stockIn['branch'] }} | {{ number_format($stockIn['available_quantity']) }} available
                                             </option>
                                         @endforeach
                                     </select>
@@ -46,7 +35,8 @@
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label for="quantity">Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" id="quantity" name="quantity" value="{{ old('quantity', $transfer->quantity ?? '') }}"
+                                    <input type="number" id="quantity" name="quantity"
+                                        value="{{ old('quantity', $transfer->quantity ?? '') }}"
                                         class="form-control @error('quantity') is-invalid @enderror" min="1" required>
                                     @error('quantity') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
