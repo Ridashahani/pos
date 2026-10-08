@@ -84,10 +84,19 @@
                         <h4 class="card-title mb-0">{{ $title }} Records</h4>
                         @if ($type === 'stock-transfer')
                             <div class="d-flex flex-wrap align-items-center">
-                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2">
-                                    <input type="search" name="search" value="{{ request('search') }}"
-                                        class="form-control mr-2" placeholder="Search product" aria-label="Search product">
-                                    <button type="submit" class="btn btn-primary">Search</button>
+                                <form method="GET" action="{{ url()->current() }}"
+                                    class="form-group row align-items-center mb-0 mr-2" style="width: 300px; max-width: 100%;">
+                                    <div class="col-sm-12">
+                                        <div class="input-group">
+                                            <input type="search" id="search" name="search" value="{{ request('search') }}"
+                                                class="form-control" placeholder="Search product" aria-label="Search product">
+                                            <div class="input-group-append">
+                                                <button type="submit" class="input-group-text bg-primary" aria-label="Search">
+                                                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </form>
                                 <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary mr-2">
                                     <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
@@ -101,12 +110,21 @@
                             </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                             <div class="d-flex align-items-center">
-                                <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center mr-2"
+                                <form method="GET" action="{{ url()->current() }}"
+                                    class="form-group row align-items-center mb-0 mr-2" style="width: 300px; max-width: 100%;"
                                     @if ($type === 'stock-in') id="stock-in-search-form" @endif>
-                                    <input type="search" name="search" value="{{ request('search') }}"
-                                        @if ($type === 'stock-in') id="stock-in-search" @endif
-                                        class="form-control mr-2" placeholder="Search product" aria-label="Search product">
-                                    <button type="submit" class="btn btn-primary">Search</button>
+                                    <div class="col-sm-12">
+                                        <div class="input-group">
+                                            <input type="search" name="search" value="{{ request('search') }}"
+                                                @if ($type === 'stock-in') id="stock-in-search" @else id="search" @endif
+                                                class="form-control" placeholder="Search product" aria-label="Search product">
+                                            <div class="input-group-append">
+                                                <button type="submit" class="input-group-text bg-primary" aria-label="Search">
+                                                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </form>
                                 @if (in_array($type, ['sold-items', 'out-of-stock']))
                                     <form method="POST" action="{{ route("stock.{$type}.clear") }}"
