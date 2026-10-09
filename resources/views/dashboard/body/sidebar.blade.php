@@ -230,7 +230,8 @@
                         <ul id="permission" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             <li
                                 class="{{ Request::is(['permission', 'permission/create', 'permission/edit/*']) ? 'active' : '' }}">
-                                <a href="{{ route('permission.index') }}">
+                               {{-- {{ route('permission.index') }}     --}}
+                                <a href="">  
                                     <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Permissions</span>
                                 </a>
                             </li>
@@ -240,7 +241,8 @@
                                 </a>
                             </li>
                             <li class="{{ Request::is(['role/permission*']) ? 'active' : '' }}">
-                                <a href="{{ route('rolePermission.index') }}">
+                                <a href="">
+                                    {{-- {{ route('rolePermission.index') }} --}}
                                     <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Role in Permissions</span>
                                 </a>
                             </li>
