@@ -27,7 +27,7 @@ class StorePaymentTransactionRequest extends FormRequest
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'nullable|string|max:30',
             'recipient_name' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|decimal:0,2|min:0.01',
             'commission' => 'required|numeric|min:0',
             'transaction_date' => 'required|date',
             'description' => 'nullable|string|max:1000',
