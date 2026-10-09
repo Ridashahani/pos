@@ -235,7 +235,7 @@
                                             @if ($type === 'stock-in')
                                                 <td>
                                                     <img class="avatar-60 rounded"
-                                                        src="{{ $row['image'] ? asset('assets/images/product/' . $row['image']) : asset('assets/images/product/default.webp') }}"
+                                                        src="{{ \App\Models\Product::imageUrl($row['image'] ?? null) }}"
                                                         alt="{{ $row['product'] }}">
                                                 </td>
                                             @endif

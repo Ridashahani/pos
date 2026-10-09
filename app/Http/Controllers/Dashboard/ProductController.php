@@ -71,63 +71,64 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-  public function create()
-{
-    return view('products.create', [
-        'categories' => Category::all(),
-        'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
-        'branches' => Branch::orderBy('name')->get(),
-        'suppliers' => Supplier::orderBy('name')->get(),
-'brands' => Brand::orderBy('name')->get(),
-        'variations' => Variation::orderBy('name')->get(),
-        'defaultGst' => $this->normalizeGstRate(Setting::get('gst', 0)),
-    ]);
-}
-public function store(StoreProductRequest $request)
-{
-    $validatedData = $request->validated();
-
-    $validatedData['product_type']  = $validatedData['product_type'] ?? 'single';
-    $validatedData['cost_price']    = $validatedData['cost_price'] ?? 0;
-    $validatedData['selling_price'] = $validatedData['selling_price'] ?? 0;
-    $validatedData['stock']         = $validatedData['stock'] ?? 0;
-
-    // GST: form se na aaye to settings wali default GST lagegi
-    $validatedData['gst_tax'] = $validatedData['gst_tax'] ?? $this->normalizeGstRate(Setting::get('gst', 0));
-
-    // Generate code only if not provided
-    if (empty($validatedData['code'])) {
-        $validatedData['code'] = IdGenerator::generate([
-            'table'  => 'products',
-            'field'  => 'code',
-            'length' => 4,
-            'prefix' => 'PC',
+    public function create()
+    {
+        return view('products.create', [
+            'categories' => Category::all(),
+            'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
+            'branches' => Branch::orderBy('name')->get(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'brands' => Brand::orderBy('name')->get(),
+            'variations' => Variation::orderBy('name')->get(),
+            'defaultGst' => $this->normalizeGstRate(Setting::get('gst', 0)),
         ]);
     }
+    public function store(StoreProductRequest $request)
+    {
+        $validatedData = $request->validated();
 
-    $validatedData['slug'] = Str::slug($validatedData['name']);
+        $validatedData['product_type']  = $validatedData['product_type'] ?? 'single';
+        $validatedData['cost_price']    = $validatedData['cost_price'] ?? 0;
+        $validatedData['selling_price'] = $validatedData['selling_price'] ?? 0;
+        $validatedData['stock']         = $validatedData['stock'] ?? 0;
 
-    /**
-     * Handle upload image with Storage.
-     */
-    if ($file = $request->file('image')) {
-        $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
-        $file->storeAs('public/products/', $fileName);
-        $validatedData['image'] = $fileName;
-    }
+        // GST: form se na aaye to settings wali default GST lagegi
+        $validatedData['gst_tax'] = $validatedData['gst_tax'] ?? $this->normalizeGstRate(Setting::get('gst', 0));
 
-    if ($files = $request->file('images')) {
-        $validatedData['images'] = collect($files)->map(function ($file) {
+        // Generate code only if not provided
+        if (empty($validatedData['code'])) {
+            $next = (int) Product::withTrashed()->max('id') + 1;
+            do {
+                $validatedData['code'] = 'PRD-' . str_pad($next, 6, '0', STR_PAD_LEFT);
+                $next++;
+            } while (Product::withTrashed()->where('code', $validatedData['code'])->exists());
+        }
+
+        $validatedData['slug'] = Str::slug($validatedData['name']);
+
+        /**
+         * Handle upload image with Storage.
+         */
+        if ($file = $request->file('image')) {
             $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/products', $fileName);
-            return $fileName;
-        })->values()->all();
+            $file->storeAs('public/products/', $fileName);
+            $validatedData['image'] = $fileName;
+        }
+
+        if ($files = $request->file('images')) {
+            $validatedData['images'] = collect($files)->map(function ($file) {
+                $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/products', $fileName);
+                return $fileName;
+            })->values()->all();
+
+            $validatedData['image'] = $validatedData['images'][0];
+        }
+
+        Product::create($validatedData);
+
+        return Redirect::route('products.index')->with('success', 'Product has been created!');
     }
-
-    Product::create($validatedData);
-
-    return Redirect::route('products.index')->with('success', 'Product has been created!');
-}
 
     /**
      * Display the specified resource.
@@ -150,74 +151,67 @@ public function store(StoreProductRequest $request)
     /**
      * Show the form for editing the specified resource.
      */
-   /**
- * Show the form for editing the specified resource.
- */
-public function edit(Product $product)
-{
-    return view('products.edit', [
-        'categories' => Category::all(),
-        'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
-        'branches' => Branch::orderBy('name')->get(),
-        'suppliers' => Supplier::orderBy('name')->get(),
-       'brands' => Brand::orderBy('name')->get(),
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Product $product)
+    {
+        return view('products.edit', [
+            'categories' => Category::all(),
+            'subcategories' => Subcategory::with('category')->orderBy('name')->get(),
+            'branches' => Branch::orderBy('name')->get(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'brands' => Brand::orderBy('name')->get(),
 
-        'variations' => Variation::orderBy('name')->get(),
-        'product' => $product,
-        'defaultGst' => $this->normalizeGstRate(Setting::get('gst', 0)),
-    ]);
-}
+            'variations' => Variation::orderBy('name')->get(),
+            'product' => $product,
+            'defaultGst' => $this->normalizeGstRate(Setting::get('gst', 0)),
+        ]);
+    }
 
     /**
      * Update the specified resource in storage.
-        */
-   public function update(UpdateProductRequest $request, Product $product)
-{
-    $validatedData = $request->validated();
-
-    $gstRate = $validatedData['gst_tax'] ?? $product->gst_tax;
-    if ($gstRate === null || $gstRate === '') {
-        $gstRate = Setting::get('gst', 0);
-    }
-    $validatedData['gst_tax'] = $this->normalizeGstRate($gstRate);
-
-    if (!empty($validatedData['variation_ids'])) {
-        $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
-        $validatedData['variation_id']    = $validatedData['variation_ids'][0];
-        $validatedData['variation']       = $variations->pluck('name')->implode(', ');
-        $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
-    }
-
-    $validatedData['slug'] = Str::slug($validatedData['name']);
-
-    /**
-     * Handle upload image with Storage.
      */
-    if ($file = $request->file('image')) {
-        $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
-        $path = 'public/products/';
+    public function update(UpdateProductRequest $request, Product $product)
+    {
+        $validatedData = $request->validated();
 
-        // Purani photo delete karo
-        if ($product->image) {
-            Storage::delete($path . $product->image);
+        $gstRate = $validatedData['gst_tax'] ?? $product->gst_tax;
+        if ($gstRate === null || $gstRate === '') {
+            $gstRate = Setting::get('gst', 0);
+        }
+        $validatedData['gst_tax'] = $this->normalizeGstRate($gstRate);
+
+        if (!empty($validatedData['variation_ids'])) {
+            $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
+            $validatedData['variation_id']    = $validatedData['variation_ids'][0];
+            $validatedData['variation']       = $variations->pluck('name')->implode(', ');
+            $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
         }
 
-        $file->storeAs($path, $fileName);
-        $validatedData['image'] = $fileName;
+        $validatedData['slug'] = Str::slug($validatedData['name']);
+
+        /**
+         * Handle upload image with Storage.
+         */
+        if ($files = $request->file('images')) {
+            foreach ($product->images ?? [] as $old) {
+                Storage::delete('public/products/' . $old);
+            }
+
+            $validatedData['images'] = collect($files)->map(function ($file) {
+                $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/products', $fileName);
+                return $fileName;
+            })->values()->all();
+
+            $validatedData['image'] = $validatedData['images'][0];
+        }
+
+        $product->update($validatedData);
+
+        return Redirect::route('products.index')->with('success', 'Product has been updated!');
     }
-
-    if ($files = $request->file('images')) {
-        $validatedData['images'] = collect($files)->map(function ($file) {
-            $fileName = hexdec(uniqid()) . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/products', $fileName);
-            return $fileName;
-        })->values()->all();
-    }
-
-    $product->update($validatedData);
-
-    return Redirect::route('products.index')->with('success', 'Product has been updated!');
-}
 
     /**
      * Remove the specified resource from storage.
@@ -279,7 +273,6 @@ public function edit(Product $product)
             }
 
             Product::insert($data);
-
         } catch (Exception $e) {
             // $error_code = $e->errorInfo[1];
             return Redirect::route('products.index')->with('error', 'There was a problem uploading the data!');
