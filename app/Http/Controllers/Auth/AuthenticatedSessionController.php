@@ -20,7 +20,7 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
-    /**
+    /**br
      * Handle an incoming authentication request.
      */
     public function store(LoginRequest $request): RedirectResponse
@@ -28,6 +28,30 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Non-admin: always reset active branch on login, then redirect to branch selection.
+        // Exception: if only ONE branch is assigned → auto-set it and go straight to dashboard.
+        if (!$user->isAdmin()) {
+            $assignedBranches = $user->branches()
+                ->where(function ($q) {
+                    $q->where('status', 'Active')->orWhere('status', 1)->orWhere('status', true);
+                })
+                ->get();
+
+            if ($assignedBranches->count() === 1) {
+                // Auto-set the only branch — no manual selection needed
+                $user->active_branch_id = $assignedBranches->first()->id;
+                $user->save();
+            } else {
+                // Multiple (or zero) branches → force selection every login
+                $user->active_branch_id = null;
+                $user->save();
+                return redirect()->route('branch.select');
+            }
+        }
 
         return redirect()->intended(RouteServiceProvider::HOME);
     }

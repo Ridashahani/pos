@@ -1,25 +1,31 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\Dashboard\BrandController;
 use App\Http\Controllers\Dashboard\CategoryController;
-use App\Http\Controllers\Dashboard\SubcategoryController;
 use App\Http\Controllers\Dashboard\CustomerController;
-use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\HelpController;
-use App\Http\Controllers\Dashboard\SaleController;
 use App\Http\Controllers\Dashboard\PosController;
 use App\Http\Controllers\Dashboard\ProductController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\PurchaseController;
+use App\Http\Controllers\Dashboard\PurchaseReturnController;
 use App\Http\Controllers\Dashboard\RoleController;
+use App\Http\Controllers\Dashboard\SaleController;
+use App\Http\Controllers\Dashboard\SettingController;
 use App\Http\Controllers\Dashboard\StockController;
+use App\Http\Controllers\Dashboard\SubcategoryController;
+use App\Http\Controllers\Dashboard\SupplierController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\Dashboard\VariationController;
+use App\Http\Controllers\Dashboard\UnitController;
 use App\Http\Controllers\ExpenseController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentAccountController;
+use App\Http\Controllers\BranchSelectionController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\UserBranchController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
@@ -27,6 +33,10 @@ Route::get('/', function () {
 });
 // DEFAULT DASHBOARD & PROFILE
 Route::middleware('auth')->group(function () {
+    // Active Branch Selection Routes
+    Route::get('/select-branch', [BranchSelectionController::class, 'select'])->name('branch.select');
+    Route::post('/select-branch', [BranchSelectionController::class, 'setActive'])->name('branch.set-active');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
     Route::prefix('stock')->name('stock.')->group(function () {
@@ -34,13 +44,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/in/details/{stockIn}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/sold-items', [StockController::class, 'soldItems'])->name('sold-items');
+        Route::delete('/sold-items', [StockController::class, 'clearSoldItems'])->name('sold-items.clear');
+        Route::delete('/sold-items/{soldItem}', [StockController::class, 'destroySoldItem'])->name('sold-items.destroy');
         Route::get('/out-of-stock', [StockController::class, 'outOfStock'])->name('out-of-stock');
+        Route::delete('/out-of-stock', [StockController::class, 'clearOutOfStock'])->name('out-of-stock.clear');
+        Route::delete('/out-of-stock/{stockIn}', [StockController::class, 'destroyOutOfStock'])->name('out-of-stock.destroy');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
         Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
         Route::get('/transfer/{transfer}/edit', [StockController::class, 'editTransfer'])->name('transfer.edit');
         Route::put('/transfer/{transfer}', [StockController::class, 'updateTransfer'])->name('transfer.update');
         Route::delete('/transfer/{transfer}', [StockController::class, 'destroyTransfer'])->name('transfer.destroy');
+        Route::delete('/transfer', [StockController::class, 'clearTransfers'])->name('transfer.clear');
     });
 
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
@@ -54,6 +69,13 @@ Route::middleware('auth')->group(function () {
 // ====== USERS ======
 Route::middleware(['permission:access.users'])->group(function () {
     Route::resource('/users', UserController::class)->except(['show']);
+
+    Route::prefix('user-branch')->name('user-branch.')->group(function () {
+        Route::get('/', [UserBranchController::class, 'index'])->name('index');
+        Route::get('/{user}/edit', [UserBranchController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserBranchController::class, 'update'])->name('update');
+        Route::delete('/{user}/{branch}', [UserBranchController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ====== CUSTOMERS ======
@@ -69,6 +91,7 @@ Route::middleware(['permission:access.suppliers'])->group(function () {
 // ====== PRODUCTS ======
 Route::middleware(['permission:access.products'])->group(function () {
     Route::resource('/variations', VariationController::class)->except(['show']);
+    Route::resource('/units', UnitController::class)->except(['show']);
     Route::get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
     Route::post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
     Route::get('/products/export', [ProductController::class, 'exportData'])->name('products.exportData');
@@ -79,6 +102,7 @@ Route::middleware(['permission:access.products'])->group(function () {
 Route::middleware(['permission:access.categories'])->group(function () {
     Route::resource('/categories', CategoryController::class);
     Route::resource('/subcategories', SubcategoryController::class)->except(['show']);
+    Route::resource('/brands', BrandController::class)->except(['show']);
 });
 
 // ====== POS ======
@@ -87,15 +111,14 @@ Route::middleware(['permission:access.pos'])->group(function () {
     Route::post('/pos/add', [PosController::class, 'addCart'])->name('pos.addCart');
     Route::post('/pos/update/{rowId}', [PosController::class, 'updateCart'])->name('pos.updateCart');
     Route::post('/pos/discount/{rowId}', [PosController::class, 'updateDiscount'])->name('pos.updateDiscount');
+    Route::post('/pos/tax-rate/{rowId}', [PosController::class, 'updateTaxRate'])->name('pos.updateTaxRate');
     Route::get('/pos/delete/{rowId}', [PosController::class, 'deleteCart'])->name('pos.deleteCart');
     Route::post('/pos/customer', [PosController::class, 'storeCustomer'])->name('pos.storeCustomer');
     Route::get('/pos/customers-ajax', [PosController::class, 'searchCustomers'])->name('pos.customers.search');
 
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
-
     // Create Sale
     Route::post('/pos/sale', [SaleController::class, 'storeSale'])->name('pos.storeSale');
-    Route::post('/pos/order', [SaleController::class, 'storeSale'])->name('pos.storeOrder');
 });
 
 // ====== SALES ======
@@ -108,19 +131,18 @@ Route::middleware(['permission:access.sales'])->group(function () {
     Route::get('/sales/invoice/download/{sale_id}', [SaleController::class, 'invoiceDownload'])->name('sale.invoiceDownload');
     Route::get('/sales/receipt/print/{sale_id}', [SaleController::class, 'printReceipt'])->name('sale.printReceipt');
 
-    Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
-    Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
-    Route::get('/purchases/returns', [PurchaseController::class, 'returns'])->name('purchases.returns');
-    Route::get('/purchases/{purchaseNo}/return', [PurchaseController::class, 'returnCreate'])->name('purchases.return.create');
+    //     Purchases return 
+    Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchases.returns');
+    Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
+    Route::post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
+    Route::get('/purchases/returns/{purchaseReturn}', [PurchaseReturnController::class, 'show'])->name('purchases.returns.show');
 
+    // Purchases resource 
+    Route::resource('purchases', PurchaseController::class);
     // Pending Due
     Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');
     Route::post('/sales/update/due', [SaleController::class, 'updateDue'])->name('sale.updateDue');
-
-    // Stock Management
-
 });
 // Branches
 Route::resource('branches', BranchController::class);
@@ -147,6 +169,8 @@ Route::middleware('auth')->group(function () {
 
 // ====== ROLE CONTROLLER ======
 Route::middleware(['permission:access.roles'])->group(function () {
+    Route::resource('/settings', SettingController::class)->except(['show']);
+
     // Permissions
     Route::get('/permission', [RoleController::class, 'permissionIndex'])->name('permission.index');
     Route::get('/permission/create', [RoleController::class, 'permissionCreate'])->name('permission.create');

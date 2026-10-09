@@ -19,32 +19,36 @@
                             @endisset
                             <div class="row">
                                 <div class="form-group col-md-12">
-                                    <label for="product_id">Product / Item <span class="text-danger">*</span></label>
-                                    <select id="product_id" name="product_id" class="form-control @error('product_id') is-invalid @enderror" required>
-                                        <option value="">Select product from stock-in</option>
-                                        @foreach ($products as $product)
-                                            <option value="{{ $product->id }}" @selected(old('product_id', $transfer->product_id ?? '') == $product->id)>
-                                                {{ $product->name }} ({{ $product->code }}) - {{ number_format($product->stock) }} available
+                                    <label for="stock_in_id">Stock-In Item <span class="text-danger">*</span></label>
+                                    <select id="stock_in_id" name="stock_in_id" class="form-control @error('stock_in_id') is-invalid @enderror" required>
+                                        <option value="">Select stock-in item and source branch</option>
+                                        @foreach ($stockIns as $stockIn)
+                                            @php
+                                                $variationLabel = collect($stockIn->variation_details ?? [])
+                                                    ->map(fn (array $variation): string => trim(($variation['name'] ?? '') . ': ' . ($variation['value'] ?? ''), ': '))
+                                                    ->filter()
+                                                    ->implode(', ');
+                                                $variationLabel = $variationLabel ?: ($stockIn->variation?->name ?? '');
+                                            @endphp
+                                            @php
+                                                $availableQuantity = $stockIn->remaining_quantity
+                                                    + (isset($transfer) && (int) $transfer->stock_in_id === (int) $stockIn->id ? $transfer->quantity : 0);
+                                            @endphp
+                                            <option value="{{ $stockIn->id }}" @selected(old('stock_in_id', $transfer->stock_in_id ?? '') == $stockIn->id)>
+                                                {{ $stockIn->product->name }}{{ $variationLabel ? ' - ' . $variationLabel : '' }} | {{ $stockIn->branch->name }} | {{ number_format($availableQuantity) }} available
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('product_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @error('stock_in_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @if ($stockIns->isEmpty())
+                                        <div class="text-danger mt-1">Stock is not available in any branch.</div>
+                                    @endif
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label for="quantity">Quantity <span class="text-danger">*</span></label>
                                     <input type="number" id="quantity" name="quantity" value="{{ old('quantity', $transfer->quantity ?? '') }}"
                                         class="form-control @error('quantity') is-invalid @enderror" min="1" required>
                                     @error('quantity') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label for="from_branch_id">From Branch <span class="text-danger">*</span></label>
-                                    <select id="from_branch_id" name="from_branch_id" class="form-control @error('from_branch_id') is-invalid @enderror" required>
-                                        <option value="">Select source branch</option>
-                                        @foreach ($branches as $branch)
-                                            <option value="{{ $branch->id }}" @selected(old('from_branch_id', $transfer->from_branch_id ?? '') == $branch->id)>{{ $branch->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('from_branch_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="form-group col-md-4">
                                     <label for="to_branch_id">To Branch <span class="text-danger">*</span></label>

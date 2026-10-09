@@ -9,6 +9,7 @@ use App\Models\PaymentAccount;
 use App\Models\PaymentTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
@@ -51,9 +52,16 @@ class PaymentController extends Controller
      */
     public function store(StorePaymentTransactionRequest $request)
     {
-        DB::transaction(function () use ($request) {
-            PaymentTransaction::create($request->validated());
-            $this->refreshAccountBalances();
+        $data = $request->validated();
+
+        DB::transaction(function () use ($data) {
+            $account = PaymentAccount::whereKey($data['payment_account_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureSufficientBalance($account, $data['amount']);
+            PaymentTransaction::create($data);
+            $this->refreshAccountBalance($account);
         });
 
         return redirect()->route('payments.index')->with('success', 'Payment transaction created successfully.');
@@ -85,9 +93,37 @@ class PaymentController extends Controller
      */
     public function update(UpdatePaymentTransactionRequest $request, PaymentTransaction $payment)
     {
-        DB::transaction(function () use ($request, $payment) {
-            $payment->update($request->validated());
-            $this->refreshAccountBalances();
+        $data = $request->validated();
+
+        DB::transaction(function () use ($data, $payment) {
+            $lockedPayment = PaymentTransaction::whereKey($payment->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $accountIds = collect([
+                $lockedPayment->payment_account_id,
+                $data['payment_account_id'],
+            ])->unique()->sort()->values();
+            $accounts = PaymentAccount::whereIn('id', $accountIds)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            $account = $accounts->get($data['payment_account_id']);
+
+            if ($account === null) {
+                abort(404);
+            }
+
+            $excludeTransactionId = $lockedPayment->payment_account_id == $account->id
+                ? $lockedPayment->id
+                : null;
+
+            $this->ensureSufficientBalance($account, $data['amount'], $excludeTransactionId);
+            $lockedPayment->update($data);
+
+            foreach ($accounts as $affectedAccount) {
+                $this->refreshAccountBalance($affectedAccount);
+            }
         });
 
         return redirect()->route('payments.index')->with('success', 'Payment transaction updated successfully.');
@@ -99,18 +135,57 @@ class PaymentController extends Controller
     public function destroy(PaymentTransaction $payment)
     {
         DB::transaction(function () use ($payment) {
-            $payment->delete();
-            $this->refreshAccountBalances();
+            $lockedPayment = PaymentTransaction::whereKey($payment->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $account = PaymentAccount::whereKey($lockedPayment->payment_account_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $lockedPayment->delete();
+            $this->refreshAccountBalance($account);
         });
 
         return redirect()->route('payments.index')->with('success', 'Payment transaction deleted successfully.');
     }
 
-    private function refreshAccountBalances(): void
+    private function ensureSufficientBalance(
+        PaymentAccount $account,
+        string|int|float $amount,
+        ?int $excludeTransactionId = null
+    ): void {
+        $transactions = $account->transactions();
+
+        if ($excludeTransactionId !== null) {
+            $transactions->where('id', '!=', $excludeTransactionId);
+        }
+
+        $availableBalance = $this->toMinorUnits($account->opening_balance)
+            - $this->toMinorUnits($transactions->sum('amount'));
+
+        if ($this->toMinorUnits($amount) > $availableBalance) {
+            throw ValidationException::withMessages([
+                'amount' => sprintf(
+                    'Insufficient balance in the selected account. Available balance: Rs %s.',
+                    number_format($availableBalance / 100, 2)
+                ),
+            ]);
+        }
+    }
+
+    private function refreshAccountBalance(PaymentAccount $account): void
     {
-        PaymentAccount::query()->each(function (PaymentAccount $account) {
-            $used = $account->transactions()->sum('amount');
-            $account->update(['balance' => $account->opening_balance - $used]);
-        });
+        $used = $this->toMinorUnits($account->transactions()->sum('amount'));
+        $balance = $this->toMinorUnits($account->opening_balance) - $used;
+        $account->update([
+            'balance' => sprintf('%s%d.%02d', $balance < 0 ? '-' : '', intdiv(abs($balance), 100), abs($balance) % 100),
+        ]);
+    }
+
+    private function toMinorUnits(string|int|float $amount): int
+    {
+        [$whole, $fraction] = array_pad(explode('.', (string) $amount, 2), 2, '');
+
+        return ((int) $whole * 100) + (int) str_pad($fraction, 2, '0');
     }
 }

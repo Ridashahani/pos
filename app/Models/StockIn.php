@@ -14,17 +14,18 @@ class StockIn extends Model
     protected $fillable = [
         'purchase_id',
         'product_id',
-        'imei',
-        'condition',
+        'variation_id',
+        'variation_details',
+        'branch_id',
+        'batch_no',
         'quantity',
-        'remaining_qty',
+        'remaining_quantity',
         'cost_price',
-        'sale_price',
     ];
 
     protected $casts = [
         'cost_price' => 'float',
-        'sale_price' => 'float',
+        'variation_details' => 'array',
     ];
 
     public function purchase()
@@ -34,7 +35,17 @@ class StockIn extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class)->withTrashed();
+    }
+
+    public function variation()
+    {
+        return $this->belongsTo(Variation::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function soldItems()

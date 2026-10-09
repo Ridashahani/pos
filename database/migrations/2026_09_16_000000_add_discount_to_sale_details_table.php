@@ -8,14 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('order_details', function (Blueprint $table) {
+        $tableName = Schema::hasTable('sale_details') ? 'sale_details' : 'order_details';
+
+        Schema::table($tableName, function (Blueprint $table) {
             $table->decimal('discount', 15, 2)->default(0)->after('unit_price');
         });
     }
 
     public function down(): void
     {
-        Schema::table('order_details', function (Blueprint $table) {
+        $tableName = Schema::hasTable('sale_details') ? 'sale_details' : 'order_details';
+
+        Schema::table($tableName, function (Blueprint $table) {
             $table->dropColumn('discount');
         });
     }

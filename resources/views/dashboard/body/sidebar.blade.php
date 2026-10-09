@@ -16,7 +16,7 @@
                         <x-heroicon-o-home class="w-6 h-6" />
                         <span class="ml-4">Dashboards</span>
                     </a>
-                </li>
+                </li> 
 
                 @if (auth()->user()->can('access.pos'))
                     <li class="{{ Request::is('pos*') ? 'active' : '' }}">
@@ -30,76 +30,89 @@
                 <hr>
 
                 @if (auth()->user()->can('access.products'))
-                    @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('categories*') || Request::is('subcategories*'))
-                    <li class="{{ $productsMenuActive ? 'active' : '' }}">
-                        <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse"
-                            aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
-                            <x-heroicon-o-archive-box class="w-6 h-6" />
-                            <span class="ml-3">Products</span>
-                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                        </a>
-                        <ul id="products" class="iq-submenu collapse {{ $productsMenuActive ? 'show' : '' }}"
-                            data-parent="#iq-sidebar-toggle">
-                            <li
-                                class="{{ Request::is('products') || (Request::is('products/*') && !Request::is('products/create')) ? 'active' : '' }}">
-                                <a href="{{ route('products.index') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
+                @php($productsMenuActive = Request::is('products*') || Request::is('variations*') || Request::is('units*') || Request::is('categories*') || Request::is('subcategories*'))
+                <li class="{{ $productsMenuActive ? 'active' : '' }}">
+                    <a href="#products" class="{{ $productsMenuActive ? '' : 'collapsed' }}" data-toggle="collapse"
+                        aria-expanded="{{ $productsMenuActive ? 'true' : 'false' }}">
+                        <x-heroicon-o-archive-box class="w-6 h-6" />
+                        <span class="ml-3">Products</span>
+                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                    </a>
+                    <ul id="products" class="iq-submenu collapse {{ $productsMenuActive ? 'show' : '' }}"
+                        data-parent="#iq-sidebar-toggle">
+                        <li
+                            class="{{ Request::is('products') || (Request::is('products/*') && !Request::is('products/create')) ? 'active' : '' }}">
+                            <a href="{{ route('products.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('variations*') ? 'active' : '' }}">
+                            <a href="{{ route('variations.index') }}">
+                                <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('units*') ? 'active' : '' }}">
+                            <a href="{{ route('units.index') }}">
+                                <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
+                            </a>
+                        </li>
+                        <li
+                            class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
+                            <a href="{{ route('products.create') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('categories*') ? 'active' : '' }}">
+                            <a href="{{ route('categories.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('subcategories*') ? 'active' : '' }}">
+                            <a href="{{ route('subcategories.index') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Subcategories</span>
+                            </a>
+                        </li>
+                        @if (auth()->user()->can('access.categories'))
+                            <li class="{{ Request::is('brands*') ? 'active' : '' }}">
+                                <a href="{{ route('brands.index') }}" class="svg-icon">
+                                    <x-heroicon-o-tag class="w-6 h-6" />
+                                    <span class="ml-3">Brands</span>
                                 </a>
                             </li>
-                            <li class="{{ Request::is('variations*') ? 'active' : '' }}">
-                                <a href="{{ route('variations.index') }}">
-                                    <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
-                                </a>
-                            </li>
-                            <li
-                                class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
-                                <a href="{{ route('products.create') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('categories*') ? 'active' : '' }}">
-                                <a href="{{ route('categories.index') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('subcategories*') ? 'active' : '' }}">
-                                <a href="{{ route('subcategories.index') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Subcategories</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                        @endif
+                    </ul>
+                </li>
                 @endif
 
                 @if (auth()->user()->can('access.sales'))
-                    <li>
-                        <a href="#sales" class="collapsed" data-toggle="collapse"
-                            aria-expanded="{{ Request::is('sales*') || Request::is('pending/due*') ? 'true' : 'false' }}">
-                            <x-heroicon-o-shopping-bag class="w-6 h-6" />
-                            <span class="ml-3">Sales</span>
-                            <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                        </a>
-                        <ul id="sales"
-                            class="iq-submenu collapse {{ Request::is('sales*') || Request::is('pending/due*') ? 'show' : '' }}"
-                            data-parent="#iq-sidebar-toggle">
-                            <li class="{{ Request::is('sales/pending*') ? 'active' : '' }}">
-                                <a href="{{ route('sale.pendingSales') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
-                                </a>
-                            </li>
-                            <li class="{{ Request::is('sales/complete*') ? 'active' : '' }}">
-                                <a href="{{ route('sale.completeSales') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
-                                </a>
-                            </li>
-                            <li
-                                class="{{ Request::is('pending/due*') || Request::is('sales/pending-due*') ? 'active' : '' }}">
-                                <a href="{{ route('sale.pendingDue') }}">
-                                    <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                <li>
+                    <a href="#sales" class="collapsed" data-toggle="collapse"
+                        aria-expanded="{{ Request::is('sales*') || Request::is('pending/due*') ? 'true' : 'false' }}">
+                        <x-heroicon-o-shopping-bag class="w-6 h-6" />
+                        <span class="ml-3">Sales</span>
+                        <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
+                    </a>
+                    <ul id="sales"
+                        class="iq-submenu collapse {{ Request::is('sales*') || Request::is('pending/due*') ? 'show' : '' }}"
+                        data-parent="#iq-sidebar-toggle">
+                        <li class="{{ Request::is('sales/pending*') ? 'active' : '' }}">
+                            <a href="{{ route('sale.pendingSales') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Sales</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('sales/complete*') ? 'active' : '' }}">
+                            <a href="{{ route('sale.completeSales') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Complete Sales</span>
+                            </a>
+                        </li>
+                        <li
+                            class="{{ Request::is('pending/due*') || Request::is('sales/pending-due*') ? 'active' : '' }}">
+                            <a href="{{ route('sale.pendingDue') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Pending Due</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
 
                     <li>
                         <a href="#purchases" class="collapsed" data-toggle="collapse"
@@ -127,7 +140,16 @@
                             </li>
                         </ul>
                     </li>
-                @endif
+                @endif 
+
+                <!-- @if (auth()->user()->can('access.categories'))
+                    <li class="{{ Request::is('brands*') ? 'active' : '' }}">
+                        <a href="{{ route('brands.index') }}" class="svg-icon">
+                            <x-heroicon-o-tag class="w-6 h-6" />
+                            <span class="ml-3">Brands</span>
+                        </a>
+                    </li>
+                @endif -->
 
                 <li>
                     <a href="#stock" class="collapsed" data-toggle="collapse"
@@ -135,12 +157,12 @@
                         <x-heroicon-o-archive-box-arrow-down class="w-6 h-6" />
                         <span class="ml-3">Stock</span>
                         <x-heroicon-o-chevron-right class="w-4 h-4 iq-arrow-right arrow-active" />
-                    </a>
+                    </a> 
                     <ul id="stock" class="iq-submenu collapse {{ Request::is('stock*') ? 'show' : '' }}"
                         data-parent="#iq-sidebar-toggle">
                         <li class="{{ Request::is('stock/in') ? 'active' : '' }}">
                             <a href="{{ route('stock.in') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock-In</span>
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Stock In</span>
                             </a>
                         </li>
                         <li class="{{ Request::is('stock/sold-items') || Request::is('stock/out') ? 'active' : '' }}">
@@ -173,27 +195,27 @@
                 @endif
 
                 @if (auth()->user()->can('access.suppliers'))
-                    <li class="{{ Request::is('suppliers*') ? 'active' : '' }}">
-                        <a href="{{ route('suppliers.index') }}" class="svg-icon">
-                            <x-heroicon-o-user-group class="w-6 h-6" />
-                            <span class="ml-3">Suppliers</span>
-                        </a>
-                    </li>
+                <li class="{{ Request::is('suppliers*') ? 'active' : '' }}">
+                    <a href="{{ route('suppliers.index') }}" class="svg-icon">
+                        <x-heroicon-o-user-group class="w-6 h-6" />
+                        <span class="ml-3">Suppliers</span>
+                    </a>
+                </li>
                 @endif
 
                 @if (auth()->user()->can('access.stocks'))
-                    <li class="{{ Request::is('expenses*') ? 'active' : '' }}">
-                        <a href="{{ route('expenses.index') }}" class="svg-icon">
-                            <x-heroicon-o-receipt-percent class="w-6 h-6" />
-                            <span class="ml-3">Expenses</span>
-                        </a>
-                    </li>
-                    <li class="{{ Request::is('branches*') ? 'active' : '' }}">
-                        <a href="{{ route('branches.index') }}" class="svg-icon">
-                            <x-heroicon-o-building-office-2 class="w-6 h-6" />
-                            <span class="ml-3">Branches</span>
-                        </a>
-                    </li>
+                <li class="{{ Request::is('expenses*') ? 'active' : '' }}">
+                    <a href="{{ route('expenses.index') }}" class="svg-icon">
+                        <x-heroicon-o-receipt-percent class="w-6 h-6" />
+                        <span class="ml-3">Expenses</span>
+                    </a>
+                </li>
+                <li class="{{ Request::is('branches*') ? 'active' : '' }}">
+                    <a href="{{ route('branches.index') }}" class="svg-icon">
+                        <x-heroicon-o-building-office-2 class="w-6 h-6" />
+                        <span class="ml-3">Branches</span>
+                    </a>
+                </li>
                 @endif
 
                 <hr>
@@ -208,7 +230,8 @@
                         <ul id="permission" class="iq-submenu collapse" data-parent="#iq-sidebar-toggle">
                             <li
                                 class="{{ Request::is(['permission', 'permission/create', 'permission/edit/*']) ? 'active' : '' }}">
-                                <a href="{{ route('permission.index') }}">
+                               {{-- {{ route('permission.index') }}     --}}
+                                <a href="">  
                                     <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Permissions</span>
                                 </a>
                             </li>
@@ -218,39 +241,45 @@
                                 </a>
                             </li>
                             <li class="{{ Request::is(['role/permission*']) ? 'active' : '' }}">
-                                <a href="{{ route('rolePermission.index') }}">
+                                <a href="">
+                                    {{-- {{ route('rolePermission.index') }} --}}
                                     <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Role in Permissions</span>
                                 </a>
                             </li>
                         </ul>
                     </li>
+                    <li class="{{ Request::is('settings*') ? 'active' : '' }}">
+                        <a href="{{ route('settings.index') }}" class="svg-icon">
+                            <x-heroicon-o-cog-6-tooth class="w-6 h-6" />
+                            <span class="ml-3">Settings</span>
+                        </a>
+                    </li>
                 @endif
 
                 @if (auth()->user()->can('access.users'))
-                    <li class="{{ Request::is('users*') ? 'active' : '' }}">
-                        <a href="{{ route('users.index') }}" class="svg-icon">
-                            <x-heroicon-o-users class="w-6 h-6" />
-                            <span class="ml-3">Users</span>
-                        </a>
-                    </li>
+                <li class="{{ Request::is('users*') ? 'active' : '' }}">
+                    <a href="{{ route('users.index') }}" class="svg-icon">
+                        <x-heroicon-o-users class="w-6 h-6" />
+                        <span class="ml-3">Users</span>
+                    </a>
+                </li>
                 @endif
-
                 @if (auth()->user()->can('access.payments'))
-                    <li class="{{ Request::is('payments*') ? 'active' : '' }}">
-                        <a href="{{ route('payments.index') }}" class="svg-icon">
-                            <x-heroicon-o-currency-dollar class="w-6 h-6" />
-                            <span class="ml-3">Wallet Services</span>
-                        </a>
-                    </li>
+                <li class="{{ Request::is('payments*') ? 'active' : '' }}">
+                    <a href="{{ route('payments.index') }}" class="svg-icon">
+                        <x-heroicon-o-wallet class="w-6 h-6" style="width: 24px; height: 24px; min-width: 24px; flex-shrink: 0;" />
+                        <span class="ml-3">Wallet/Branchless Banking</span>
+                    </a>
+                </li>
                 @endif
 
                 @if (auth()->user()->can('database.menu'))
-                    {{-- <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
+                 <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
                 <a href="{{ route('backup.index') }}" class="svg-icon">
                     <x-heroicon-o-circle-stack class="w-6 h-6" />
                     <span class="ml-3">Backup Database</span>
                 </a>
-                </li> --}}
+                </li> 
                 @endif
             </ul>
         </nav>

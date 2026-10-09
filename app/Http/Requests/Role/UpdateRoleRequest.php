@@ -32,7 +32,7 @@ class UpdateRoleRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'in:Admin,Staff',
+                'in:Admin,Manager,Cashier',
                 Rule::unique('roles', 'name')->ignore($roleId),
             ],
         ];

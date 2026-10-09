@@ -3,132 +3,244 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Purchase\StorePurchaseRequest;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Supplier;
-use Illuminate\Http\Request;
+use App\Models\StockIn;
+use App\Models\Variation;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('purchases.index', ['purchases' => Purchase::with(['supplier', 'items'])->latest('purchase_date')->get()]);
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $branchFilter = $user->activeBranchFilter();
+
+        $purchases = Purchase::with(['supplier', 'branch', 'items.product'])
+            ->when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))
+            ->when($request->filled('search') && $request->filled('search_by'), function ($q) use ($request) {
+                $search = $request->search;
+                $searchBy = $request->search_by;
+
+                match ($searchBy) {
+                    'purchase_no' => $q->where('purchase_no', 'like', "%{$search}%"),
+                    'product' => $q->whereHas('items.product', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
+                    'supplier' => $q->whereHas('supplier', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
+                    'branch' => $q->whereHas('branch', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
+                    default => null,
+                };
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        $totalPurchases = Purchase::when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))->sum('total_amount');
+        $itemsReceived = PurchaseItem::when($branchFilter, fn($q) => $q->whereHas('purchase', fn($q2) => $q2->where('branch_id', $branchFilter)))->sum('quantity');
+        $pendingPayments = Purchase::when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))->sum('due_amount');
+
+        return view('purchases.index', compact('purchases', 'totalPurchases', 'itemsReceived', 'pendingPayments'));
     }
 
     public function create()
     {
-        $products = Product::query()
-            ->select(['id', 'name', 'variation_types', 'buying_price'])
-            ->orderBy('name')
-            ->get()
-            ->map(function ($product) {
-                $types = is_array($product->variation_types) ? array_values(array_filter($product->variation_types)) : [];
-
-                $variants = count($types)
-                    ? collect($types)->map(fn($type, $index) => [
-                        'id' => $product->id . '-' . $index,
-                        'name' => $type,
-                        'purchasePrice' => (float) $product->buying_price,
-                    ])->values()->all()
-                    : [[
-                        'id' => $product->id . '-0',
-                        'name' => 'Standard',
-                        'purchasePrice' => (float) $product->buying_price,
-                    ]];
-
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'variants' => $variants,
-                ];
-            });
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
 
         return view('purchases.create', [
-            'products' => $products,
-            'suppliers' => Supplier::orderBy('name')->get(['id', 'name']),
-            'branches' => Branch::where('status', 'Active')->orderBy('name')->get(['id', 'name']),
+            'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
+            'variations' => Variation::orderBy('name')->get(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'branches' => $user->allowedBranches(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StorePurchaseRequest $request)
     {
-        $validated = $request->validate([
-            'supplier_id' => ['required', 'exists:suppliers,id'],
-            'branch_id' => ['required', 'exists:branches,id'],
-            'purchase_date' => ['required', 'date'],
-            'payment_status' => ['required', 'in:Paid,Partial,Due'],
-            'amount_paid' => ['nullable', 'numeric', 'min:0'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
-            'items.*.variant' => ['nullable', 'string', 'max:255'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.unit_cost' => ['required', 'numeric', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
-        DB::transaction(function () use ($validated): void {
-            $total = collect($validated['items'])->sum(fn (array $item): float => $item['quantity'] * $item['unit_cost']);
-            $amountPaid = min((float) ($validated['amount_paid'] ?? 0), $total);
+        $itemsTotal = collect($validated['items'])->sum(
+            fn($item) => $item['quantity'] * $item['unit_price']
+        );
+        $paidAmount = $validated['paid_amount'] ?? 0;
+
+        DB::transaction(function () use ($validated, $itemsTotal, $paidAmount) {
             $purchase = Purchase::create([
-                'purchase_number' => 'PUR-' . Str::upper(Str::random(8)),
+                'purchase_no' => $this->generatePurchaseNo(),
                 'supplier_id' => $validated['supplier_id'],
                 'branch_id' => $validated['branch_id'],
                 'purchase_date' => $validated['purchase_date'],
-                'total_amount' => $total,
-                'amount_paid' => $amountPaid,
+                'total_amount' => $itemsTotal,
+                'paid_amount' => $paidAmount,
+                'due_amount' => max(0, $itemsTotal - $paidAmount),
+                'payment_status' => $validated['payment_status'],
+                'created_by' => auth()->id(),
+            ]);
+
+            $this->createPurchaseItemsAndStock($purchase, $validated['items']);
+        });
+
+        return redirect()->route('purchases.index')->with('success', 'Purchase created successfully.');
+    }
+
+    public function show(Purchase $purchase)
+    {
+        $purchase->load(['supplier', 'branch', 'items.product']);
+
+        return view('purchases.show', compact('purchase'));
+    }
+
+    public function edit(Purchase $purchase)
+    {
+        $purchase->load('items');
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
+        return view('purchases.edit', [
+            'purchase' => $purchase,
+            'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
+            'variations' => Variation::orderBy('name')->get(),
+            'suppliers' => Supplier::orderBy('name')->get(),
+            'branches' => $user->allowedBranches(),
+        ]);
+    }
+
+    public function update(StorePurchaseRequest $request, Purchase $purchase)
+    {
+        $validated = $request->validated();
+
+        $itemsTotal = collect($validated['items'])->sum(
+            fn($item) => $item['quantity'] * $item['unit_price']
+        );
+        $paidAmount = $validated['paid_amount'] ?? 0;
+
+        DB::transaction(function () use ($validated, $purchase, $itemsTotal, $paidAmount) {
+            $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
+            $stockIns = $this->lockPurchaseStockIns($purchase);
+
+            if ($stockIns->contains(fn(StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
+                throw ValidationException::withMessages([
+                    'purchase' => 'This purchase cannot be edited because stock from it has sale history.',
+                ]);
+            }
+
+            $this->removePurchaseStock($stockIns);
+            $purchase->stockIns()->delete();
+
+            $purchase->update([
+                'supplier_id' => $validated['supplier_id'],
+                'branch_id' => $validated['branch_id'],
+                'purchase_date' => $validated['purchase_date'],
+                'total_amount' => $itemsTotal,
+                'paid_amount' => $paidAmount,
+                'due_amount' => max(0, $itemsTotal - $paidAmount),
                 'payment_status' => $validated['payment_status'],
             ]);
 
-            foreach ($validated['items'] as $item) {
-                $purchase->items()->create([
-                    'product_id' => $item['product_id'],
-                    'variant' => $item['variant'] ?? null,
-                    'quantity' => $item['quantity'],
-                    'unit_cost' => $item['unit_cost'],
-                    'total_amount' => $item['quantity'] * $item['unit_cost'],
-                ]);
-
-                Product::whereKey($item['product_id'])->lockForUpdate()->increment('stock', $item['quantity']);
-            }
+            $purchase->items()->delete();
+            $this->createPurchaseItemsAndStock($purchase, $validated['items']);
         });
 
-        return redirect()->route('purchases.index')->with('success', 'Purchase saved and added to stock-in.');
+        return redirect()->route('purchases.index')->with('success', 'Purchase updated successfully.');
     }
 
-    public function returns()
+    public function destroy(Purchase $purchase)
     {
-        return view('purchases.returns', ['purchases' => $this->purchaseRecords()]);
-    }
+        $deleted = DB::transaction(function () use ($purchase): bool {
+            $purchase = Purchase::whereKey($purchase->id)->lockForUpdate()->firstOrFail();
+            $stockIns = $this->lockPurchaseStockIns($purchase);
 
-    public function returnCreate(string $purchaseNo)
-    {
-        $purchase = collect($this->purchaseRecords())->firstWhere('number', $purchaseNo);
+            if ($stockIns->contains(fn(StockIn $stockIn): bool => $stockIn->soldItems()->exists())) {
+                return false;
+            }
 
-        if (!$purchase) {
-            $savedPurchase = Purchase::with(['supplier', 'items'])->where('purchase_number', $purchaseNo)->first();
-            $purchase = $savedPurchase ? [
-                'number' => $savedPurchase->purchase_number,
-                'supplier' => $savedPurchase->supplier?->name ?: 'N/A',
-                'date' => $savedPurchase->purchase_date->format('Y-m-d'),
-                'items' => $savedPurchase->items->sum('quantity'),
-            ] : null;
+            $this->removePurchaseStock($stockIns);
+            $purchase->stockIns()->delete();
+            $purchase->items()->delete();
+            $purchase->delete();
+
+            return true;
+        });
+
+        if (! $deleted) {
+            return redirect()->route('purchases.index')->with('error', 'This purchase cannot be deleted because stock from it has sale history.');
         }
 
-        abort_if(!$purchase, 404);
-
-        return view('purchases.return-create', ['purchase' => $purchase]);
+        return redirect()->route('purchases.index')->with('success', 'Purchase deleted successfully.');
     }
 
-    private function purchaseRecords(): array
+    private function createPurchaseItemsAndStock(Purchase $purchase, array $items): void
     {
-        return [
-            ['number' => 'PUR-1001', 'supplier' => 'Usman Mobile Traders', 'date' => '2026-09-12', 'items' => 86, 'total' => 'PKR 4,280.00', 'payment' => 'Bank Transfer', 'status' => 'Paid', 'reason' => 'Damaged charger boxes received'],
-            ['number' => 'PUR-1002', 'supplier' => 'Al-Madina Mobile Accessories', 'date' => '2026-09-10', 'items' => 124, 'total' => 'PKR 7,650.00', 'payment' => 'Cash', 'status' => 'Paid', 'reason' => 'Wrong mobile covers delivered'],
-            ['number' => 'PUR-1003', 'supplier' => 'Hassan Electronics Wholesale', 'date' => '2026-09-08', 'items' => 72, 'total' => 'PKR 5,500.00', 'payment' => 'Credit', 'status' => 'Pending', 'reason' => 'Screen protectors did not match order'],
-            ['number' => 'PUR-1004', 'supplier' => 'Usman Mobile Traders', 'date' => '2026-09-05', 'items' => 55, 'total' => 'PKR 3,920.00', 'payment' => 'Bank Transfer', 'status' => 'Paid', 'reason' => 'Power banks failed quality check'],
-            ['number' => 'PUR-1005', 'supplier' => 'Al-Madina Mobile Accessories', 'date' => '2026-09-02', 'items' => 98, 'total' => 'PKR 3,500.00', 'payment' => 'Credit', 'status' => 'Pending', 'reason' => 'Quantity was more than ordered'],
-        ];
+        foreach ($items as $item) {
+            $product = Product::whereKey($item['product_id'])->lockForUpdate()->firstOrFail();
+            $variationId = data_get($item, 'variations.0.variation_id', $product->variation_id);
+
+            PurchaseItem::create([
+                'purchase_id' => $purchase->id,
+                'product_id' => $product->id,
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'total_amount' => $item['quantity'] * $item['unit_price'],
+                'variations' => $item['variations'] ?? null,
+            ]);
+
+            $purchase->stockIns()->create([
+                'product_id' => $product->id,
+                'variation_id' => $variationId,
+                'variation_details' => $item['variations'] ?? [],
+                'branch_id' => $purchase->branch_id,
+                'batch_no' => $purchase->purchase_no,
+                'quantity' => $item['quantity'],
+                'remaining_quantity' => $item['quantity'],
+                'cost_price' => $item['unit_price'],
+            ]);
+
+            $product->increment('stock', $item['quantity']);
+        }
+    }
+
+    private function lockPurchaseStockIns(Purchase $purchase)
+    {
+        $productIds = $purchase->stockIns()
+            ->pluck('product_id')
+            ->unique()
+            ->sort();
+
+        foreach ($productIds as $productId) {
+            Product::whereKey($productId)->lockForUpdate()->firstOrFail();
+        }
+
+        return $purchase->stockIns()
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+    }
+
+    private function removePurchaseStock($stockIns): void
+    {
+        foreach ($stockIns->groupBy('product_id') as $productId => $productStockIns) {
+            Product::whereKey($productId)
+                ->firstOrFail()
+                ->decrement('stock', $productStockIns->sum('remaining_quantity'));
+        }
+    }
+
+    private function generatePurchaseNo(): string
+    {
+        $lastId = (int) (Purchase::max('id') ?? 0);
+
+        do {
+            $lastId++;
+            $purchaseNo = 'PUR-' . str_pad($lastId, 5, '0', STR_PAD_LEFT);
+        } while (Purchase::where('purchase_no', $purchaseNo)->exists());
+
+        return $purchaseNo;
     }
 }

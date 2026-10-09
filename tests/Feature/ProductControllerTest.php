@@ -57,6 +57,7 @@ class ProductControllerTest extends TestCase
             'stock' => 10,
             'buying_price' => 100,
             'selling_price' => 150,
+            'condition' => 'used',
         ]);
 
         $response->assertRedirect('/products');
@@ -65,6 +66,7 @@ class ProductControllerTest extends TestCase
         $this->assertDatabaseHas('products', [
             'name' => 'Test Product',
             'code' => 'MANUAL-CODE-123',
+            'condition' => 'used',
         ]);
     }
 
