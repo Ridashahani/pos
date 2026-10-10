@@ -122,7 +122,7 @@
                                     <td>{{ $products->currentPage() * 10 - 10 + $loop->iteration }}</td>
                                     <td>
                                         <img class="avatar-60 rounded"
-                                            src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                                            src="{{ \App\Models\Product::imageUrl($product->image) }}"
                                             alt="{{ $product->name }}">
                                     </td>
                                     <td>{{ $product->name }}</td>

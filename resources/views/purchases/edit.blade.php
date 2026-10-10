@@ -400,7 +400,7 @@
                         @forelse ($products as $product)
                             <div class="pp-product" data-id="{{ $product->id }}" data-name="{{ $product->name }}"
                                 data-price="{{ $product->cost_price }}">
-                                <img src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                                <img src="{{ \App\Models\Product::imageUrl($product->image) }}"
                                     alt="{{ $product->name }}">
                                 <div class="pp-p-name">{{ $product->name }}</div>
                                 <div class="pp-p-price">PKR {{ number_format($product->cost_price, 2) }}</div>
