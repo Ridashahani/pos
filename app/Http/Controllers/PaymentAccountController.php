@@ -12,11 +12,30 @@ class PaymentAccountController extends Controller
 {
     public function index(): View
     {
+        $accountSummaries = PaymentAccount::withCount('transactions')
+            ->withSum('transactions as total_used', 'amount')
+            ->orderBy('name')
+            ->get();
+        $accountTypeStats = collect(['bank', 'jazzcash', 'easypaisa'])->mapWithKeys(
+            function (string $type) use ($accountSummaries): array {
+                $typeAccounts = $accountSummaries->where('type', $type);
+                $openingBalance = $typeAccounts->sum(fn (PaymentAccount $account) => (float) $account->opening_balance);
+                $totalUsed = $typeAccounts->sum(fn (PaymentAccount $account) => (float) ($account->total_used ?? 0));
+
+                return [$type => [
+                    'accounts_count' => $typeAccounts->count(),
+                    'opening_balance' => $openingBalance,
+                    'transactions_count' => $typeAccounts->sum('transactions_count'),
+                    'total_transaction_amount' => $totalUsed,
+                    'current_balance' => $openingBalance - $totalUsed,
+                ]];
+            }
+        );
         $accounts = PaymentAccount::withCount('transactions')
             ->orderBy('name')
             ->paginate(10);
 
-        return view('payment-accounts.index', compact('accounts'));
+        return view('payment-accounts.index', compact('accounts', 'accountSummaries', 'accountTypeStats'));
     }
 
     public function create(): View
