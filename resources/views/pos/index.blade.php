@@ -5,7 +5,6 @@
         // Every product that should appear in the dropdown.
         // Pass $allProducts from the controller (see instructions); falls back to $products.
         $dropdownProducts = $allProducts ?? $products;
-        $cartProductIds = Cart::content()->pluck('id')->map(fn ($id) => (string) $id)->all();
     @endphp
 
     <div class="container-fluid">
@@ -88,11 +87,11 @@
                             </div>
                         </div>
 
-                        <!-- Product multiselect dropdown -->
+                        <!-- Searchable product dropdown: search bar first, all products below it -->
                         <div class="pos-product-picker p-3 border-bottom">
                             <label class="pos-field-label" for="product_multiselect">Products</label>
-                            <select id="product_multiselect" class="form-control" multiple="multiple"
-                                style="width: 100%;">
+                            <select id="product_multiselect" class="form-control" style="width: 100%;">
+                                <option></option>
                                 @foreach ($dropdownProducts as $p)
                                     <option value="{{ $p->id }}"
                                         data-name="{{ $p->name }}"
@@ -100,15 +99,14 @@
                                         data-code="{{ $p->code }}"
                                         data-stock="{{ $p->stock }}"
                                         data-image="{{ \App\Models\Product::imageUrl($p->image) }}"
-                                        @if ($p->stock <= 0) disabled @endif
-                                        @if (in_array((string) $p->id, $cartProductIds, true)) selected @endif>
+                                        @if ($p->stock <= 0) disabled @endif>
                                         {{ $p->name }}@if ($p->code) ({{ $p->code }})@endif
                                     </option>
                                 @endforeach
                             </select>
                             <small class="form-text text-muted">
-                                Select a product to add it to the sale. Remove its tag to take it out. Change
-                                quantities in the table below.
+                                Click the field, type to search by name or code, then pick a product to add it to the
+                                sale. Change quantities or remove products in the table below.
                             </small>
                         </div>
 
@@ -261,13 +259,14 @@
                 }
             });
 
-            // Product multiselect (all available products, searchable by name or code)
+            // Product dropdown: search bar is the first row, all products are listed below it.
+            // Searchable by name or code (the option text is "Name (code)").
             const $products = $('#product_multiselect');
 
             $products.select2({
-                placeholder: 'Search and select products...',
+                placeholder: 'Search and select a product...',
                 width: '100%',
-                closeOnSelect: false,
+                minimumResultsForSearch: 0,     // always show the search bar
                 templateResult: function(option) {
                     if (!option.id || !option.element) return option.text;
                     const d = option.element.dataset;
@@ -283,40 +282,46 @@
                     return $row;
                 },
                 templateSelection: function(option) {
-                    return option.element ? option.element.dataset.name : option.text;
+                    if (!option.id || !option.element) return option.text;
+                    return option.element.dataset.name || option.text;
                 }
+            });
+
+            // Select2 4.1.0-rc.0 + jQuery 3.6+ does not focus the search box on open,
+            // so focus it ourselves and the cashier can type straight away.
+            $(document).on('select2:open', function() {
+                setTimeout(function() {
+                    const field = document.querySelector('.select2-search--dropdown .select2-search__field');
+                    if (field) field.focus();
+                }, 0);
             });
 
             // Picking a product adds it to the cart.
             $products.on('select2:select', function(e) {
                 const d = e.params.data.element.dataset;
-                window.posAddProduct({
+                const product = {
                     id: e.params.data.id,
                     name: d.name,
                     price: d.price,
                     code: d.code || '',
                     image: d.image || ''
-                }).then(window.syncProductSelect);
-            });
+                };
 
-            // Removing a tag removes that product from the cart.
-            $products.on('select2:unselect', function(e) {
-                window.posRemoveItem(e.params.data.id);
+                // Reset the picker right away so the same product can be picked again.
+                setTimeout(window.syncProductSelect, 0);
+
+                window.posAddProduct(product);
             });
 
             window.syncProductSelect();
         });
 
-        // Keep the dropdown tags in step with whatever is actually in the cart
-        // (trash icon, quantity set to 0, completed sale, failed add ...).
+        // The picker is only an "add" control: it is cleared after every pick.
+        // The cart table below is the source of truth for what is in the sale.
         window.syncProductSelect = function() {
             const $products = $('#product_multiselect');
             if (!$products.length || !$products.data('select2')) return;
-            const ids = Array.from(document.querySelectorAll('#cart-sidebar-container tr[data-item-id]'))
-                .map(function(tr) {
-                    return String(tr.dataset.itemId);
-                });
-            $products.val(ids).trigger('change.select2');
+            $products.val(null).trigger('change.select2');
         };
 
         // Helper: Get Selected Customer ID
@@ -503,7 +508,7 @@
                     if (el && v !== undefined) el.value = v;
                 });
                 lastData = null;
-                window.syncProductSelect();       // keep dropdown tags in step with the cart
+                window.syncProductSelect();       // keep the product picker reset
             }
 
             function settle() {
@@ -816,7 +821,7 @@
                         document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
                     }
 
-                    // Clear the product dropdown tags
+                    // Reset the product picker
                     window.syncProductSelect();
 
                     alert('Sale Successful!');
@@ -1045,39 +1050,44 @@
             }
         }
 
-        /* ---------- Product multiselect ---------- */
+        /* ---------- Product dropdown ---------- */
         .pos-product-picker .select2-container {
             width: 100% !important;
         }
 
-        .pos-product-picker .select2-container--default .select2-selection--multiple {
+        .pos-product-picker .select2-container--default .select2-selection--single {
             border: 1px solid #dfe5ec;
             border-radius: 3px;
-            min-height: 38px;
-            padding: 2px 4px;
+            height: 38px;
         }
 
-        .pos-product-picker .select2-container--default.select2-container--focus .select2-selection--multiple {
+        .pos-product-picker .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+
+        .pos-product-picker .select2-container--default.select2-container--focus .select2-selection--single {
             border-color: #2f80ed;
         }
 
-        .pos-product-picker .select2-container--default .select2-selection--multiple .select2-selection__choice {
-            background: #eef4ff;
-            border: 1px solid #b9d5ff;
+        /* search bar = first row of the dropdown */
+        .select2-search--dropdown {
+            padding: 8px;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #dfe5ec;
             border-radius: 3px;
-            color: #2f80ed;
-            font-size: .74rem;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .pos-product-picker .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-            color: #2f80ed;
-        }
-
-        .pos-product-picker .select2-search--inline .select2-search__field {
             font-size: .8rem;
-            margin-top: 6px;
+            padding: 6px 8px;
+        }
+
+        /* taller list so more products are visible at once */
+        .select2-container--default .select2-results > .select2-results__options {
+            max-height: 340px;
         }
 
         /* dropdown rows (the dropdown itself is rendered in <body>) */
