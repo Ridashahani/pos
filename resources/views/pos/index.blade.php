@@ -1,12 +1,6 @@
 @extends('dashboard.body.main')
 
 @section('container')
-    @php
-        // Every product that should appear in the dropdown.
-        // Pass $allProducts from the controller (see instructions); falls back to $products.
-        $dropdownProducts = $allProducts ?? $products;
-    @endphp
-
     <div class="container-fluid">
         <!-- Success Alert -->
         <div class="row">
@@ -87,22 +81,13 @@
                             </div>
                         </div>
 
-                        <!-- Searchable product dropdown: search bar first, all products below it -->
+                        <!-- Searchable product dropdown.
+                             Products are fetched on demand (30 per page, scroll for more),
+                             so no product list is rendered into this page. -->
                         <div class="pos-product-picker p-3 border-bottom">
                             <label class="pos-field-label" for="product_multiselect">Products</label>
                             <select id="product_multiselect" class="form-control" style="width: 100%;">
                                 <option></option>
-                                @foreach ($dropdownProducts as $p)
-                                    <option value="{{ $p->id }}"
-                                        data-name="{{ $p->name }}"
-                                        data-price="{{ $p->selling_price }}"
-                                        data-code="{{ $p->code }}"
-                                        data-stock="{{ $p->stock }}"
-                                        data-image="{{ \App\Models\Product::imageUrl($p->image) }}"
-                                        @if ($p->stock <= 0) disabled @endif>
-                                        {{ $p->name }}@if ($p->code) ({{ $p->code }})@endif
-                                    </option>
-                                @endforeach
                             </select>
                             <small class="form-text text-muted">
                                 Click the field, type to search by name or code, then pick a product to add it to the
@@ -234,10 +219,11 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Initialize Select2 on Load
-        window.addEventListener('load', function() {
+        // DOMContentLoaded (not "load"): "load" waits for every image on the page,
+        // which delayed the dropdown from becoming usable.
+        document.addEventListener('DOMContentLoaded', function() {
             // Customer search (AJAX)
-            $('.select2').select2({
+            $('#customer_id').select2({
                 placeholder: " Select Customer",
                 allowClear: true,
                 width: 'resolve',
@@ -259,31 +245,45 @@
                 }
             });
 
-            // Product dropdown: search bar is the first row, all products are listed below it.
-            // Searchable by name or code (the option text is "Name (code)").
+            // Product dropdown: search bar first, products below it.
+            // Server-side search + pagination (30 per page, scroll for more): the browser
+            // never builds more than a screenful of rows, whatever the catalogue size.
             const $products = $('#product_multiselect');
 
             $products.select2({
                 placeholder: 'Search and select a product...',
                 width: '100%',
                 minimumResultsForSearch: 0,     // always show the search bar
+                ajax: {
+                    url: "{{ route('pos.products.search') }}",
+                    dataType: 'json',
+                    delay: 200,                 // debounce typing
+                    data: function(params) {
+                        return {
+                            term: params.term || '',
+                            page: params.page || 1
+                        };
+                    }
+                    // the endpoint already returns { results: [...], pagination: { more } }
+                },
                 templateResult: function(option) {
-                    if (!option.id || !option.element) return option.text;
-                    const d = option.element.dataset;
+                    if (option.loading || !option.id) return option.text;
                     const $row = $('<span class="pos-opt"></span>');
-                    $row.append($('<img class="pos-opt-thumb" alt="">').attr('src', d.image));
+                    $row.append($('<img class="pos-opt-thumb" alt="" loading="lazy" decoding="async">')
+                        .attr('src', option.image));
                     const $text = $('<span class="pos-opt-text"></span>');
-                    $text.append($('<span class="pos-opt-name"></span>').text(d.name));
-                    const stock = parseInt(d.stock, 10) || 0;
-                    const meta = Number(d.price).toLocaleString('en-US') +
-                        (stock > 0 ? '  |  Stock: ' + stock : '  |  Out of stock');
+                    $text.append($('<span class="pos-opt-name"></span>').text(option.name));
+                    const meta = [
+                        option.code,
+                        Number(option.price).toLocaleString('en-US'),
+                        'Stock: ' + option.stock
+                    ].filter(Boolean).join('  |  ');
                     $text.append($('<small class="pos-opt-meta"></small>').text(meta));
                     $row.append($text);
                     return $row;
                 },
                 templateSelection: function(option) {
-                    if (!option.id || !option.element) return option.text;
-                    return option.element.dataset.name || option.text;
+                    return option.name || option.text;
                 }
             });
 
@@ -296,24 +296,13 @@
                 }, 0);
             });
 
-            // Picking a product adds it to the cart.
+            // Picking a product adds it to the cart. Only the id is sent: the server
+            // reads name / price / image from the database.
             $products.on('select2:select', function(e) {
-                const d = e.params.data.element.dataset;
-                const product = {
-                    id: e.params.data.id,
-                    name: d.name,
-                    price: d.price,
-                    code: d.code || '',
-                    image: d.image || ''
-                };
-
                 // Reset the picker right away so the same product can be picked again.
                 setTimeout(window.syncProductSelect, 0);
-
-                window.posAddProduct(product);
+                window.posAddProduct({ id: e.params.data.id });
             });
-
-            window.syncProductSelect();
         });
 
         // The picker is only an "add" control: it is cleared after every pick.
@@ -324,16 +313,12 @@
             $products.val(null).trigger('change.select2');
         };
 
-        // Helper: Get Selected Customer ID
-        function getCustomerId() {
-            return $('#customer_id').val();
-        }
-
         /* =====================================================================
-         * CART ENGINE (same look as before, only the behaviour is fixed)
+         * CART ENGINE
          * - spinner arrows / typing update the numbers instantly (local maths)
          * - saves are debounced and sent ONE AT A TIME (no lost clicks)
-         * - the cart HTML is only re-rendered when nothing is being edited
+         * - qty / tax / discount saves get a tiny JSON reply (no HTML re-render)
+         * - the cart HTML is only redrawn when rows are added or removed
          * ===================================================================== */
         (function () {
             const container = document.getElementById('cart-sidebar-container');
@@ -418,15 +403,10 @@
 
             /* ---------- one request at a time ---------- */
             let chain = Promise.resolve();
-            let inflight = 0;
-            let lastData = null;
             const timers = new Map();
 
             function enqueue(task) {
-                inflight++;
-                chain = chain.then(task)
-                    .catch(err => console.error(err))
-                    .finally(() => { if (--inflight === 0) settle(); });
+                chain = chain.then(task).catch(err => console.error(err));
                 return chain;
             }
 
@@ -440,15 +420,6 @@
 
             function flushTimers() {
                 [...timers.values()].forEach(x => { clearTimeout(x.t); x.run(); });
-            }
-
-            // rowId changes whenever options change; keep the live DOM pointing at the current ids.
-            function syncRowIds(html) {
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                doc.querySelectorAll('tr[data-item-id]').forEach(n => {
-                    const live = rowFor(n.dataset.itemId);
-                    if (live) live.dataset.rowId = n.dataset.rowId;
-                });
             }
 
             async function saveField(itemId, field) {
@@ -478,19 +449,20 @@
 
                 if (res.ok && data?.success) {
                     input.dataset.saved = value;
-                    // No re-render: the numbers on screen were already calculated locally and
-                    // match the server. Only keep the row ids in sync so later saves hit the right row.
-                    syncRowIds(data.cart_html);
-                    if (field === 'qty' && num(value) === 0) render(data);   // line was removed, redraw once
+                    if (data.cart_html) {
+                        render(data);                      // a line was removed: redraw once
+                    } else if (data.row_id) {
+                        tr.dataset.rowId = data.row_id;    // row id changes when options change
+                    }
                 } else if (data?.cart_html) {
-                    render(data);                         // e.g. 409: row vanished, show the real cart
+                    render(data);                          // e.g. 409: row vanished, show the real cart
                 } else {
-                    input.value = input.dataset.saved;    // validation/server error: roll back
+                    input.value = input.dataset.saved;     // validation/server error: roll back
                     recalcSummary();
                 }
             }
 
-            /* ---------- rendering (only when nothing is being edited) ---------- */
+            /* ---------- rendering (only when rows are added / removed) ---------- */
             const KEEP = ['pay_amount', 'payment_type'];
 
             function render(data) {
@@ -507,14 +479,7 @@
                     const el = document.getElementById(id);
                     if (el && v !== undefined) el.value = v;
                 });
-                lastData = null;
                 window.syncProductSelect();       // keep the product picker reset
-            }
-
-            function settle() {
-                const a = document.activeElement;
-                const editing = a && container.contains(a) && a.matches('input, select');
-                if (inflight === 0 && timers.size === 0 && lastData && !editing) render(lastData);
             }
 
             /* ---------- native spinner arrows: don't leave the input "active" ---------- */
@@ -598,40 +563,40 @@
             });
 
             container.addEventListener('focusout', e => {
-                if (isField(e.target)) {
-                    const input = e.target;
-                    const tr = input.closest('tr');
-                    if (tr && num(input.value) !== num(input.dataset.saved)) {
-                        schedule(tr, fieldOf(input), 150);
-                    }
+                if (!isField(e.target)) return;
+                const input = e.target;
+                const tr = input.closest('tr');
+                if (tr && num(input.value) !== num(input.dataset.saved)) {
+                    schedule(tr, fieldOf(input), 150);
                 }
-                setTimeout(settle, 0);
             });
 
             /* ---------- add to cart ---------- */
+            let adding = 0;
+
             function postAdd(formData) {
                 flushTimers();
-                const cid = getCustomerId();
-                if (cid) formData.append('customer_id', cid);
+                container.classList.add('pos-busy');     // instant visual feedback
+                adding++;
                 return enqueue(async () => {
-                    const res = await fetch("{{ route('pos.addCart') }}", {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                        body: formData,
-                    });
-                    const data = await res.json();
-                    if (data.success) render(data); else alert(data.message || 'Failed to add item');
+                    try {
+                        const res = await fetch("{{ route('pos.addCart') }}", {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: formData,
+                        });
+                        const data = await res.json();
+                        if (data.success) render(data); else alert(data.message || 'Failed to add item');
+                    } finally {
+                        if (--adding === 0) container.classList.remove('pos-busy');
+                    }
                 });
             }
 
-            // Used by the product dropdown.
+            // Used by the product dropdown (only the product id is sent).
             window.posAddProduct = function (p) {
                 const fd = new FormData();
                 fd.append('id', p.id);
-                fd.append('name', p.name);
-                fd.append('price', p.price);
-                fd.append('code', p.code || '');
-                fd.append('image', p.image || '');
                 return postAdd(fd);
             };
 
@@ -974,6 +939,13 @@
             padding: .2rem .35rem;
         }
 
+        /* cart dims slightly while a product is being added */
+        .pos-busy .cart-items-wrapper {
+            opacity: .55;
+            pointer-events: none;
+            transition: opacity .12s;
+        }
+
         /* ---------- Page shell ---------- */
         .pos-shell {
             align-items: flex-start;
@@ -1098,6 +1070,7 @@
         }
 
         .pos-opt-thumb {
+            background: #f1f3f6;
             border-radius: 4px;
             flex: 0 0 34px;
             height: 34px;

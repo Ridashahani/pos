@@ -11,10 +11,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redirect;
+use Gloudemans\Shoppingcart\CartItem;
 use Gloudemans\Shoppingcart\Facades\Cart;
 
 class PosController extends Controller
 {
+    private const PRODUCTS_PER_PAGE = 30;
+
     /**
      * Cart lines in the order they were added.
      * (Gloudemans re-adds a row at the end whenever its options change,
@@ -25,6 +28,10 @@ class PosController extends Controller
         return Cart::content()->sortBy(fn($item) => $item->options->added_at ?? 0);
     }
 
+    /**
+     * Full cart response (re-renders the cart partial).
+     * Only used when the table structure changes: add / remove / missing row.
+     */
     private function cartJson(?string $message = null, int $status = 200)
     {
         return response()->json([
@@ -36,10 +43,24 @@ class PosController extends Controller
     }
 
     /**
+     * Lightweight response for qty / tax / discount edits.
+     * The browser already shows the right numbers (it calculates locally), so all it
+     * needs back is the row's new id: no view rendering, tiny payload.
+     */
+    private function lineJson(CartItem $item)
+    {
+        return response()->json([
+            'success'    => true,
+            'row_id'     => $item->rowId,
+            'cart_count' => Cart::count(),
+        ]);
+    }
+
+    /**
      * Single place that recalculates a cart line, so qty / tax / discount
      * can never disagree with each other.
      */
-    private function applyLine(string $rowId, int $qty, array $options): void
+    private function applyLine(string $rowId, int $qty, array $options): CartItem
     {
         $original = (float) ($options['original_price'] ?? 0);
         $taxRate  = (float) ($options['tax_rate'] ?? 10);
@@ -52,7 +73,8 @@ class PosController extends Controller
         $options['discount'] = $discount;
 
         Cart::setTax($rowId, $taxRate);
-        Cart::update($rowId, [
+
+        return Cart::update($rowId, [
             'qty'     => $qty,
             'price'   => $net / ($qty * (1 + $taxRate / 100)),
             'options' => $options,
@@ -62,24 +84,11 @@ class PosController extends Controller
     /**
      * Display the POS interface.
      *
-     * The product sidebar (search / pagination) is gone: every sellable product
-     * is loaded once and shown in the multiselect dropdown.
+     * Products are NOT loaded here any more: the dropdown fetches them on demand
+     * from searchProducts(), so the page stays light however big the catalogue is.
      */
     public function index(Request $request)
     {
-        $todayDate = Carbon::today();
-
-        // Same rules addCart() enforces: in stock and not expired.
-        // (Products without an expiry date are included.)
-        $allProducts = Product::query()
-            ->where('stock', '>', 0)
-            ->where(function ($query) use ($todayDate) {
-                $query->whereNull('expire_date')
-                    ->orWhereDate('expire_date', '>=', $todayDate);
-            })
-            ->orderBy('name')
-            ->get(['id', 'name', 'code', 'selling_price', 'stock', 'image']);
-
         $user = $request->user();
         $isAdmin = $user->roles()->whereRaw('LOWER(name) = ?', ['admin'])->exists();
         $branches = $isAdmin
@@ -90,7 +99,52 @@ class PosController extends Controller
             'branches' => $branches,
             'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
             'productItem' => $this->cartContent(),
-            'allProducts' => $allProducts,
+        ]);
+    }
+
+    /**
+     * Product search for the Select2 dropdown (AJAX, paginated, 30 per page).
+     * Same sellable rules as before: in stock and not expired.
+     * Exact code matches come first, then names starting with the term, then the rest.
+     */
+    public function searchProducts(Request $request)
+    {
+        $term = trim((string) $request->query('term', ''));
+
+        $query = Product::query()
+            ->where('stock', '>', 0)
+            ->where(function ($q) {
+                $q->whereNull('expire_date')
+                    ->orWhere('expire_date', '>=', Carbon::today());
+            });
+
+        if ($term !== '') {
+            $escaped = addcslashes($term, '\\%_');
+
+            $query->where(function ($q) use ($escaped) {
+                $q->where('name', 'like', "%{$escaped}%")
+                    ->orWhere('code', 'like', "%{$escaped}%");
+            })
+                ->orderByRaw('(code = ?) desc', [$term])
+                ->orderByRaw('(name like ?) desc', [$escaped . '%']);
+        }
+
+        // simplePaginate = one query (LIMIT n+1), no COUNT(*).
+        $products = $query
+            ->orderBy('name')
+            ->simplePaginate(self::PRODUCTS_PER_PAGE, ['id', 'name', 'code', 'selling_price', 'stock', 'image']);
+
+        return response()->json([
+            'results' => $products->getCollection()->map(fn($p) => [
+                'id'    => $p->id,
+                'text'  => $p->name . ($p->code ? " ({$p->code})" : ''),
+                'name'  => $p->name,
+                'code'  => $p->code,
+                'price' => $p->selling_price,
+                'stock' => $p->stock,
+                'image' => Product::imageUrl($p->image),
+            ])->values(),
+            'pagination' => ['more' => $products->hasMorePages()],
         ]);
     }
 
@@ -130,10 +184,10 @@ class PosController extends Controller
 
             $this->applyLine($item->rowId, 1, $item->options->toArray());
         } else {
+            // Only the id is trusted from the browser. Name, price, code and image
+            // always come from the database (a cashier can't tamper with the price).
             $data = $request->validate([
-                'id'    => 'required|numeric',
-                'name'  => 'required|string',
-                'price' => 'required|numeric',
+                'id' => 'required|integer',
             ]);
 
             $product = Product::findOrFail($data['id']);
@@ -141,7 +195,7 @@ class PosController extends Controller
 
             // Adding the same product again increments the existing line.
             $existing = Cart::search(
-                fn($cartItem) => $cartItem->id == $data['id'] && empty($cartItem->options->manual)
+                fn($cartItem) => $cartItem->id == $product->id && empty($cartItem->options->manual)
             )->first();
 
             if ($existing) {
@@ -150,20 +204,21 @@ class PosController extends Controller
                 $this->applyLine($existing->rowId, min($existing->qty + 1, max(1, $stock)), $options);
             } else {
                 $taxRate = (float) ($product->order_tax ?? Setting::get('gst', 0));
+                $price   = (float) $product->selling_price;
 
                 $item = Cart::add([
-                    'id'    => $data['id'],
-                    'name'  => $data['name'],
+                    'id'    => $product->id,
+                    'name'  => $product->name,
                     'qty'   => 1,
-                    'price' => $data['price'],
+                    'price' => $price,
                     'options' => [
                         'size'           => 'large',
-                        'code'           => $request->input('code', 'PRD-' . str_pad($data['id'], 6, '0', STR_PAD_LEFT)),
-                        'image'          => $request->input('image'),
-                        'tax'            => $request->input('tax', 0),
+                        'code'           => $product->code ?: 'PRD-' . str_pad($product->id, 6, '0', STR_PAD_LEFT),
+                        'image'          => $product->image,
+                        'tax'            => 0,
                         'tax_rate'       => $taxRate,
-                        'discount'       => $request->input('discount', 0),
-                        'original_price' => $data['price'],
+                        'discount'       => 0,
+                        'original_price' => $price,
                         'currency'       => $product->currency ?: 'PKR',
                         'stock'          => $stock,
                         'added_at'       => microtime(true),
@@ -210,14 +265,19 @@ class PosController extends Controller
             $options['stock'] = $stock;
         }
 
+        // Line removed (qty 0 or no stock left): the table changes, so send the full cart.
         if ($qty === 0) {
             Cart::remove($rowId);
-        } else {
-            $this->applyLine($rowId, $qty, $options);
+
+            return $request->wantsJson()
+                ? $this->cartJson('Cart has been updated!')
+                : Redirect::back()->with('success', 'Cart has been updated!');
         }
 
+        $line = $this->applyLine($rowId, $qty, $options);
+
         return $request->wantsJson()
-            ? $this->cartJson('Cart has been updated!')
+            ? $this->lineJson($line)
             : Redirect::back()->with('success', 'Cart has been updated!');
     }
 
@@ -235,9 +295,9 @@ class PosController extends Controller
         $options = $item->options->toArray();
         $options['discount'] = (float) $data['discount'];
 
-        $this->applyLine($rowId, max(1, (int) $item->qty), $options);
-
-        return $this->cartJson();
+        return $this->lineJson(
+            $this->applyLine($rowId, max(1, (int) $item->qty), $options)
+        );
     }
 
     public function updateTaxRate(Request $request, string $rowId)
@@ -254,9 +314,9 @@ class PosController extends Controller
         $options = $item->options->toArray();
         $options['tax_rate'] = (float) $data['tax_rate'];
 
-        $this->applyLine($rowId, max(1, (int) $item->qty), $options);
-
-        return $this->cartJson();
+        return $this->lineJson(
+            $this->applyLine($rowId, max(1, (int) $item->qty), $options)
+        );
     }
 
     /**
