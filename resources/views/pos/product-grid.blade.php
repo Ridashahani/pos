@@ -3,7 +3,7 @@
         <div class="col-lg-6 col-md-4 col-sm-6 mb-3">
             <div class="product-card h-100 d-flex flex-column">
                 <div class="image-container">
-                    <img src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                    <img src="{{ \App\Models\Product::imageUrl($product->image) }}"
                         class="product-image" alt="{{ $product->name }}">
 
                     <span class="badge position-absolute shadow-sm"
@@ -29,7 +29,7 @@
                             <input type="hidden" name="price" value="{{ $product->selling_price }}">
                             <input type="hidden" name="code" value="{{ $product->code }}">
                             <input type="hidden" name="image"
-                                value="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}">
+                                value="{{ \App\Models\Product::imageUrl($product->image) }}">
                             <button type="submit"
                                 class="btn btn-primary btn-sm rounded-pill px-1 text-center shadow-sm d-flex align-items-center">
                                 <x-heroicon-o-plus class="w-4 h-4 mr-1" />

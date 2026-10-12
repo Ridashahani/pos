@@ -157,7 +157,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
                                                 <img class="avatar-50 rounded"
-                                                    src="{{ $item->product && $item->product->image ? asset('storage/products/' . $item->product->image) : asset('assets/images/product/default.webp') }}"
+                                                    src="{{ \App\Models\Product::imageUrl($item->product?->image) }}"
                                                     alt="{{ $item->product->name ?? 'Product' }}"
                                                     style="object-fit: cover;">
                                             </td>

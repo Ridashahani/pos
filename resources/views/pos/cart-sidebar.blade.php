@@ -39,7 +39,7 @@
                             $originalPrice = (float) ($options->original_price ?? $item->price);
                             $stock = $options->stock ?? null;
                             $currency = $options->currency ?? 'PKR';
-                            $image = $options->image ?? asset('assets/images/product/default.webp');
+                            $image = \App\Models\Product::imageUrl($options->image ?? null);
                         @endphp
                         @php
                             $gross     = $originalPrice * $item->qty;

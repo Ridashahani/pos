@@ -24,7 +24,7 @@ class PosController extends Controller
      */
     private function cartContent()
     {
-        return Cart::content()->sortBy(fn ($item) => $item->options->added_at ?? 0);
+        return Cart::content()->sortBy(fn($item) => $item->options->added_at ?? 0);
     }
 
     private function cartJson(?string $message = null, int $status = 200)
@@ -84,7 +84,7 @@ class PosController extends Controller
             ->allowedFilters(['name', 'category_id'])
             ->filter($request->only(['search', 'category_id']))
             ->orderBy('products.id')
-            ->when($search === '', fn ($query) => $query->whereIn('products.id', []))
+            ->when($search === '', fn($query) => $query->whereIn('products.id', []))
             ->paginate($row)
             ->appends($request->query());
 
@@ -107,7 +107,7 @@ class PosController extends Controller
             'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
             'productItem' => $this->cartContent(),
             'products' => QueryBuilder::for(Product::class)
-                ->whereHas('stockIns', fn ($query) => $query->where('remaining_quantity', '>', 0))
+                ->whereHas('stockIns', fn($query) => $query->where('remaining_quantity', '>', 0))
                 ->where('expire_date', '>', $todayDate)
                 ->allowedSorts(['name', 'selling_price'])
                 ->allowedFilters(['name', 'category_id'])
@@ -165,7 +165,7 @@ class PosController extends Controller
 
             // Adding the same product again increments the existing line.
             $existing = Cart::search(
-                fn ($cartItem) => $cartItem->id == $data['id'] && empty($cartItem->options->manual)
+                fn($cartItem) => $cartItem->id == $data['id'] && empty($cartItem->options->manual)
             )->first();
 
             if ($existing) {

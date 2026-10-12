@@ -21,7 +21,7 @@
             <div class="card-body">
                 <div class="row align-items-center mb-4">
                     <div class="col-md-3 text-center mb-3 mb-md-0">
-                        <img src="{{ $purchaseItem->product->image ? asset('assets/images/product/' . $purchaseItem->product->image) : asset('assets/images/product/default.webp') }}"
+                        <img src="{{ \App\Models\Product::imageUrl($purchaseItem->product?->image) }}"
                             alt="{{ $purchaseItem->product->name }}" class="img-fluid rounded"
                             style="max-height: 180px; object-fit: contain;">
                     </div>

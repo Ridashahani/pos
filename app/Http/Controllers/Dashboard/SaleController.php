@@ -174,7 +174,7 @@ class SaleController extends Controller
         ]);
     }
 
-    /**
+    /**s
      * Update the specified sale resource status in storage.
      */
     public function updateStatus(Request $request)

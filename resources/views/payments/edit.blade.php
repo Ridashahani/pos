@@ -1,13 +1,22 @@
 @extends('dashboard.body.main')
 
 @section('container')
+<style>
+    .payment-page-title {
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-lg-12">
             <div class="card card-block card-stretch card-height">
                 <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
-                    <h4 class="card-title mb-0">Edit Payment Transaction</h4>
-                    <a href="{{ route('payments.index') }}" class="btn btn-light btn-sm"><x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back</a>
+                    <h4 class="card-title payment-page-title mb-0">Edit Payment Transaction</h4>
+                    <a href="{{ route('payments.index') }}" class="btn btn-light btn-sm">
+                        <x-heroicon-o-arrow-left class="w-4 h-4 mr-1" /> Back
+                    </a>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('payments.update', $payment) }}" method="POST">
@@ -31,26 +40,32 @@
                                 </select>
                                 @error('payment_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+
                             <div class="form-group col-md-6">
+                                <label>Transaction ID</label>
+                                <input class="form-control" value="{{ $payment->transaction_id }}" readonly>
+                            </div>
+                            <div class="form-group col-md-6 send-money-field">
                                 <label for="customer_name">Customer Name <span class="text-danger">*</span></label>
                                 <input id="customer_name" name="customer_name" value="{{ old('customer_name', $payment->customer_name) }}" class="form-control @error('customer_name') is-invalid @enderror" required>
                                 @error('customer_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-6 send-money-field">
                                 <label for="customer_phone">Customer Phone</label>
-                                <input id="customer_phone" name="customer_phone" value="{{ old('customer_phone', $payment->customer_phone) }}" class="form-control @error('customer_phone') is-invalid @enderror">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="30" id="customer_phone" name="customer_phone" value="{{ old('customer_phone', $payment->customer_phone) }}" class="form-control @error('customer_phone') is-invalid @enderror">
                                 @error('customer_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="form-group col-md-6">
+                            <div class="form-group col-md-6 send-money-field">
                                 <label for="recipient_name">Recipient Name</label>
                                 <input id="recipient_name" name="recipient_name" value="{{ old('recipient_name', $payment->recipient_name) }}" class="form-control @error('recipient_name') is-invalid @enderror">
                                 @error('recipient_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="transaction_date">Transaction Date <span class="text-danger">*</span></label>
-                                <input type="datetime-local" id="transaction_date" name="transaction_date" value="{{ old('transaction_date', $payment->transaction_date->format('Y-m-d\TH:i')) }}" class="form-control @error('transaction_date') is-invalid @enderror" required>
-                                @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <div class="form-group col-md-6 send-money-field">
+                                <label for="recipient_phone">Recipient Phone</label>
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="30" id="recipient_phone" name="recipient_phone" value="{{ old('recipient_phone', $payment->recipient_phone) }}" class="form-control @error('recipient_phone') is-invalid @enderror">
+                                @error('recipient_phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
+
                             <div class="form-group col-md-6">
                                 <label for="amount">Amount <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" min="0.01" id="amount" name="amount" value="{{ old('amount', $payment->amount) }}" class="form-control @error('amount') is-invalid @enderror" required>
@@ -61,11 +76,11 @@
                                 <input type="number" step="0.01" min="0" id="commission" name="commission" value="{{ old('commission', $payment->commission) }}" class="form-control @error('commission') is-invalid @enderror" required>
                                 @error('commission') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                          
-                            <div class="form-group col-md-12">
-                                <label for="description">Description</label>
-                                <textarea id="description" name="description" rows="3" class="form-control @error('description') is-invalid @enderror">{{ old('description', $payment->description) }}</textarea>
-                                @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                            <div class="form-group col-md-6">
+                                <label>Transaction Date</label>
+                                <input class="form-control" value="{{ $payment->transaction_date->format('d M Y, h:i A') }}" readonly>
+                                <small class="text-muted">Automatically updates to the current date and time when saved.</small>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary mr-2"><x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Update</button>
@@ -76,4 +91,35 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const transactionType = document.getElementById('type');
+        const withdrawalFields = document.querySelectorAll('.transaction-withdrawal-field');
+        const sendMoneyFields = document.querySelectorAll('.send-money-field');
+        const phoneFields = document.querySelectorAll('#customer_phone, #recipient_phone');
+
+        phoneFields.forEach(function (field) {
+            field.addEventListener('input', function () {
+                field.value = field.value.replace(/[^0-9]/g, '');
+            });
+        });
+
+        function updateTransactionFields() {
+            const isWithdrawal = transactionType.value === 'withdrawal';
+            withdrawalFields.forEach(function (field) {
+                field.classList.toggle('d-none', !isWithdrawal);
+            });
+            sendMoneyFields.forEach(function (field) {
+                field.classList.toggle('d-none', isWithdrawal);
+                field.querySelectorAll('input').forEach(function (input) {
+                    input.disabled = isWithdrawal;
+                    input.required = isWithdrawal && input.name === 'customer_name';
+                });
+            });
+        }
+
+        transactionType.addEventListener('change', updateTransactionFields);
+        updateTransactionFields();
+    });
+</script>
 @endsection

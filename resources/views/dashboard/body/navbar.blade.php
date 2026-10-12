@@ -10,6 +10,7 @@
                     <h5 class="logo-title ml-3">POSDash</h5>
                 </a>
             </div>
+            {{-- Search Bar --}}
             <div class="iq-search-bar device-search">
                 <form action="#" class="searchbox">
                     <a class="search-link" href="#">

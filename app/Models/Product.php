@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -59,6 +60,33 @@ class Product extends Model
         $taxRate = (float) ($this->gst_tax ?? 0);
 
         return round($price * (1 + ($taxRate / 100)), 2);
+    }
+
+    public static function imageUrl(?string $image = null): string
+    {
+        $defaultUrl = asset('assets/images/product/default.webp');
+
+        if (empty($image)) {
+            return $defaultUrl;
+        }
+
+        if (preg_match('#^https?://#i', $image)) {
+            return $image;
+        }
+
+        $fileName = basename($image);
+        $storedPath = storage_path('app/public/products/' . $fileName);
+
+        if (file_exists($storedPath)) {
+            return asset('storage/products/' . $fileName);
+        }
+
+        $assetPath = public_path('assets/images/product/' . $fileName);
+        if (file_exists($assetPath)) {
+            return asset('assets/images/product/' . $fileName);
+        }
+
+        return $defaultUrl;
     }
 
     public function category(){
