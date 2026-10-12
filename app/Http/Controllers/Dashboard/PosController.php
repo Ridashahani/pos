@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use Carbon\Carbon;
 use App\Models\Branch;
-use App\Models\Category;
 use App\Models\Product;
 use App\Models\Customer;
 use App\Models\Setting;
@@ -13,7 +12,6 @@ use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redirect;
 use Gloudemans\Shoppingcart\Facades\Cart;
-use Spatie\QueryBuilder\QueryBuilder;
 
 class PosController extends Controller
 {
@@ -63,37 +61,24 @@ class PosController extends Controller
 
     /**
      * Display the POS interface.
+     *
+     * The product sidebar (search / pagination) is gone: every sellable product
+     * is loaded once and shown in the multiselect dropdown.
      */
     public function index(Request $request)
     {
         $todayDate = Carbon::today();
-        $row = (int) $request->input('row', 10);
-        $search = trim((string) $request->input('search', ''));
 
-        if ($row < 1 || $row > 100) {
-            abort(400, 'The per-page parameter must be an integer between 1 and 100.');
-        }
-
-        $products = QueryBuilder::for(Product::class)
-            ->where('products.stock', '>', 0)
+        // Same rules addCart() enforces: in stock and not expired.
+        // (Products without an expiry date are included.)
+        $allProducts = Product::query()
+            ->where('stock', '>', 0)
             ->where(function ($query) use ($todayDate) {
                 $query->whereNull('expire_date')
                     ->orWhereDate('expire_date', '>=', $todayDate);
             })
-            ->allowedSorts(['name', 'selling_price'])
-            ->allowedFilters(['name', 'category_id'])
-            ->filter($request->only(['search', 'category_id']))
-            ->orderBy('products.id')
-            ->when($search === '', fn($query) => $query->whereIn('products.id', []))
-            ->paginate($row)
-            ->appends($request->query());
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'html' => view('pos.product-grid', compact('products'))->render(),
-                'total' => $products->total(),
-            ]);
-        }
+            ->orderBy('name')
+            ->get(['id', 'name', 'code', 'selling_price', 'stock', 'image']);
 
         $user = $request->user();
         $isAdmin = $user->roles()->whereRaw('LOWER(name) = ?', ['admin'])->exists();
@@ -102,19 +87,10 @@ class PosController extends Controller
             : $user->branches()->where('branches.status', 'Active')->orderBy('branches.name')->get();
 
         return view('pos.index', [
-            'categories' => Category::orderBy('name')->get(),
             'branches' => $branches,
             'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
             'productItem' => $this->cartContent(),
-            'products' => QueryBuilder::for(Product::class)
-                ->whereHas('stockIns', fn($query) => $query->where('remaining_quantity', '>', 0))
-                ->where('expire_date', '>', $todayDate)
-                ->allowedSorts(['name', 'selling_price'])
-                ->allowedFilters(['name', 'category_id'])
-                ->filter(request(['search', 'category_id']))
-                ->orderBy('products.id')
-                ->paginate($row)
-                ->appends(request()->query()),
+            'allProducts' => $allProducts,
         ]);
     }
 
