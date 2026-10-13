@@ -379,6 +379,10 @@
                 set('.pos-summary-price', currency + ' ' + fmt(t.price));
                 set('.pos-summary-tax', currency + ' ' + fmt(t.tax));
                 set('.pos-summary-discount', currency + ' ' + fmt(t.discount));
+                // const footerRate = container.querySelector('.pos-footer-tax-rate');
+                // if (footerRate) footerRate.textContent = fmt(t.price > 0 ? (t.tax / t.price) * 100 : 0) + '%';
+                const footerDiscount = container.querySelector('.pos-footer-discount');
+                if (footerDiscount) footerDiscount.textContent = currency + ' ' + fmt(t.discount);
                 const total = document.getElementById('cart-total');
                 if (total) {
                     total.dataset.total = t.net;
