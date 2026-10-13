@@ -129,15 +129,12 @@
                     <h4 class="payment-page-title mb-2">Payments</h4>
                     <p class="mb-0 text-muted">Money transfer &amp; cash withdrawal transactions.</p>
                 </div>
-                <div class="mt-3 mt-md-0">
-                    @can('access.payments')
-                        <a href="{{ route('payment-accounts.index') }}" class="btn btn-light mr-2">Manage Accounts</a>
-                    @endcan
-                    @can('create.payments')
-                        <a href="{{ route('payments.create') }}" class="btn btn-primary add-list">
-                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Transaction
-                        </a>
-                    @endcan
+                <div class="payments-page-actions mt-3 mt-md-0">
+                    <a href="{{ route('payment-accounts.index') }}" class="btn btn-light">Manage Accounts</a>
+                    <a href="#fund-transfer" class="btn btn-success">Fund Transfer</a>
+                    <a href="{{ route('payments.create') }}" class="btn btn-primary add-list">
+                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Transaction
+                    </a>
                 </div>
             </div>
         </div>
@@ -149,6 +146,15 @@
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <x-heroicon-o-x-mark class="w-5 h-5" />
                 </button>
+            </div>
+            @endif
+            @if ($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0 pl-3">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
             @endif
         </div>
@@ -216,9 +222,9 @@
                         <table class="table module-table mb-0">
                             <thead class="bg-primary">
                                 <tr>
-                                    <th>Transaction ID</th>
-                                    <th>Customer / Phone</th>
-                                    <th>Recipient / Phone</th>
+                                    <th>Transaction IDs</th>
+                                    <th>Customer Name Phone No</th>
+                                    <th>Recipient Name Phone No</th>
                                     <th>Transaction Type</th>
                                     <th>Account</th>
                                     <th>Amount</th>
@@ -278,6 +284,124 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-12">
+            <div class="card card-block card-stretch card-height">
+                <div class="card-header">
+                    <h5 class="mb-0">Transfer Funds Between Accounts</h5>
+                </div>
+                <div class="card-body">
+                    @if ($accounts->count() < 2)
+                    <div class="alert alert-warning mb-0">
+                        At least two active payment accounts are required to transfer funds.
+                    </div>
+                    @else
+                    <form action="{{ route('payment-transfers.store') }}" method="POST">
+                        @csrf
+                        <div class="row">
+                            <div class="form-group col-md-4">
+                                <label for="from_payment_account_id">From Account <span class="text-danger">*</span></label>
+                                <select id="from_payment_account_id" name="from_payment_account_id" class="form-control @error('from_payment_account_id') is-invalid @enderror" required>
+                                    <option value="">Select Account</option>
+                                    @foreach ($accounts as $account)
+                                    <option value="{{ $account->id }}" @selected(old('from_payment_account_id') == $account->id)>
+                                        {{ $account->name }} (Rs {{ number_format($account->available_balance, 2) }})
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('from_payment_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="to_payment_account_id">To Account <span class="text-danger">*</span></label>
+                                <select id="to_payment_account_id" name="to_payment_account_id" class="form-control @error('to_payment_account_id') is-invalid @enderror" required>
+                                    <option value="">Select Account</option>
+                                    @foreach ($accounts as $account)
+                                    <option value="{{ $account->id }}" @selected(old('to_payment_account_id') == $account->id)>
+                                        {{ $account->name }} (Rs {{ number_format($account->available_balance, 2) }})
+                                    </option>
+                                    @endforeach
+                                </select>
+                                @error('to_payment_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="transfer_amount">Amount <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0.01" id="transfer_amount" name="amount" value="{{ old('amount') }}" class="form-control @error('amount') is-invalid @enderror" required>
+                                @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="form-group col-md-2">
+                                <label for="transfer_note">Note</label>
+                                <input id="transfer_note" name="note" value="{{ old('note') }}" class="form-control @error('note') is-invalid @enderror" maxlength="255">
+                                @error('note') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Transfer Funds</button>
+                    </form>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="card card-block card-stretch card-height">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Fund Transfers</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive rounded">
+                        <table class="table module-table mb-0">
+                            <thead class="bg-primary">
+                                <tr>
+                                    <th>From Account</th>
+                                    <th>To Account</th>
+                                    <th>Amount</th>
+                                    <th>Date &amp; Time</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($transfers as $transfer)
+                                <tr>
+                                    <td>{{ $transfer->fromAccount->name ?? '—' }}</td>
+                                    <td>{{ $transfer->toAccount->name ?? '—' }}</td>
+                                    <td class="text-nowrap"><strong>Rs {{ number_format($transfer->amount, 2) }}</strong></td>
+                                    <td>{{ $transfer->transfer_date->timezone(config('app.timezone'))->format('d M Y, h:i A') }}</td>
+                                    <td>{{ $transfer->note ?: '—' }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">No fund transfers found.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ $transfers->links() }}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fromAccount = document.getElementById('from_payment_account_id');
+        const toAccount = document.getElementById('to_payment_account_id');
+
+        if (!fromAccount || !toAccount) {
+            return;
+        }
+
+        function updateDestinationAccounts() {
+            Array.from(toAccount.options).forEach(function (option) {
+                option.disabled = option.value !== '' && option.value === fromAccount.value;
+            });
+
+            if (toAccount.value === fromAccount.value) {
+                toAccount.value = '';
+            }
+        }
+
+        fromAccount.addEventListener('change', updateDestinationAccounts);
+        updateDestinationAccounts();
+    });
+</script>
 @endsection

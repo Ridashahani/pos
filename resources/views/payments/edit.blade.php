@@ -35,7 +35,7 @@
                                 <label for="payment_account_id">Payment Account <span class="text-danger">*</span></label>
                                 <select id="payment_account_id" name="payment_account_id" class="form-control @error('payment_account_id') is-invalid @enderror" required>
                                     @foreach ($accounts as $account)
-                                    <option value="{{ $account->id }}" @selected(old('payment_account_id', $payment->payment_account_id) == $account->id)>{{ $account->name }} (Rs {{ number_format($account->balance, 0) }})</option>
+                                    <option value="{{ $account->id }}" @selected(old('payment_account_id', $payment->payment_account_id) == $account->id)>{{ $account->name }} (Rs {{ number_format($account->available_balance, 0) }})</option>
                                     @endforeach
                                 </select>
                                 @error('payment_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
