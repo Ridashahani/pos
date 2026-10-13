@@ -88,6 +88,7 @@
                                         <x-heroicon-o-tag class="w-4 h-4" /><span>Brands</span>
                                     </a>
                                 </li>
+                                
                             @elsecan('create.categories')
                                 <li class="{{ Request::is('categories/create') ? 'active' : '' }}">
                                     <a href="{{ route('categories.create') }}">
@@ -343,14 +344,14 @@
                     </li>
                 @endcan
 
-                @can('database.menu')
+                {{-- @can('database.menu')
                     <li class="{{ Request::is('database/backup*') ? 'active' : '' }}">
                         <a href="{{ route('backup.index') }}" class="svg-icon">
                             <x-heroicon-o-circle-stack class="w-6 h-6" />
                             <span class="ml-3">Backup Database</span>
                         </a>
                     </li>
-                @endcan
+                @endcan --}}
             </ul>
         </nav>
         <div class="p-3"></div>
