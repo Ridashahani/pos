@@ -152,7 +152,7 @@
                 readonly>
         </div> -->
     <!-- </div> -->
-    <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
+    <div class="d-flex justify-content-between align-items-center pt-2 mt-1">
         <span class="font-weight-bold">Grand Total</span>
         <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
             {{ number_format($cartGrandTotal, 2) }}</span>
