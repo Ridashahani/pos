@@ -47,31 +47,6 @@
                                 </li>
                             @endcan
 
-                            @can('access.products')
-                                <li class="{{ Request::is('variations*') ? 'active' : '' }}">
-                                    <a href="{{ route('variations.index') }}">
-                                        <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
-                                    </a>
-                                </li>
-                            @endcan
-
-                            @can('access.products')
-                                <li class="{{ Request::is('units*') ? 'active' : '' }}">
-                                    <a href="{{ route('units.index') }}">
-                                        <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
-                                    </a>
-                                </li>
-                            @endcan
-
-                            @can('create.products')
-                                <li
-                                    class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
-                                    <a href="{{ route('products.create') }}">
-                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
-                                    </a>
-                                </li>
-                            @endcan
-
                             @can('access.categories')
                                 <li class="{{ Request::is('categories*') ? 'active' : '' }}">
                                     <a href="{{ route('categories.index') }}">
@@ -88,11 +63,20 @@
                                         <x-heroicon-o-tag class="w-4 h-4" /><span>Brands</span>
                                     </a>
                                 </li>
-                                
-                            @elsecan('create.categories')
-                                <li class="{{ Request::is('categories/create') ? 'active' : '' }}">
-                                    <a href="{{ route('categories.create') }}">
-                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Create Category</span>
+                            @endcan
+
+                              @can('access.products')
+                                <li class="{{ Request::is('variations*') ? 'active' : '' }}">
+                                    <a href="{{ route('variations.index') }}">
+                                        <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
+                                    </a>
+                                </li>
+                            @endcan
+
+                            @can('access.products')
+                                <li class="{{ Request::is('units*') ? 'active' : '' }}">
+                                    <a href="{{ route('units.index') }}">
+                                        <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
                                     </a>
                                 </li>
                             @endcan
@@ -149,13 +133,7 @@
                                     </a>
                                 </li>
                             @endcan
-                            @can('create.sales')
-                                <li class="{{ Request::is('purchases/create') ? 'active' : '' }}">
-                                    <a href="{{ route('purchases.create') }}">
-                                        <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Purchase</span>
-                                    </a>
-                                </li>
-                            @endcan
+                           
                             @can('access.sales')
                                 <li class="{{ Request::is('purchases/returns') ? 'active' : '' }}">
                                     <a href="{{ route('purchases.returns') }}">
