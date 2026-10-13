@@ -22,6 +22,7 @@ use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\Dashboard\UnitController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentAccountController;
+use App\Http\Controllers\PaymentTransferController;
 use App\Http\Controllers\BranchSelectionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserBranchController;
@@ -150,7 +151,10 @@ Route::resource('branches', BranchController::class);
 Route::resource('expenses', ExpenseController::class);
 // Payments
 Route::middleware(['permission:access.payments'])->group(function () {
+    Route::post('/payment-accounts/{paymentAccount}/daily-opening-balance', [PaymentAccountController::class, 'storeDailyOpeningBalance'])
+        ->name('payment-accounts.daily-opening-balance');
     Route::resource('payment-accounts', PaymentAccountController::class)->except(['show']);
+    Route::post('/payments/transfers', [PaymentTransferController::class, 'store'])->name('payment-transfers.store');
     Route::resource('payments', PaymentController::class);
 });
 // privacy policy and terms of use of service

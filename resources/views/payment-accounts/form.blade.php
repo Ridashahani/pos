@@ -24,11 +24,13 @@
         <input id="holder_name" name="holder_name" value="{{ old('holder_name', $account->holder_name ?? '') }}" class="form-control @error('holder_name') is-invalid @enderror">
         @error('holder_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
+    @if ($account)
     <div class="form-group col-md-6">
         <label for="opening_balance">Opening Balance <span class="text-danger">*</span></label>
         <input type="number" step="0.01" min="0" id="opening_balance" name="opening_balance" value="{{ old('opening_balance', $account->opening_balance ?? 0) }}" class="form-control no-spinner @error('opening_balance') is-invalid @enderror" required>
         @error('opening_balance') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
+    @endif
     <div class="form-group col-md-6">
         <label for="status">Status <span class="text-danger">*</span></label>
         <select id="status" name="status" class="form-control @error('status') is-invalid @enderror" required>
