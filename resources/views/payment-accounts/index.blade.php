@@ -106,6 +106,7 @@
                 <div class="payment-type-stats-metrics">
                     <span>Previous Balance <strong>Rs {{ number_format($stats['previous_balance'], 0) }}</strong></span>
                     <span>Today's Opening <strong>Rs {{ number_format($stats['opening_balance'], 0) }}</strong></span>
+                    <span>Today's Balance <strong>Rs {{ number_format($stats['today_balance'], 0) }}</strong></span>
                     <span>Transactions <strong>{{ number_format($stats['transactions_count']) }}</strong></span>
                     <span>Transactions Amount <strong>Rs {{ number_format($stats['total_transaction_amount'], 0) }}</strong></span>
                     <span>Transfers In / Out <strong>Rs {{ number_format($stats['total_transferred_in'], 0) }} / {{ number_format($stats['total_transferred_out'], 0) }}</strong></span>
@@ -225,7 +226,7 @@
                         <th>Account Number</th>
                         <th>Previous Balance</th>
                         <th>Add Today's Balance</th>
-                        <th>Today's Opening Balance</th>
+                        <th>Today's Balance</th>
                         <th>Transactions</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -256,7 +257,7 @@
                             </form>
                             @error('opening_balance') <small class="text-danger">{{ $message }}</small> @enderror
                         </td>
-                        <td>Rs {{ number_format($accountRow->today_opening_balance, 2) }}</td>
+                        <td>Rs {{ number_format($accountRow->available_balance, 2) }}</td>
                         <td>{{ $accountRow->transactions_count }}</td>
                         <td>
                             <span class="badge {{ $accountRow->status === 'active' ? 'badge-success' : 'badge-secondary' }}">

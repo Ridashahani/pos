@@ -23,6 +23,7 @@ class PaymentAccountController extends Controller
             ->get();
         $accountSummaries->each(function (PaymentAccount $account) use ($today): void {
             $account->setAttribute('today_opening_balance', $account->dailyOpeningBalanceForDate($today) / 100);
+            $account->setAttribute('available_balance', $account->calculatedBalanceInMinorUnits(null, $today) / 100);
         });
         $accountTypeStats = collect(['bank', 'jazzcash', 'easypaisa'])->mapWithKeys(
             function (string $type) use ($accountSummaries): array {
@@ -35,6 +36,7 @@ class PaymentAccountController extends Controller
                     'accounts_count' => $typeAccounts->count(),
                     'previous_balance' => $typeAccounts->sum('previous_balance'),
                     'opening_balance' => $typeAccounts->sum('today_opening_balance'),
+                    'today_balance' => $typeAccounts->sum('available_balance'),
                     'transactions_count' => $typeAccounts->sum('transactions_count'),
                     'total_transaction_amount' => $totalUsed,
                     'total_transferred_out' => $transferredOut,
@@ -51,6 +53,10 @@ class PaymentAccountController extends Controller
             $account->setAttribute(
                 'today_opening_balance',
                 $account->dailyOpeningBalanceForDate($today) / 100
+            );
+            $account->setAttribute(
+                'available_balance',
+                $account->calculatedBalanceInMinorUnits(null, $today) / 100
             );
             $account->setAttribute('opening_balance_addition', $account->openingBalanceSuggestionForDate($today) / 100);
         });
