@@ -13,7 +13,8 @@ class InventoryService
     public function sell(Sale $sale, SaleDetails $detail): void
     {
         $remaining = (int) $detail->quantity;
-        $discountPerUnit = $remaining > 0 ? (float) $detail->discount / $remaining : 0;
+        $discountValue = (float) ($detail->discount ?? 0);
+        $discountPerUnit = $remaining > 0 ? $discountValue / $remaining : 0;
 
         $stockRows = StockIn::where('product_id', $detail->product_id)
             ->where('remaining_quantity', '>', 0)
