@@ -135,6 +135,7 @@ class SaleController extends Controller
                     'product_id' => $content->id,
                     'quantity'   => $content->qty,
                     'unit_price' => $unitPrice,
+                    'discount'   => $lineDiscount,
                     'total'      => max(0, ($unitPrice * $content->qty) + $lineTax - $lineDiscount),
                 ]);
             }
@@ -198,7 +199,7 @@ class SaleController extends Controller
             }
         });
 
-        return Redirect::route('sale.pendingSales')->with('success', 'Sale has been completed!');
+        return Redirect::route('sale.completeSales')->with('success', 'Sale has been completed!');
     }
     public function returnSale(Sale $sale)
     {

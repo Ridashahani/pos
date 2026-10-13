@@ -174,6 +174,72 @@ class PosControllerTest extends TestCase
         $this->assertDatabaseHas('sales', ['branch_id' => $branch->id]);
     }
 
+    public function test_pending_sale_can_be_completed_and_marked_as_completed(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'edit.sales'],
+            ['group_name' => 'sales']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+
+        $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'Sale Completion Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $customer = Customer::factory()->create();
+        $category = $this->createCategory();
+        $product = Product::create([
+            'name' => 'Completion Product',
+            'slug' => 'completion-product',
+            'code' => 'COMPLETE-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'cost_price' => 40,
+            'selling_price' => 50,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
+        ]);
+
+        $stockIn = \App\Models\StockIn::create([
+            'product_id' => $product->id,
+            'quantity' => 5,
+            'remaining_quantity' => 5,
+            'cost_price' => 40,
+            'batch_no' => 'BATCH-001',
+            'branch_id' => $branch->id,
+        ]);
+
+        $sale = \App\Models\Sale::create([
+            'customer_id' => $customer->id,
+            'branch_id' => $branch->id,
+            'user_id' => $user->id,
+            'invoice_no' => 'INV-TEST-001',
+            'sale_date' => Carbon::now(),
+            'status' => 'pending',
+            'subtotal' => 100,
+            'discount' => 0,
+            'tax' => 0,
+            'grand_total' => 100,
+            'paid_amount' => 0,
+            'due_amount' => 100,
+            'payment_method' => 'Cash',
+        ]);
+
+        \App\Models\SaleDetails::create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 50,
+            'total' => 100,
+        ]);
+
+        $response = $this->actingAs($user)->put('/sales/update/status', ['id' => $sale->id]);
+
+        $response->assertRedirect(route('sale.completeSales'));
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'status' => 'completed']);
+        $this->assertDatabaseHas('sold_items', ['sale_id' => $sale->id, 'product_id' => $product->id, 'status' => 'sold']);
+        $this->assertDatabaseHas('stock_in', ['id' => $stockIn->id, 'remaining_quantity' => 3]);
+    }
+
     public function test_pos_product_results_keep_a_stable_order(): void
     {
         $user = $this->createAuthenticatedUser();
