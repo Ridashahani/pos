@@ -126,6 +126,8 @@ Route::middleware(['permission:access.pos'])->group(function () {
     Route::get('/pos/delete/{rowId}', [PosController::class, 'deleteCart'])->name('pos.deleteCart');
     Route::post('/pos/customer', [PosController::class, 'storeCustomer'])->name('pos.storeCustomer');
     Route::get('/pos/customers-ajax', [PosController::class, 'searchCustomers'])->name('pos.customers.search');
+    Route::get('pos/products/search', [PosController::class, 'searchProducts'])
+    ->name('pos.products.search');
 
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
     // Create Sale

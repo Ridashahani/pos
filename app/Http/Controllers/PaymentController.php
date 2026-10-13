@@ -54,12 +54,21 @@ class PaymentController extends Controller
     {
         $data = $request->validated();
 
+        if ($data['type'] === 'withdrawal') {
+            $data['customer_name'] = null;
+            $data['customer_phone'] = null;
+            $data['recipient_name'] = null;
+            $data['recipient_phone'] = null;
+        }
+
         DB::transaction(function () use ($data) {
             $account = PaymentAccount::whereKey($data['payment_account_id'])
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $data['transaction_id'] = $this->generateTransactionId($account);
             $this->ensureSufficientBalance($account, $data['amount']);
+            $data['transaction_date'] = now();
             PaymentTransaction::create($data);
             $this->refreshAccountBalance($account);
         });
@@ -95,6 +104,13 @@ class PaymentController extends Controller
     {
         $data = $request->validated();
 
+        if ($data['type'] === 'withdrawal') {
+            $data['customer_name'] = null;
+            $data['customer_phone'] = null;
+            $data['recipient_name'] = null;
+            $data['recipient_phone'] = null;
+        }
+
         DB::transaction(function () use ($data, $payment) {
             $lockedPayment = PaymentTransaction::whereKey($payment->id)
                 ->lockForUpdate()
@@ -114,11 +130,17 @@ class PaymentController extends Controller
                 abort(404);
             }
 
+            $expectedIdLength = $this->transactionIdLengthForAccount($account);
+            if (strlen((string) $lockedPayment->transaction_id) !== $expectedIdLength) {
+                $data['transaction_id'] = $this->generateTransactionId($account);
+            }
+
             $excludeTransactionId = $lockedPayment->payment_account_id == $account->id
                 ? $lockedPayment->id
                 : null;
 
             $this->ensureSufficientBalance($account, $data['amount'], $excludeTransactionId);
+            $data['transaction_date'] = now();
             $lockedPayment->update($data);
 
             foreach ($accounts as $affectedAccount) {
@@ -187,5 +209,23 @@ class PaymentController extends Controller
         [$whole, $fraction] = array_pad(explode('.', (string) $amount, 2), 2, '');
 
         return ((int) $whole * 100) + (int) str_pad($fraction, 2, '0');
+    }
+
+    private function generateTransactionId(PaymentAccount $account): string
+    {
+        $length = $this->transactionIdLengthForAccount($account);
+        $minimum = 10 ** ($length - 1);
+        $maximum = (10 ** $length) - 1;
+
+        do {
+            $transactionId = 'TXN-' . random_int($minimum, $maximum);
+        } while (PaymentTransaction::where('transaction_id', $transactionId)->exists());
+
+        return $transactionId;
+    }
+
+    private function transactionIdLengthForAccount(PaymentAccount $account): int
+    {
+        return strtolower($account->type) === 'jazzcash' ? 12 : 10;
     }
 }

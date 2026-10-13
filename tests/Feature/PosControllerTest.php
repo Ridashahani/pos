@@ -86,6 +86,38 @@ class PosControllerTest extends TestCase
         $response->assertViewIs('pos.index');
     }
 
+    public function test_pos_product_picker_search_returns_sellable_products(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'POS Search Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $category = $this->createCategory();
+        $product = Product::create([
+            'name' => 'Searchable POS Product',
+            'slug' => 'searchable-pos-product',
+            'code' => 'POS-SEARCH-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'cost_price' => 50,
+            'selling_price' => 100,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/pos/products/search?term=Searchable');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'results')
+            ->assertJsonPath('results.0.id', $product->id)
+            ->assertJsonPath('results.0.name', 'Searchable POS Product')
+            ->assertJsonPath('pagination.more', false);
+    }
+
     public function test_pos_branch_selector_contains_the_users_active_branches(): void
     {
         $permission = Permission::firstOrCreate(

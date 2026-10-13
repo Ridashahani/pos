@@ -116,12 +116,23 @@
                 margin-left: 70px;
             }
         }
+
+        @media (max-width: 767px) {
+            body.pos-page.sidebar-main .iq-sidebar {
+                left: -300px;
+            }
+
+            body.pos-page:not(.sidebar-main) .iq-sidebar {
+                left: 0;
+                z-index: 999;
+            }
+        }
     </style>
 
     @yield('specificpagestyles')
 </head>
 
-<body>
+<body class="{{ Request::routeIs('pos.index') ? 'sidebar-main pos-page' : '' }}">
     <!-- loader Start -->
     {{-- <div id="loading">
         <div id="loading-center"></div>
