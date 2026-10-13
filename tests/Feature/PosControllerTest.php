@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -515,10 +516,20 @@ class PosControllerTest extends TestCase
         );
         Role::where('name', 'test-role')->first()->givePermissionTo($permission);
         $user = $this->createAuthenticatedUser();
-        $product = $this->createProductWithCode('GST Rate Item', 'GST-RATE-001');
-        $product->update([
+        $branch = Branch::create(['name' => 'GST Rate Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $category = $this->createCategory();
+        Setting::updateOrCreate(['key' => 'gst'], ['value' => '5']);
+        $product = Product::create([
+            'name' => 'GST Rate Item',
+            'slug' => 'gst-rate-item',
+            'code' => 'GST-RATE-001',
+            'category_id' => $category->id,
+            'stock' => 5,
             'selling_price' => 100,
-            'order_tax' => 17.5,
+            'gst_tax' => 17.5,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
         ]);
 
         $response = $this->actingAs($user)->postJson('/pos/add', [
@@ -533,7 +544,7 @@ class PosControllerTest extends TestCase
         $this->assertSame(17.5, (float) $cartItem->taxRate);
         $this->assertEquals(17.5, (float) Cart::tax(2, '.', ''));
         $this->assertStringContainsString('value="17.50"', $response->json('cart_html'));
-        $this->assertStringContainsString('class="pos-tax-amount">17.50</td>', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">17.50</span>', $response->json('cart_html'));
     }
 
     public function test_updates_for_removed_cart_rows_return_the_current_cart(): void

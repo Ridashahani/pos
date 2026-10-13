@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use App\Models\Branch;
 use App\Models\Product;
 use App\Models\Customer;
-use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
@@ -208,7 +207,7 @@ class PosController extends Controller
                 $options['stock'] = $stock;
                 $this->applyLine($existing->rowId, min($existing->qty + 1, max(1, $stock)), $options);
             } else {
-                $taxRate = (float) ($product->order_tax ?? Setting::get('gst', 0));
+                $taxRate = (float) $product->gst_tax;
                 $price   = (float) $product->selling_price;
 
                 $item = Cart::add([
