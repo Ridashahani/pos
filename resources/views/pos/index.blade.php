@@ -379,6 +379,10 @@
                 set('.pos-summary-price', currency + ' ' + fmt(t.price));
                 set('.pos-summary-tax', currency + ' ' + fmt(t.tax));
                 set('.pos-summary-discount', currency + ' ' + fmt(t.discount));
+                // const footerRate = container.querySelector('.pos-footer-tax-rate');
+                // if (footerRate) footerRate.textContent = fmt(t.price > 0 ? (t.tax / t.price) * 100 : 0) + '%';
+                const footerDiscount = container.querySelector('.pos-footer-discount');
+                if (footerDiscount) footerDiscount.textContent = currency + ' ' + fmt(t.discount);
                 const total = document.getElementById('cart-total');
                 if (total) {
                     total.dataset.total = t.net;
@@ -949,7 +953,7 @@
         /* ---------- Page shell ---------- */
         .pos-shell {
             align-items: flex-start;
-            background: #f8fafc;
+            /* background: #f8fafc; */
             margin: -1.5rem;
             min-height: calc(100vh - 80px);
             padding: 1.5rem;
@@ -1042,7 +1046,7 @@
         }
 
         .pos-product-picker .select2-container--default.select2-container--focus .select2-selection--single {
-            border-color: #2f80ed;
+            /* border-color: #2f80ed; */
         }
 
         /* search bar = first row of the dropdown */

@@ -6,7 +6,7 @@
                     <x-heroicon-o-bars-3 class="wrapper-menu w-8 h-8" />
                 </div>
                 <a href="{{ route('dashboard') }}" class="header-logo">
-                    <img src="../assets/images/logo.png" class="img-fluid rounded-normal" alt="logo">
+                    <img src="{{ asset('assets/images/logo.png') }}" class="img-fluid rounded-normal" alt="logo">
                     <h5 class="logo-title ml-3">POSDash</h5>
                 </a>
             </div>

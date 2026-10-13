@@ -138,8 +138,9 @@
                         @error('gst_tax')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="form-text text-muted">Price after GST: <span
-                                id="price_including_gst">0.00</span></small>
+                        <!-- <small class="form-text text-muted">Price after GST: <span
+                                id="price_including_gst">0.00</span>
+                            </small> -->
                     </div>
                     <div class="form-group col-md-6">
                         <label>Multiple Images</label>

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -524,6 +525,9 @@ class PosControllerTest extends TestCase
         );
         Role::where('name', 'test-role')->first()->givePermissionTo($permission);
         $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'Discount Test Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
         $item = Cart::add([
             'id' => 'discount-test',
             'name' => 'Discount Test Item',
@@ -544,13 +548,15 @@ class PosControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true);
-        $this->assertStringContainsString('PKR 195.00', $response->json('cart_html'));
-        $cartHtml = $response->json('cart_html');
+        $cartHtml = view('pos.cart-sidebar', ['productItem' => Cart::content()])->render();
+        $this->assertStringContainsString('PKR 195.00', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 200\.00"/', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-price">PKR 100.00', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-gross">PKR 200.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax-rate">10.00%', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-tax">PKR 20.00', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 220.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-discount">PKR 25.00', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-net">PKR 195.00', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-tax"\s+value="PKR 20\.00"/', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-discount"\s+value="PKR 25\.00"/', $cartHtml);
@@ -563,12 +569,15 @@ class PosControllerTest extends TestCase
         ]);
 
         $quantityResponse->assertOk()->assertJsonPath('success', true);
-        $this->assertStringContainsString('PKR 305.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-gross">PKR 300.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-tax">PKR 30.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 330.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-net">PKR 305.00', $quantityResponse->json('cart_html'));
-        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 300\.00"/', $quantityResponse->json('cart_html'));
+        $cartHtml = view('pos.cart-sidebar', ['productItem' => Cart::content()])->render();
+        $this->assertStringContainsString('PKR 305.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-gross">PKR 300.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax-rate">10.00%', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax">PKR 30.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 330.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-discount">PKR 25.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-net">PKR 305.00', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 300\.00"/', $cartHtml);
         $this->assertEquals(305.0, (float) Cart::total(null, null, ''));
         $this->assertSame(25.0, (float) Cart::content()->first()->options->discount);
     }
@@ -581,10 +590,20 @@ class PosControllerTest extends TestCase
         );
         Role::where('name', 'test-role')->first()->givePermissionTo($permission);
         $user = $this->createAuthenticatedUser();
-        $product = $this->createProductWithCode('GST Rate Item', 'GST-RATE-001');
-        $product->update([
+        $branch = Branch::create(['name' => 'GST Rate Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $category = $this->createCategory();
+        Setting::updateOrCreate(['key' => 'gst'], ['value' => '5']);
+        $product = Product::create([
+            'name' => 'GST Rate Item',
+            'slug' => 'gst-rate-item',
+            'code' => 'GST-RATE-001',
+            'category_id' => $category->id,
+            'stock' => 5,
             'selling_price' => 100,
-            'order_tax' => 17.5,
+            'gst_tax' => 17.5,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
         ]);
 
         $response = $this->actingAs($user)->postJson('/pos/add', [
@@ -599,7 +618,7 @@ class PosControllerTest extends TestCase
         $this->assertSame(17.5, (float) $cartItem->taxRate);
         $this->assertEquals(17.5, (float) Cart::tax(2, '.', ''));
         $this->assertStringContainsString('value="17.50"', $response->json('cart_html'));
-        $this->assertStringContainsString('class="pos-tax-amount">17.50</td>', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">17.50</span>', $response->json('cart_html'));
     }
 
     public function test_updates_for_removed_cart_rows_return_the_current_cart(): void

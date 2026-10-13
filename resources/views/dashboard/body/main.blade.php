@@ -13,10 +13,75 @@
     <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
 
     <style>
+        .iq-sidebar-logo {
+            justify-content: flex-end;
+        }
+
+        .iq-sidebar-logo .iq-menu-bt-sidebar {
+            margin-left: auto;
+            padding-right: 0;
+            padding-left: 0;
+        }
+
         @media (min-width: 768px) {
-            /* The sidebar owns the desktop logo; keep the navbar as a single control bar. */
+            .iq-top-navbar .iq-navbar-logo {
+                display: flex !important;
+            }
+
             .iq-top-navbar .iq-navbar-logo .header-logo {
-                display: none;
+                display: flex;
+            }
+
+            .iq-top-navbar {
+                box-sizing: border-box;
+                position: fixed;
+                top: 0;
+                right: 0;
+                left: 260px;
+                width: calc(100% - 260px);
+                z-index: 1001;
+            }
+
+            body.sidebar-main .iq-top-navbar {
+                left: 70px;
+                width: calc(100% - 70px);
+            }
+
+            body.sidebar-main .iq-sidebar-logo {
+                box-sizing: border-box;
+                width: 60px;
+                margin-right: 0;
+                padding: 12px 0;
+                flex-direction: column;
+                justify-content: center;
+                transform: none;
+            }
+
+            body.sidebar-main .iq-sidebar-logo .iq-menu-bt-sidebar {
+                display: flex;
+                width: 60px;
+                margin: 0 !important;
+                align-items: center;
+                justify-content: center;
+            }
+
+            body.sidebar-main .iq-sidebar-logo .wrapper-menu {
+                display: block;
+                margin: 0;
+                opacity: 1;
+                visibility: visible;
+            }
+
+            body.sidebar-main .iq-sidebar-menu .iq-menu > li > a {
+                width: 60px;
+                justify-content: center;
+                margin-right: 0;
+                padding-right: 0;
+                padding-left: 0;
+            }
+
+            body.sidebar-main .iq-sidebar-menu .iq-menu > li > a > svg {
+                flex-shrink: 0;
             }
 
             .iq-footer {
@@ -32,6 +97,16 @@
         }
 
         @media (max-width: 767px) {
+            .iq-top-navbar {
+                box-sizing: border-box;
+                position: fixed;
+                top: 0;
+                right: 0;
+                left: 0;
+                width: 100%;
+                z-index: 1001;
+            }
+
             .iq-footer {
                 box-sizing: border-box;
                 margin-left: 0;
@@ -68,10 +143,6 @@
                 width: 260px;
             }
 
-            .iq-top-navbar {
-                width: calc(100% - 260px);
-            }
-
             .content-page {
                 margin-left: 260px;
             }
@@ -94,10 +165,6 @@
                 width: 60px;
                 margin-right: 0;
                 padding: 15px 0;
-            }
-
-            body.sidebar-main .iq-sidebar-logo .header-logo {
-                display: none;
             }
 
             body.sidebar-main .iq-sidebar-logo .iq-menu-bt-sidebar {
@@ -125,10 +192,6 @@
 
             body.sidebar-main .iq-sidebar-menu .iq-menu .iq-submenu {
                 display: none;
-            }
-
-            body.sidebar-main .iq-top-navbar {
-                width: calc(100% - 70px);
             }
 
             body.sidebar-main .content-page {

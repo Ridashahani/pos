@@ -102,10 +102,10 @@
                         <td class="pos-footer-price">{{ $cartCurrency }} {{ number_format($summaryUnitPrice, 2) }}</td>
                         <td></td>
                         <td class="pos-footer-gross">{{ $cartCurrency }} {{ number_format($summaryPrice, 2) }}</td>
-                        <td></td>
+                         <td></td>
                         <td class="pos-footer-tax">{{ $cartCurrency }} {{ number_format($summaryTaxAmount, 2) }}</td>
                         <td class="pos-footer-incl-tax">{{ $cartCurrency }} {{ number_format($summaryInclTax, 2) }}</td>
-                        <td></td>
+                        <td class="pos-footer-discount">{{ $cartCurrency }} {{ number_format($summaryDiscount, 2) }}</td>
                         <td class="pos-footer-net">{{ $cartCurrency }} {{ number_format($summaryNetAmount, 2) }}</td>
                         <td></td>
                     </tr>
@@ -130,29 +130,29 @@
     $cartGrandTotal = $summaryNetAmount;
 @endphp
 <div class="pos-cart-summary p-3 bg-white border-top">
-    <div class="row">
-        <div class="col-md-3 col-6 form-group mb-2">
+    <!-- <div class="row"> -->
+        <!-- <div class="col-md-3 col-6 form-group mb-2">
             <label>Item</label>
             <input class="form-control form-control-sm pos-summary-items" value="{{ Cart::count() }}" readonly>
-        </div>
-        <div class="col-md-3 col-6 form-group mb-2">
+        </div> -->
+        <!-- <div class="col-md-3 col-6 form-group mb-2">
             <label>Price</label>
             <input class="form-control form-control-sm pos-summary-price"
                 value="{{ $cartCurrency }} {{ number_format($cartSubtotal, 2) }}" readonly>
-        </div>
-        <div class="col-md-3 col-6 form-group mb-2">
+        </div> -->
+        <!-- <div class="col-md-3 col-6 form-group mb-2">
             <label>Tax</label>
             <input class="form-control form-control-sm pos-summary-tax"
                 value="{{ $cartCurrency }} {{ number_format($cartTax, 2) }}" readonly>
-        </div>
-        <div class="col-md-3 col-6 form-group">
+        </div> -->
+        <!-- <div class="col-md-3 col-6 form-group">
             <label>Discount</label>
             <input class="form-control form-control-sm pos-summary-discount"
                 value="{{ $cartCurrency }} {{ number_format($cartDiscount, 2) }}"
                 readonly>
-        </div>
-    </div>
-    <div class="d-flex justify-content-between align-items-center pt-2 mt-1 border-top">
+        </div> -->
+    <!-- </div> -->
+    <div class="d-flex justify-content-between align-items-center pt-2 mt-1">
         <span class="font-weight-bold">Grand Total</span>
         <span class="font-weight-bold text-primary" id="cart-total">{{ $cartCurrency }}
             {{ number_format($cartGrandTotal, 2) }}</span>

@@ -47,21 +47,23 @@ class ProductController extends Controller
         }
 
         $products = QueryBuilder::for(Product::class)
-            ->allowedSorts([
-                'name',
-                'selling_price',
-                'status',
-                AllowedSort::callback('category.name', function ($query, $descending) {
-                    $query->join('categories', 'products.category_id', '=', 'categories.id')
-                        ->orderBy('categories.name', $descending ? 'DESC' : 'ASC')
-                        ->select('products.*');
-                })
-            ])
-            ->allowedFilters(['name'])
-            ->filter(request(['search']))
-            ->with(['category'])
-            ->paginate($row)
-            ->appends(request()->query());
+    ->defaultSort('-created_at')   // latest first by default
+    ->allowedSorts([
+        'name',
+        'selling_price',
+        'status',
+        'created_at',              // optional: lets users sort by it via ?sort=created_at
+        AllowedSort::callback('category.name', function ($query, $descending) {
+            $query->join('categories', 'products.category_id', '=', 'categories.id')
+                ->orderBy('categories.name', $descending ? 'DESC' : 'ASC')
+                ->select('products.*');
+        }),
+    ])
+    ->allowedFilters(['name'])
+    ->filter(request(['search']))
+    ->with(['category'])
+    ->paginate($row)
+    ->appends(request()->query());
 
         return view('products.index', [
             'products' => $products,
