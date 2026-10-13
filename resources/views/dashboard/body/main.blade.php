@@ -18,6 +18,25 @@
             .iq-top-navbar .iq-navbar-logo .header-logo {
                 display: none;
             }
+
+            .iq-footer {
+                box-sizing: border-box;
+                margin-left: 260px;
+                width: calc(100% - 260px);
+            }
+
+            body.sidebar-main .iq-footer {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+        }
+
+        @media (max-width: 767px) {
+            .iq-footer {
+                box-sizing: border-box;
+                margin-left: 0;
+                width: 100%;
+            }
         }
 
         @media (min-width: 1300px) {
