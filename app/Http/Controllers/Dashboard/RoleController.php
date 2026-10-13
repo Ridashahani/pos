@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use App\Http\Controllers\Controller;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -16,10 +15,32 @@ class RoleController extends Controller
     // Permission Controller
     public function permissionIndex()
     {
-        $permissions = QueryBuilder::for(Permission::class)->paginate();
+        $query = Permission::query();
+
+        if (request()->filled('search')) {
+            $search = request('search');
+            $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('group_name', 'like', "%{$search}%");
+            });
+        }
+
+        if (request()->filled('group')) {
+            $query->where('group_name', request('group'));
+        }
+
+        $permissions = $query->orderBy('group_name')->orderBy('name')
+            ->paginate(15)
+            ->withQueryString();
+        $permissionGroups = Permission::query()
+            ->select('group_name')
+            ->distinct()
+            ->orderBy('group_name')
+            ->pluck('group_name');
 
         return view('roles.permission-index', [
             'permissions' => $permissions,
+            'permissionGroups' => $permissionGroups,
         ]);
     }
 
@@ -172,11 +193,7 @@ class RoleController extends Controller
     public function rolePermissionUpdate(Request $request, Int $id)
     {
         $role = Role::findOrFail($id);
-        $permissions = $request->permission_id;
-
-        if(!empty($permissions)) {
-            $role->syncPermissions($permissions);
-        }
+        $role->syncPermissions($request->permission_id ?? []);
 
         return Redirect::route('rolePermission.index')->with('success', 'Role Permission has been updated!');
     }
@@ -185,7 +202,7 @@ class RoleController extends Controller
     {
         $role = Role::findOrFail($id);
 
-        if(!is_null($role)) {
+        if (!is_null($role)) {
             $role->delete();
         }
 

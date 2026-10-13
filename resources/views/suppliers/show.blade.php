@@ -10,8 +10,10 @@
                             <h4 class="card-title">Supplier Details</h4>
                         </div>
                         <div>
-                            <a href="{{ route('suppliers.edit', $supplier->id) }}" class="btn btn-primary font-size-14">Edit
-                                Profile</a>
+                            @can('edit.suppliers')
+                                <a href="{{ route('suppliers.edit', $supplier->id) }}" class="btn btn-primary font-size-14">Edit
+                                    Profile</a>
+                            @endcan
                             <a href="{{ route('suppliers.index') }}" class="btn btn-secondary font-size-14">Back</a>
                         </div>
                     </div>

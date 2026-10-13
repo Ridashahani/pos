@@ -32,8 +32,10 @@ class UpdateRoleRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'in:Admin,Manager,Cashier',
-                Rule::unique('roles', 'name')->ignore($roleId),
+                'max:255',
+                Rule::unique('roles', 'name')
+                    ->where('guard_name', config('auth.defaults.guard'))
+                    ->ignore($roleId),
             ],
         ];
     }

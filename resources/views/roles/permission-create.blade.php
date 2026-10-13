@@ -7,10 +7,6 @@
                 'slug' => 'pos',
                 'name' => 'POS',
             ],
-            // [
-            //     'slug' => 'employee',
-            //     'name' => 'Employee',
-            // ],
             [
                 'slug' => 'customer',
                 'name' => 'Customer',
@@ -19,14 +15,6 @@
                 'slug' => 'supplier',
                 'name' => 'Supplier',
             ],
-            // [
-            //     'slug' => 'salary',
-            //     'name' => 'Salary',
-            // ],
-            // [
-            //     'slug' => 'attendance',
-            //     'name' => 'Attendance',
-            // ],
             [
                 'slug' => 'category',
                 'name' => 'Category',
@@ -37,7 +25,7 @@
             ],
             [
                 'slug' => 'sales',
-                'name' => 'Saless',
+                'name' => 'Sales',
             ],
             [
                 'slug' => 'stock',
@@ -51,10 +39,12 @@
                 'slug' => 'user',
                 'name' => 'User',
             ],
-            // [
-            //     'slug' => 'database',
-            //     'name' => 'Database',
-            // ],
+            [
+                'slug' => 'settings',
+                'name' => 'Settings',
+            ],
+            
+
         ];
     @endphp
 

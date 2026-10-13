@@ -36,9 +36,11 @@
         </div>
         <div class="mt-3 mt-md-0">
             <a href="{{ route('payments.index') }}" class="btn btn-light mr-2">Payments</a>
-            <a href="{{ route('payment-accounts.create') }}" class="btn btn-primary">
-                <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Add Account
-            </a>
+            @can('create.payments')
+                <a href="{{ route('payment-accounts.create') }}" class="btn btn-primary">
+                    <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Add Account
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -199,16 +201,20 @@
                             </span>
                         </td>
                         <td>
-                            <a href="{{ route('payment-accounts.edit', $accountRow) }}" class="btn btn-light btn-sm" title="Edit account">
-                                <x-heroicon-o-pencil-square class="w-4 h-4" />
-                            </a>
-                            <form action="{{ route('payment-accounts.destroy', $accountRow) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete or deactivate this account?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-light btn-sm" title="Delete or deactivate account">
-                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                </button>
-                            </form>
+                            @can('edit.payments')
+                                <a href="{{ route('payment-accounts.edit', $account) }}" class="btn btn-light btn-sm" title="Edit account">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                </a>
+                            @endcan
+                            @can('delete.payments')
+                                <form action="{{ route('payment-accounts.destroy', $account) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete or deactivate this account?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-light btn-sm" title="Delete or deactivate account">
+                                        <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                    </button>
+                                </form>
+                            @endcan
                         </td>
                     </tr>
                     @empty

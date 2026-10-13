@@ -134,9 +134,11 @@
                         <h4 class="mb-0">Role List</h4>
                         <div class="d-flex align-items-center gap-2">
                             <input type="text" id="rlSearch" class="rl-search" placeholder="Search...">
-                            <a href="{{ route('rolePermission.create') }}" class="btn btn-primary ml-2">
-                                <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Assign Permissions
-                            </a>
+                            @can('create.roles')
+                                <a href="{{ route('rolePermission.create') }}" class="btn btn-primary ml-2">
+                                    <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Assign Permissions
+                                </a>
+                            @endcan
                         </div>
                     </div>
 
@@ -161,21 +163,25 @@
                                             <td>{{ $role->created_at ? $role->created_at->format('d-m-Y') : '-' }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <a class="rl-icon-btn edit mr-2" data-toggle="tooltip"
-                                                        data-placement="top" title="Edit"
-                                                        href="{{ route('rolePermission.edit', $role->id) }}">
-                                                        <x-heroicon-o-pencil class="w-4 h-4" />
-                                                    </a>
-                                                    <form action="{{ route('rolePermission.destroy', $role->id) }}"
-                                                        method="POST" style="display:inline;">
-                                                        @method('delete')
-                                                        @csrf
-                                                        <button type="submit" class="rl-icon-btn delete"
-                                                            onclick="return confirm('Are you sure you want to delete this role permission assignment?')"
-                                                            data-toggle="tooltip" data-placement="top" title="Delete">
-                                                            <x-heroicon-o-trash class="w-4 h-4" />
-                                                        </button>
-                                                    </form>
+                                                    @can('edit.roles')
+                                                        <a class="rl-icon-btn edit mr-2" data-toggle="tooltip"
+                                                            data-placement="top" title="Edit"
+                                                            href="{{ route('rolePermission.edit', $role->id) }}">
+                                                            <x-heroicon-o-pencil class="w-4 h-4" />
+                                                        </a>
+                                                    @endcan
+                                                    @can('delete.roles')
+                                                        <form action="{{ route('rolePermission.destroy', $role->id) }}"
+                                                            method="POST" style="display:inline;">
+                                                            @method('delete')
+                                                            @csrf
+                                                            <button type="submit" class="rl-icon-btn delete"
+                                                                onclick="return confirm('Are you sure you want to delete this role permission assignment?')"
+                                                                data-toggle="tooltip" data-placement="top" title="Delete">
+                                                                <x-heroicon-o-trash class="w-4 h-4" />
+                                                            </button>
+                                                        </form>
+                                                    @endcan
                                                 </div>
                                             </td>
                                         </tr>
