@@ -46,22 +46,6 @@
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Products</span>
                             </a>
                         </li>
-                        <li class="{{ Request::is('variations*') ? 'active' : '' }}">
-                            <a href="{{ route('variations.index') }}">
-                                <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
-                            </a>
-                        </li>
-                        <li class="{{ Request::is('units*') ? 'active' : '' }}">
-                            <a href="{{ route('units.index') }}">
-                                <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
-                            </a>
-                        </li>
-                        <li
-                            class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
-                            <a href="{{ route('products.create') }}">
-                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
-                            </a>
-                        </li>
                         <li class="{{ Request::is('categories*') ? 'active' : '' }}">
                             <a href="{{ route('categories.index') }}">
                                 <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Categories</span>
@@ -76,10 +60,26 @@
                             <li class="{{ Request::is('brands*') ? 'active' : '' }}">
                                 <a href="{{ route('brands.index') }}" class="svg-icon">
                                     <x-heroicon-o-tag class="w-6 h-6" />
-                                    <span class="ml-3">Brands</span>
+                                    <span class="">Brands</span>
                                 </a>
                             </li>
                         @endif
+                        <li class="{{ Request::is('variations*') ? 'active' : '' }}">
+                            <a href="{{ route('variations.index') }}">
+                                <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
+                            </a>
+                        </li>
+                        <li class="{{ Request::is('units*') ? 'active' : '' }}">
+                            <a href="{{ route('units.index') }}">
+                                <x-heroicon-o-scale class="w-4 h-4" /><span>Units</span>
+                            </a>
+                        </li>
+                        <!-- <li
+                            class="{{ Request::is('products/create') || Request::is('products/*/edit') ? 'active' : '' }}">
+                            <a href="{{ route('products.create') }}">
+                                <x-heroicon-o-arrow-right class="w-4 h-4" /><span>Add Product</span>
+                            </a>
+                        </li> -->
                     </ul>
                 </li>
                 @endif
