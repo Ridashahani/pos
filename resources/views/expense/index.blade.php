@@ -34,9 +34,11 @@
                     <h4 class="mb-2">Expenses</h4>
                     <p class="mb-0 text-muted">Operating expenses recorded per branch.</p>
                 </div>
-                <a href="{{ route('expenses.create') }}" class="btn btn-primary add-list d-flex align-items-center mt-3 mt-md-0">
-                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Expense
-                </a>
+                @can('create.stocks')
+                    <a href="{{ route('expenses.create') }}" class="btn btn-primary add-list d-flex align-items-center mt-3 mt-md-0">
+                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Expense
+                    </a>
+                @endcan
             </div>
         </div>
 
@@ -90,16 +92,20 @@
                                     <td><strong>{{ number_format($expense->amount, 2) }}</strong></td>
                                     <td>{{ $expense->description }}</td>
                                     <td class="text-center">
-                                        <a href="{{ route('expenses.edit', $expense) }}" class="btn btn-light btn-sm mr-1" title="Edit expense">
-                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                        </a>
-                                        <form action="{{ route('expenses.destroy', $expense) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-light btn-sm" title="Delete expense">
-                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                            </button>
-                                        </form>
+                                        @can('edit.stocks')
+                                            <a href="{{ route('expenses.edit', $expense) }}" class="btn btn-light btn-sm mr-1" title="Edit expense">
+                                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                            </a>
+                                        @endcan
+                                        @can('delete.stocks')
+                                            <form action="{{ route('expenses.destroy', $expense) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-light btn-sm" title="Delete expense">
+                                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                </button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                                 @empty

@@ -34,10 +34,14 @@
                     <p class="mb-0 text-muted">Money transfer &amp; cash withdrawal transactions.</p>
                 </div>
                 <div class="mt-3 mt-md-0">
-                    <a href="{{ route('payment-accounts.index') }}" class="btn btn-light mr-2">Manage Accounts</a>
-                    <a href="{{ route('payments.create') }}" class="btn btn-primary add-list">
-                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Transaction
-                    </a>
+                    @can('access.payments')
+                        <a href="{{ route('payment-accounts.index') }}" class="btn btn-light mr-2">Manage Accounts</a>
+                    @endcan
+                    @can('create.payments')
+                        <a href="{{ route('payments.create') }}" class="btn btn-primary add-list">
+                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Transaction
+                        </a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -141,17 +145,21 @@
                                     <td>{{ number_format($tx->commission, 2) }}</td>
                                     <td>{{ $tx->description ?? '—' }}</td>
                                     <td>
-                                        <a href="{{ route('payments.edit', $tx) }}" class="btn btn-light btn-sm mr-1" title="Edit transaction">
-                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                        </a>
-                                        <form action="{{ route('payments.destroy', $tx) }}" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Are you sure you want to delete this transaction?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-light btn-sm" title="Delete transaction">
-                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                            </button>
-                                        </form>
+                                        @can('edit.payments')
+                                            <a href="{{ route('payments.edit', $tx) }}" class="btn btn-light btn-sm mr-1" title="Edit transaction">
+                                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                            </a>
+                                        @endcan
+                                        @can('delete.payments')
+                                            <form action="{{ route('payments.destroy', $tx) }}" method="POST" class="d-inline"
+                                                onsubmit="return confirm('Are you sure you want to delete this transaction?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-light btn-sm" title="Delete transaction">
+                                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                </button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                                 @empty

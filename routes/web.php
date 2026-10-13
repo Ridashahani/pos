@@ -39,21 +39,27 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth'])->name('dashboard');
 
-    Route::prefix('stock')->name('stock.')->group(function () {
+    Route::middleware('permission:access.stocks')->prefix('stock')->name('stock.')->group(function () {
         Route::get('/in', [StockController::class, 'in'])->name('in');
         Route::get('/in/details/{stockIn}', [StockController::class, 'inDetails'])->name('in.details');
         Route::get('/out', [StockController::class, 'out'])->name('out');
         Route::get('/sold-items', [StockController::class, 'soldItems'])->name('sold-items');
-        Route::delete('/sold-items', [StockController::class, 'clearSoldItems'])->name('sold-items.clear');
-        Route::delete('/sold-items/{soldItem}', [StockController::class, 'destroySoldItem'])->name('sold-items.destroy');
         Route::get('/out-of-stock', [StockController::class, 'outOfStock'])->name('out-of-stock');
-        Route::delete('/out-of-stock', [StockController::class, 'clearOutOfStock'])->name('out-of-stock.clear');
-        Route::delete('/out-of-stock/{stockIn}', [StockController::class, 'destroyOutOfStock'])->name('out-of-stock.destroy');
         Route::get('/transfer', [StockController::class, 'transfer'])->name('transfer');
+    });
+    Route::middleware('permission:create.stocks')->prefix('stock')->name('stock.')->group(function () {
         Route::get('/transfer/create', [StockController::class, 'createTransfer'])->name('transfer.create');
         Route::post('/transfer', [StockController::class, 'storeTransfer'])->name('transfer.store');
+    });
+    Route::middleware('permission:edit.stocks')->prefix('stock')->name('stock.')->group(function () {
         Route::get('/transfer/{transfer}/edit', [StockController::class, 'editTransfer'])->name('transfer.edit');
         Route::put('/transfer/{transfer}', [StockController::class, 'updateTransfer'])->name('transfer.update');
+    });
+    Route::middleware('permission:delete.stocks')->prefix('stock')->name('stock.')->group(function () {
+        Route::delete('/sold-items', [StockController::class, 'clearSoldItems'])->name('sold-items.clear');
+        Route::delete('/sold-items/{soldItem}', [StockController::class, 'destroySoldItem'])->name('sold-items.destroy');
+        Route::delete('/out-of-stock', [StockController::class, 'clearOutOfStock'])->name('out-of-stock.clear');
+        Route::delete('/out-of-stock/{stockIn}', [StockController::class, 'destroyOutOfStock'])->name('out-of-stock.destroy');
         Route::delete('/transfer/{transfer}', [StockController::class, 'destroyTransfer'])->name('transfer.destroy');
         Route::delete('/transfer', [StockController::class, 'clearTransfers'])->name('transfer.clear');
     });
@@ -66,44 +72,49 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// ====== USERS ======
-Route::middleware(['permission:access.users'])->group(function () {
-    Route::resource('/users', UserController::class)->except(['show']);
+// Register each resource action under its own permission.
+$registerCrudRoutes = function (string $uri, string $controller, string $permission, array $only = []) {
+    $actions = [
+        'create' => ['create', 'store'],
+        'access' => ['index', 'show'],
+        'edit' => ['edit', 'update'],
+        'delete' => ['destroy'],
+    ];
 
-    Route::prefix('user-branch')->name('user-branch.')->group(function () {
-        Route::get('/', [UserBranchController::class, 'index'])->name('index');
-        Route::get('/{user}/edit', [UserBranchController::class, 'edit'])->name('edit');
-        Route::put('/{user}', [UserBranchController::class, 'update'])->name('update');
-        Route::delete('/{user}/{branch}', [UserBranchController::class, 'destroy'])->name('destroy');
-    });
-});
+    foreach ($actions as $action => $methods) {
+        $methods = array_values(array_intersect($methods, $only ?: array_merge(...array_values($actions))));
+        if ($methods) {
+            Route::middleware("permission:{$action}.{$permission}")
+                ->group(fn () => Route::resource($uri, $controller)->only($methods));
+        }
+    }
+};
+
+// ====== USERS ======
+$registerCrudRoutes('/users', UserController::class, 'users', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
+Route::middleware('permission:access.users')->get('/user-branch', [UserBranchController::class, 'index'])->name('user-branch.index');
+Route::middleware('permission:edit.users')->get('/user-branch/{user}/edit', [UserBranchController::class, 'edit'])->name('user-branch.edit');
+Route::middleware('permission:edit.users')->put('/user-branch/{user}', [UserBranchController::class, 'update'])->name('user-branch.update');
+Route::middleware('permission:delete.users')->delete('/user-branch/{user}/{branch}', [UserBranchController::class, 'destroy'])->name('user-branch.destroy');
 
 // ====== CUSTOMERS ======
-Route::middleware(['permission:access.customers'])->group(function () {
-    Route::resource('/customers', CustomerController::class);
-});
+$registerCrudRoutes('/customers', CustomerController::class, 'customers');
 
 // ====== SUPPLIERS ======
-Route::middleware(['permission:access.suppliers'])->group(function () {
-    Route::resource('/suppliers', SupplierController::class);
-});
+$registerCrudRoutes('/suppliers', SupplierController::class, 'suppliers');
 
 // ====== PRODUCTS ======
-Route::middleware(['permission:access.products'])->group(function () {
-    Route::resource('/variations', VariationController::class)->except(['show']);
-    Route::resource('/units', UnitController::class)->except(['show']);
-    Route::get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
-    Route::post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
-    Route::get('/products/export', [ProductController::class, 'exportData'])->name('products.exportData');
-    Route::resource('/products', ProductController::class);
-});
+$registerCrudRoutes('/variations', VariationController::class, 'products', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
+$registerCrudRoutes('/units', UnitController::class, 'products', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
+$registerCrudRoutes('/products', ProductController::class, 'products');
+Route::middleware('permission:access.products')->get('/products/export', [ProductController::class, 'exportData'])->name('products.exportData');
+Route::middleware('permission:create.products')->get('/products/import', [ProductController::class, 'importView'])->name('products.importView');
+Route::middleware('permission:create.products')->post('/products/import', [ProductController::class, 'importStore'])->name('products.importStore');
 
 // ====== CATEGORY PRODUCTS ======
-Route::middleware(['permission:access.categories'])->group(function () {
-    Route::resource('/categories', CategoryController::class);
-    Route::resource('/subcategories', SubcategoryController::class)->except(['show']);
-    Route::resource('/brands', BrandController::class)->except(['show']);
-});
+$registerCrudRoutes('/categories', CategoryController::class, 'categories');
+$registerCrudRoutes('/subcategories', SubcategoryController::class, 'categories', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
+$registerCrudRoutes('/brands', BrandController::class, 'categories', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
 // ====== POS ======
 Route::middleware(['permission:access.pos'])->group(function () {
@@ -122,37 +133,29 @@ Route::middleware(['permission:access.pos'])->group(function () {
 });
 
 // ====== SALES ======
-Route::middleware(['permission:access.sales'])->group(function () {
+Route::middleware('permission:access.sales')->group(function () {
     Route::get('/sales/pending', [SaleController::class, 'pendingSales'])->name('sale.pendingSales');
     Route::get('/sales/complete', [SaleController::class, 'completeSales'])->name('sale.completeSales');
     Route::get('/sales/details/{sale_id}', [SaleController::class, 'saleDetails'])->name('sale.saleDetails');
-    Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');
-    Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->name('sale.return');
     Route::get('/sales/invoice/download/{sale_id}', [SaleController::class, 'invoiceDownload'])->name('sale.invoiceDownload');
     Route::get('/sales/receipt/print/{sale_id}', [SaleController::class, 'printReceipt'])->name('sale.printReceipt');
-
-    //     Purchases return 
-    Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchases.returns');
-    Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
-    Route::post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
-    Route::get('/purchases/returns/{purchaseReturn}', [PurchaseReturnController::class, 'show'])->name('purchases.returns.show');
-
-    // Purchases resource 
-    Route::resource('purchases', PurchaseController::class);
-    // Pending Due
     Route::get('/sales/pending-due', [SaleController::class, 'pendingDue'])->name('sale.pendingDue');
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');
+    Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchases.returns');
+    Route::get('/purchases/returns/{purchaseReturn}', [PurchaseReturnController::class, 'show'])->name('purchases.returns.show');
+});
+Route::middleware('permission:edit.sales')->group(function () {
+    Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');
+    Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->name('sale.return');
     Route::post('/sales/update/due', [SaleController::class, 'updateDue'])->name('sale.updateDue');
 });
-// Branches
-Route::resource('branches', BranchController::class);
-// Expense
-Route::resource('expenses', ExpenseController::class);
-// Payments
-Route::middleware(['permission:access.payments'])->group(function () {
-    Route::resource('payment-accounts', PaymentAccountController::class)->except(['show']);
-    Route::resource('payments', PaymentController::class);
-});
+Route::middleware('permission:create.sales')->get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
+Route::middleware('permission:create.sales')->post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
+$registerCrudRoutes('purchases', PurchaseController::class, 'sales');
+$registerCrudRoutes('branches', BranchController::class, 'stocks');
+$registerCrudRoutes('expenses', ExpenseController::class, 'stocks');
+$registerCrudRoutes('payment-accounts', PaymentAccountController::class, 'payments', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
+$registerCrudRoutes('payments', PaymentController::class, 'payments');
 // privacy policy and terms of use of service
 Route::get('/privacy-policy', function () {
     return view('backend.privacy-policy');
@@ -168,31 +171,32 @@ Route::middleware('auth')->group(function () {
 });
 
 // ====== ROLE CONTROLLER ======
-Route::middleware(['permission:access.roles'])->group(function () {
-    Route::resource('/settings', SettingController::class)->except(['show']);
+$registerCrudRoutes('/settings', SettingController::class, 'roles', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
-    // Permissions
+Route::middleware('permission:access.roles')->group(function () {
     Route::get('/permission', [RoleController::class, 'permissionIndex'])->name('permission.index');
+    Route::get('/role', [RoleController::class, 'roleIndex'])->name('role.index');
+    Route::get('/role/permission', [RoleController::class, 'rolePermissionIndex'])->name('rolePermission.index');
+});
+Route::middleware('permission:create.roles')->group(function () {
     Route::get('/permission/create', [RoleController::class, 'permissionCreate'])->name('permission.create');
     Route::post('/permission', [RoleController::class, 'permissionStore'])->name('permission.store');
-    Route::get('/permission/edit/{id}', [RoleController::class, 'permissionEdit'])->name('permission.edit');
-    Route::put('/permission/{id}', [RoleController::class, 'permissionUpdate'])->name('permission.update');
-    Route::delete('/permission/{id}', [RoleController::class, 'permissionDestroy'])->name('permission.destroy');
-
-    // Roles
-    Route::get('/role', [RoleController::class, 'roleIndex'])->name('role.index');
     Route::get('/role/create', [RoleController::class, 'roleCreate'])->name('role.create');
     Route::post('/role', [RoleController::class, 'roleStore'])->name('role.store');
-    Route::get('/role/edit/{id}', [RoleController::class, 'roleEdit'])->name('role.edit');
-    Route::put('/role/{id}', [RoleController::class, 'roleUpdate'])->name('role.update');
-    Route::delete('/role/{id}', [RoleController::class, 'roleDestroy'])->name('role.destroy');
-
-    // Role Permissions
-    Route::get('/role/permission', [RoleController::class, 'rolePermissionIndex'])->name('rolePermission.index');
     Route::get('/role/permission/create', [RoleController::class, 'rolePermissionCreate'])->name('rolePermission.create');
     Route::post('/role/permission', [RoleController::class, 'rolePermissionStore'])->name('rolePermission.store');
+});
+Route::middleware('permission:edit.roles')->group(function () {
+    Route::get('/permission/edit/{id}', [RoleController::class, 'permissionEdit'])->name('permission.edit');
+    Route::put('/permission/{id}', [RoleController::class, 'permissionUpdate'])->name('permission.update');
+    Route::get('/role/edit/{id}', [RoleController::class, 'roleEdit'])->name('role.edit');
+    Route::put('/role/{id}', [RoleController::class, 'roleUpdate'])->name('role.update');
     Route::get('/role/permission/{id}', [RoleController::class, 'rolePermissionEdit'])->name('rolePermission.edit');
     Route::put('/role/permission/{id}', [RoleController::class, 'rolePermissionUpdate'])->name('rolePermission.update');
+});
+Route::middleware('permission:delete.roles')->group(function () {
+    Route::delete('/permission/{id}', [RoleController::class, 'permissionDestroy'])->name('permission.destroy');
+    Route::delete('/role/{id}', [RoleController::class, 'roleDestroy'])->name('role.destroy');
     Route::delete('/role/permission/{id}', [RoleController::class, 'rolePermissionDestroy'])->name('rolePermission.destroy');
 });
 

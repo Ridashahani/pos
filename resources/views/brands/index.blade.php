@@ -25,10 +25,12 @@
                                 value="{{ request('search') }}" placeholder="Search brands..."
                                 aria-label="Search brands by name">
                         </form>
-                        <a href="{{ route('brands.create') }}" class="btn btn-primary add-list d-flex align-items-center"
-                            style="white-space: nowrap; flex-shrink: 0;">
-                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add New Brand
-                        </a>
+                        @can('create.categories')
+                            <a href="{{ route('brands.create') }}" class="btn btn-primary add-list d-flex align-items-center"
+                                style="white-space: nowrap; flex-shrink: 0;">
+                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add New Brand
+                            </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -46,19 +48,23 @@
                                     <td>{{ $brand->name }}</td>
                                     <td>
                                         <div class="d-flex align-items-center list-action">
-                                            <a class="btn btn-success mr-2" href="{{ route('brands.edit', $brand) }}"
-                                                title="Edit" aria-label="Edit {{ $brand->name }}">
-                                                <x-heroicon-o-pencil class="w-5 h-5" />
-                                            </a>
-                                            <form action="{{ route('brands.destroy', $brand) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger border-0" title="Delete"
-                                                    aria-label="Delete {{ $brand->name }}"
-                                                    onclick="return confirm('Are you sure you want to delete this brand?')">
-                                                    <x-heroicon-o-trash class="w-5 h-5" />
-                                                </button>
-                                            </form>
+                                            @can('edit.categories')
+                                                <a class="btn btn-success mr-2" href="{{ route('brands.edit', $brand) }}"
+                                                    title="Edit" aria-label="Edit {{ $brand->name }}">
+                                                    <x-heroicon-o-pencil class="w-5 h-5" />
+                                                </a>
+                                            @endcan
+                                            @can('delete.categories')
+                                                <form action="{{ route('brands.destroy', $brand) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger border-0" title="Delete"
+                                                        aria-label="Delete {{ $brand->name }}"
+                                                        onclick="return confirm('Are you sure you want to delete this brand?')">
+                                                        <x-heroicon-o-trash class="w-5 h-5" />
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

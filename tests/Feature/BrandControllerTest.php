@@ -19,15 +19,14 @@ class BrandControllerTest extends TestCase
     {
         parent::setUp();
 
-        Permission::firstOrCreate(
-            ['name' => 'access.categories'],
-            ['group_name' => 'category']
-        );
+        $permissions = collect(['access.categories', 'create.categories', 'edit.categories', 'delete.categories'])
+            ->map(fn ($name) => Permission::firstOrCreate(
+                ['name' => $name],
+                ['group_name' => 'category']
+            ));
 
         $role = Role::firstOrCreate(['name' => 'brand-test-role']);
-        if (! $role->hasPermissionTo('access.categories')) {
-            $role->givePermissionTo('access.categories');
-        }
+        $role->syncPermissions($permissions);
     }
 
     public function test_brand_creation_succeeds_and_duplicate_name_fails_validation(): void

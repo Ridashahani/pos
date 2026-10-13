@@ -98,15 +98,19 @@
                                         </div>
                                     </div>
                                 </form>
-                                <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary mr-2">
-                                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
-                                </a>
-                                <form method="POST" action="{{ route('stock.transfer.clear') }}"
-                                    onsubmit="return confirm('Delete all stock transfer records? Stock will be returned.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger">Clear All</button>
-                                </form>
+                                @can('create.stocks')
+                                    <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary mr-2">
+                                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
+                                    </a>
+                                @endcan
+                                @can('delete.stocks')
+                                    <form method="POST" action="{{ route('stock.transfer.clear') }}"
+                                        onsubmit="return confirm('Delete all stock transfer records? Stock will be returned.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Clear All</button>
+                                    </form>
+                                @endcan
                             </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
                             <div class="d-flex align-items-center">
@@ -127,12 +131,14 @@
                                     </div>
                                 </form>
                                 @if (in_array($type, ['sold-items', 'out-of-stock']))
-                                    <form method="POST" action="{{ route("stock.{$type}.clear") }}"
-                                        onsubmit="return confirm('{{ $type === 'out-of-stock' ? 'Delete all out-of-stock records? Records linked to sales or transfers will be skipped.' : 'Delete all sold item records?' }}');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger">Clear All</button>
-                                    </form>
+                                    @can('delete.stocks')
+                                        <form method="POST" action="{{ route("stock.{$type}.clear") }}"
+                                            onsubmit="return confirm('{{ $type === 'out-of-stock' ? 'Delete all out-of-stock records? Records linked to sales or transfers will be skipped.' : 'Delete all sold item records?' }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger">Clear All</button>
+                                        </form>
+                                    @endcan
                                 @endif
                             </div>
                         @endif
@@ -273,53 +279,65 @@
                                                 </td>
                                             @elseif ($type === 'sold-items')
                                                 <td class="text-center">
-                                                    <a href="{{ route('sale.saleDetails', $row['sale_id']) }}"
-                                                        class="btn btn-light btn-sm mr-1" title="Edit sale" aria-label="Edit sale">
-                                                        <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                                    </a>
-                                                    <form action="{{ route('stock.sold-items.destroy', $row['sold_item_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this sold item record?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete sold item" aria-label="Delete sold item">
-                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                                        </button>
-                                                    </form>
+                                                    @can('access.sales')
+                                                        <a href="{{ route('sale.saleDetails', $row['sale_id']) }}"
+                                                            class="btn btn-light btn-sm mr-1" title="View sale" aria-label="View sale">
+                                                            <x-heroicon-o-eye class="w-4 h-4" />
+                                                        </a>
+                                                    @endcan
+                                                    @can('delete.stocks')
+                                                        <form action="{{ route('stock.sold-items.destroy', $row['sold_item_id']) }}" method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Delete this sold item record?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete sold item" aria-label="Delete sold item">
+                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                            </button>
+                                                        </form>
+                                                    @endcan
                                                 </td>
                                             @elseif ($type === 'out-of-stock')
                                                 <td class="text-center">
-                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
-                                                        class="btn btn-primary btn-sm mr-1">Purchase again</a>
-                                                    @can('access.products')
+                                                    @can('create.sales')
+                                                        <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
+                                                            class="btn btn-primary btn-sm mr-1">Purchase again</a>
+                                                    @endcan
+                                                    @can('edit.products')
                                                         <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
                                                             <x-heroicon-o-pencil-square class="w-4 h-4" />
                                                         </a>
                                                     @endcan
-                                                    <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
-                                                        onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
-                                                            <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                                        </button>
-                                                    </form>
+                                                    @can('delete.stocks')
+                                                        <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
+                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                            </button>
+                                                        </form>
+                                                    @endcan
                                                 </td>
                                             @elseif ($type === 'stock-transfer')
                                                 <td class="text-center">
                                                     @if (!empty($row['id']))
-                                                        <a href="{{ route('stock.transfer.edit', $row['id']) }}"
-                                                            class="btn btn-light btn-sm mr-1" title="Edit stock transfer"
-                                                            aria-label="Edit stock transfer">
-                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                                        </a>
-                                                        <form action="{{ route('stock.transfer.destroy', $row['id']) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete stock transfer"
-                                                                aria-label="Delete stock transfer">
-                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                                            </button>
-                                                        </form>
+                                                        @can('edit.stocks')
+                                                            <a href="{{ route('stock.transfer.edit', $row['id']) }}"
+                                                                class="btn btn-light btn-sm mr-1" title="Edit stock transfer"
+                                                                aria-label="Edit stock transfer">
+                                                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                            </a>
+                                                        @endcan
+                                                        @can('delete.stocks')
+                                                            <form action="{{ route('stock.transfer.destroy', $row['id']) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-light btn-sm" title="Delete stock transfer"
+                                                                    aria-label="Delete stock transfer">
+                                                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                                </button>
+                                                            </form>
+                                                        @endcan
                                                     @endif
                                                 </td>
                                             @endif

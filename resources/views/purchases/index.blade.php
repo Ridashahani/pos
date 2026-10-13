@@ -59,9 +59,11 @@
                         <h4 @class(['mb-2'])>Purchase List</h4>
                         <p @class(['mb-0'])>Track incoming stock purchases and supplier payments.</p>
                     </div>
-                    <a href="{{ route('purchases.create') }}" @class(['btn', 'btn-primary', 'd-flex', 'align-items-center'])>
-                        <x-heroicon-o-plus @class(['w-5', 'h-5', 'mr-1']) /> Add Purchase
-                    </a>
+                    @can('create.sales')
+                        <a href="{{ route('purchases.create') }}" @class(['btn', 'btn-primary', 'd-flex', 'align-items-center'])>
+                            <x-heroicon-o-plus @class(['w-5', 'h-5', 'mr-1']) /> Add Purchase
+                        </a>
+                    @endcan
                 </div>
             </div>
 
@@ -247,29 +249,35 @@
                                                     <x-heroicon-o-eye class="w-4 h-4" />
                                                 </a>
 
-                                                <a href="{{ route('purchases.edit', $purchase) }}"
-                                                    class="btn btn-light btn-sm border mr-1" title="Edit">
-                                                    <x-heroicon-o-pencil class="w-4 h-4" />
-                                                </a>
+                                                @can('edit.sales')
+                                                    <a href="{{ route('purchases.edit', $purchase) }}"
+                                                        class="btn btn-light btn-sm border mr-1" title="Edit">
+                                                        <x-heroicon-o-pencil class="w-4 h-4" />
+                                                    </a>
+                                                @endcan
 
-                                                <a href="{{ route('purchases.return.create', $purchase->id) }}"
-                                                    class="btn btn-light btn-sm border  mr-1" title="Return">
-                                                    <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
-                                                </a>
+                                                @can('create.sales')
+                                                    <a href="{{ route('purchases.return.create', $purchase->id) }}"
+                                                        class="btn btn-light btn-sm border  mr-1" title="Return">
+                                                        <x-heroicon-o-arrow-uturn-left class="w-4 h-4" />
+                                                    </a>
+                                                @endcan
 
-                                                <form action="{{ route('purchases.destroy', $purchase) }}" method="POST"
-                                                    class="delete-purchase-form"
-                                                    onsubmit="return confirm('Are you sure you want to delete this purchase?');">
+                                                @can('delete.sales')
+                                                    <form action="{{ route('purchases.destroy', $purchase) }}" method="POST"
+                                                        class="delete-purchase-form"
+                                                        onsubmit="return confirm('Are you sure you want to delete this purchase?');">
 
-                                                    @csrf
-                                                    @method('DELETE')
+                                                        @csrf
+                                                        @method('DELETE')
 
-                                                    <button type="submit" class="btn btn-light btn-sm border text-danger"
-                                                        title="Delete">
-                                                        <x-heroicon-o-trash class="w-4 h-4" />
-                                                    </button>
+                                                        <button type="submit" class="btn btn-light btn-sm border text-danger"
+                                                            title="Delete">
+                                                            <x-heroicon-o-trash class="w-4 h-4" />
+                                                        </button>
 
-                                                </form>
+                                                    </form>
+                                                @endcan
 
                                             </td>
                                         </tr>
