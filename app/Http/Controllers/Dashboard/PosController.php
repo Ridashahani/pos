@@ -109,9 +109,14 @@ class PosController extends Controller
      */
     public function searchProducts(Request $request)
     {
-        $term = trim((string) $request->query('term', ''));
+        $data = $request->validate([
+            'term' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+        $term = trim($data['term'] ?? '');
 
         $query = Product::query()
+            ->without('category')
             ->where('stock', '>', 0)
             ->where(function ($q) {
                 $q->whereNull('expire_date')
