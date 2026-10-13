@@ -29,12 +29,32 @@
     }
 
     .payment-account-table {
-        min-width: 1320px;
+        min-width: 1120px;
     }
 
     .payment-account-table th,
     .payment-account-table td {
         padding: 12px 10px;
+    }
+
+    .payment-account-table th:last-child,
+    .payment-account-table td:last-child {
+        position: sticky;
+        right: 0;
+        min-width: 100px;
+        z-index: 2;
+        background: #fff;
+        box-shadow: -5px 0 8px rgba(20, 35, 55, 0.08);
+        white-space: nowrap;
+    }
+
+    .payment-account-table thead th:last-child {
+        z-index: 3;
+        background-color: #2bb8dc;
+    }
+
+    .payment-account-table td:last-child .btn {
+        margin: 0 2px;
     }
 
     .payment-account-table th:nth-child(1),
@@ -265,20 +285,16 @@
                             </span>
                         </td>
                         <td>
-                            @can('edit.payments')
-                                <a href="{{ route('payment-accounts.edit', $account) }}" class="btn btn-light btn-sm" title="Edit account">
+                            <a href="{{ route('payment-accounts.edit', $accountRow) }}" class="btn btn-light btn-sm" title="Edit account">
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                </a>
-                            @endcan
-                            @can('delete.payments')
-                                <form action="{{ route('payment-accounts.destroy', $account) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete or deactivate this account?');">
+                            </a>
+                            <form action="{{ route('payment-accounts.destroy', $accountRow) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete or deactivate this account?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-light btn-sm" title="Delete or deactivate account">
                                         <x-heroicon-o-trash class="w-4 h-4 text-danger" />
                                     </button>
-                                </form>
-                            @endcan
+                            </form>
                         </td>
                     </tr>
                     @empty
