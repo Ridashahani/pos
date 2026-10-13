@@ -84,7 +84,7 @@
                             <td>
                                 <input type="number" class="form-control form-control-sm pos-discount-input"
                                     style="width: 70px;" value="{{ number_format($discount, 2) }}"
-                                    min="0" step="0.01" max="{{ $inclTax }}">
+                                    min="0" step="0.01" max="{{ $inclTax }}" data-saved="{{ number_format($discount, 2) }}">
                             </td>
                             <td><span class="pos-net-amount">{{ $currency }} {{ number_format($netAmount, 2) }}</span></td>
                             <td>

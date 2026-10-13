@@ -691,7 +691,7 @@
         }
 
         // Logic: Validate Payment & Show Summary Modal
-        function validateAndShowModal() {
+        async function validateAndShowModal() {
             // 1. Ensure Customer Selected
             var customerId = $('#customer_id').val();
             if (!customerId) {
@@ -719,8 +719,8 @@
                 return;
             }
 
-            // Make sure any pending quantity/tax/discount edits are saved.
-            if (window.posCartIdle) window.posCartIdle();
+            // Make sure any pending quantity/tax/discount edits are saved before opening modal.
+            if (window.posCartIdle) await window.posCartIdle();
 
             // 3. Update Modal UI
             document.getElementById('modal_total_display').innerText = totalText;
