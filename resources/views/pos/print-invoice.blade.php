@@ -66,7 +66,7 @@
         }
 
         .invoice-summary {
-            background: #f8fafc;
+            /* background: #f8fafc; */
             border-radius: 8px;
             padding: 1.1rem;
         }

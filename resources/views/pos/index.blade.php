@@ -949,7 +949,7 @@
         /* ---------- Page shell ---------- */
         .pos-shell {
             align-items: flex-start;
-            background: #f8fafc;
+            /* background: #f8fafc; */
             margin: -1.5rem;
             min-height: calc(100vh - 80px);
             padding: 1.5rem;
@@ -1042,7 +1042,7 @@
         }
 
         .pos-product-picker .select2-container--default.select2-container--focus .select2-selection--single {
-            border-color: #2f80ed;
+            /* border-color: #2f80ed; */
         }
 
         /* search bar = first row of the dropdown */
