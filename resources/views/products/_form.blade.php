@@ -2,11 +2,21 @@
     $editing = isset($product) && $product;
     $field = fn($name, $default = '') => old($name, $editing ? $product->{$name} ?? $default : $default);
     $variationTypes = $field('variation_types', []);
+    $variationTypes = is_array($variationTypes) ? array_map('strval', $variationTypes) : [];
     $selectedVariationIds = old(
         'variation_ids',
         $editing ? ($product->variation_ids ?: ($product->variation_id ? [$product->variation_id] : [])) : [],
     );
     $selectedVariationIds = is_array($selectedVariationIds) ? $selectedVariationIds : [$selectedVariationIds];
+    $variationOptions = $variations->map(function ($variation) {
+        $types = collect($variation->types ?? [])
+            ->map(fn($type) => is_array($type) ? ($type['value'] ?? ($type['name'] ?? '')) : (is_object($type) ? ($type->value ?? ($type->name ?? '')) : $type))
+            ->filter(fn($type) => $type !== '' && $type !== null)
+            ->values()
+            ->all();
+
+        return ['id' => (string) $variation->id, 'name' => $variation->name, 'types' => $types];
+    })->values();
     $selectedCategoryId = (string) old('category_id', $editing ? $product->category_id ?? '' : '');
     if ($selectedCategoryId === '' && $categories->isNotEmpty()) {
         $selectedCategoryId = (string) $categories->first()->id;
@@ -119,6 +129,62 @@
                         @error('selling_price')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+                    <div class="form-group col-md-12">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="has-variations"
+                                @checked(count($selectedVariationIds) > 0)>
+                            <label class="custom-control-label font-weight-bold" for="has-variations">This product has variations</label>
+                        </div>
+                        <div id="variation-fields" class="row mt-3"
+                            @if (count($selectedVariationIds) === 0) style="display:none" @endif>
+                            <div class="col-md-6 form-group">
+                                <label for="variation-key-button">Variation Keys</label>
+                                <div class="multi-picker" id="variation-key-picker">
+                                    <button type="button" id="variation-key-button"
+                                        class="form-control multi-picker-toggle variation-field-input">
+                                        <span class="multi-picker-label" id="variation-key-label">Select keys</span>
+                                        <span class="multi-picker-chevron">&#9662;</span>
+                                    </button>
+                                    <div class="multi-picker-menu" id="variation-key-menu">
+                                        @foreach ($variationOptions as $variation)
+                                            <label>
+                                                <input type="checkbox" class="variation-key-option variation-field-input"
+                                                    name="variation_ids[]" value="{{ $variation['id'] }}"
+                                                    @checked(in_array($variation['id'], array_map('strval', $selectedVariationIds), true))>
+                                                {{ $variation['name'] }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @if ($variationOptions->isEmpty())
+                                    <small class="form-text text-muted">Create a variation key and its types first.</small>
+                                @endif
+                                @error('variation_ids')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('variation_ids.*')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="variation-type-button">Variation Types</label>
+                                <div class="multi-picker" id="variation-type-picker">
+                                    <button type="button" id="variation-type-button"
+                                        class="form-control multi-picker-toggle variation-field-input">
+                                        <span class="multi-picker-label" id="variation-type-label">Select types</span>
+                                        <span class="multi-picker-chevron">&#9662;</span>
+                                    </button>
+                                    <div class="multi-picker-menu" id="variation-type-menu"></div>
+                                </div>
+                                @error('variation_types')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                @error('variation_types.*')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Status</label>
@@ -482,6 +548,97 @@
     }
 </style>
 <script>
+    (function() {
+        const toggle = document.getElementById('has-variations');
+        const fields = document.getElementById('variation-fields');
+        const keyPicker = document.getElementById('variation-key-picker');
+        const typePicker = document.getElementById('variation-type-picker');
+        if (!toggle || !fields || !keyPicker || !typePicker) return;
+
+        const keyMenu = document.getElementById('variation-key-menu');
+        const typeMenu = document.getElementById('variation-type-menu');
+        const keyLabel = document.getElementById('variation-key-label');
+        const typeLabel = document.getElementById('variation-type-label');
+        const options = @json($variationOptions);
+        const initiallySelectedTypes = new Set(@json($variationTypes));
+        let restoreInitialTypes = true;
+        const findOption = id => options.find(option => String(option.id) === String(id));
+
+        function updateLabels() {
+            const keys = [...keyMenu.querySelectorAll('.variation-key-option:checked')]
+                .map(input => findOption(input.value)?.name)
+                .filter(Boolean);
+            const types = [...typeMenu.querySelectorAll('.variation-type-option:checked')]
+                .map(input => input.value);
+            keyLabel.textContent = keys.length ? keys.join(', ') : 'Select keys';
+            typeLabel.textContent = types.length ? types.join(', ') : 'Select types';
+        }
+
+        function renderTypes() {
+            const selectedTypes = new Set(
+                [...typeMenu.querySelectorAll('.variation-type-option:checked')].map(input => input.value)
+            );
+            const selectedKeys = [...keyMenu.querySelectorAll('.variation-key-option:checked')]
+                .map(input => findOption(input.value))
+                .filter(Boolean);
+            const types = [...new Set(selectedKeys.flatMap(option => option.types.map(String)))];
+
+            typeMenu.replaceChildren();
+            if (!types.length) {
+                const empty = document.createElement('div');
+                empty.className = 'text-muted small p-2';
+                empty.textContent = 'Select variation keys first';
+                typeMenu.appendChild(empty);
+            }
+
+            types.forEach(type => {
+                const label = document.createElement('label');
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.name = 'variation_types[]';
+                input.value = type;
+                input.className = 'variation-type-option variation-field-input';
+                input.checked = selectedTypes.has(type) || (restoreInitialTypes && initiallySelectedTypes.has(type));
+                label.append(input, document.createTextNode(type));
+                typeMenu.appendChild(label);
+            });
+
+            restoreInitialTypes = false;
+            updateLabels();
+        }
+
+        function updateVisibility() {
+            fields.style.display = toggle.checked ? '' : 'none';
+            fields.querySelectorAll('.variation-field-input').forEach(input => {
+                input.disabled = !toggle.checked;
+            });
+            if (!toggle.checked) {
+                keyPicker.classList.remove('open');
+                typePicker.classList.remove('open');
+            }
+        }
+
+        [
+            [keyPicker, document.getElementById('variation-key-button')],
+            [typePicker, document.getElementById('variation-type-button')]
+        ].forEach(([picker, button]) => {
+            button.addEventListener('click', () => picker.classList.toggle('open'));
+        });
+
+        document.addEventListener('click', event => {
+            [keyPicker, typePicker].forEach(picker => {
+                if (!picker.contains(event.target)) picker.classList.remove('open');
+            });
+        });
+
+        keyMenu.addEventListener('change', renderTypes);
+        typeMenu.addEventListener('change', updateLabels);
+        toggle.addEventListener('change', updateVisibility);
+
+        renderTypes();
+        updateVisibility();
+    }());
+
     (function() {
         const categoryInput = document.getElementById('selected_category_id');
         const subcategorySelect = document.getElementById('subcategory_select');
