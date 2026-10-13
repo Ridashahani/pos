@@ -90,6 +90,38 @@
             font-size: 13px;
             color: #4b5563;
         }
+
+        .pswitch input:indeterminate+.slider {
+            background-color: #9db8f5;
+        }
+
+        .permission-matrix th:first-child,
+        .permission-matrix td:first-child {
+            width: 22%;
+            min-width: 180px;
+        }
+
+        .permission-matrix th:not(:first-child),
+        .permission-matrix td:not(:first-child) {
+            width: 10%;
+            min-width: 78px;
+            text-align: center;
+        }
+
+        .permission-matrix {
+            width: 100%;
+            min-width: 980px;
+            table-layout: fixed;
+        }
+
+        .permission-matrix .pswitch {
+            vertical-align: middle;
+        }
+
+        .permission-action {
+            font-weight: 600;
+            color: #4b5563;
+        }
     </style>
 @endsection
 
@@ -116,41 +148,57 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label class="mb-0">Permissions</label>
-                                <div class="enable-all-wrap">
-                                    <span>Enable All</span>
-                                    <label class="pswitch mb-0">
-                                        <input type="checkbox" id="enable-all">
-                                        <span class="slider"></span>
-                                    </label>
-                                </div>
-                            </div>
+                            <label class="mb-2 d-block">Permissions</label>
 
                             <div class="table-responsive rounded border">
-                                <table class="table perm-table mb-0">
+                                <table class="table perm-table permission-matrix mb-0">
                                     <thead>
                                         <tr>
                                             <th>Module</th>
-                                            <th class="text-center">Access</th>
+                                            @foreach (['View', 'Create', 'Edit', 'Delete', 'All'] as $label)
+                                                <th>
+                                                    <div class="permission-action">{{ $label }}</div>
+                                                </th>
+                                            @endforeach
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($permission_groups as $permission_group)
                                             @php
-                                                $permission = $permissions->firstWhere('group_name', $permission_group->group_name);
+                                                $g = $permission_group->group_name;
+                                                $groupPermissions = $permissions->where('group_name', $g);
+                                                $permissionsByAction = $groupPermissions->keyBy(
+                                                    fn($permission) => explode('.', $permission->name, 2)[0],
+                                                );
                                             @endphp
 
-                                            @if ($permission)
+                                            @if ($groupPermissions->count())
                                                 <tr>
-                                                    <td class="module-name">{{ $permission_group->group_name }}</td>
-                                                    <td class="text-center">
+                                                    <td class="module-name">
+                                                        {{ \Illuminate\Support\Str::headline($g) }}
+                                                    </td>
+                                                    @foreach (['access', 'create', 'edit', 'delete'] as $action)
+                                                        @php($permission = $permissionsByAction->get($action))
+                                                        <td>
+                                                            @if ($permission)
+                                                                <label class="pswitch mb-0">
+                                                                    <input type="checkbox" class="perm-toggle"
+                                                                        name="permission_id[]" value="{{ $permission->id }}"
+                                                                        data-group="{{ $g }}"
+                                                                        data-action="{{ $action }}"
+                                                                        {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
+                                                                    <span class="slider"></span>
+                                                                </label>
+                                                            @else
+                                                                <span class="text-muted">-</span>
+                                                            @endif
+                                                        </td>
+                                                    @endforeach
+                                                    <td>
                                                         <label class="pswitch mb-0">
-                                                            <input type="checkbox" class="perm-toggle"
-                                                                id="permission_id[{{ $permission->id }}]"
-                                                                name="permission_id[]"
-                                                                value="{{ $permission->id }}"
-                                                                {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
+                                                            <input type="checkbox" class="module-toggle"
+                                                                data-group="{{ $g }}"
+                                                                aria-label="Toggle all {{ $g }} permissions">
                                                             <span class="slider"></span>
                                                         </label>
                                                     </td>
@@ -179,16 +227,39 @@
 
     <script>
         $(function() {
-            $('#enable-all').on('change', function() {
-                $('.perm-toggle').prop('checked', $(this).is(':checked'));
-            });
+            function syncToggles() {
+                $('.module-toggle').each(function() {
+                    var $permissions = $('.perm-toggle[data-group="' + $(this).data('group') + '"]');
+                    var selected = $permissions.filter(':checked').length;
+                    $(this).prop('checked', $permissions.length > 0 && selected === $permissions.length)
+                        .prop('indeterminate', selected > 0 && selected < $permissions.length);
+                });
+
+                $('.column-toggle').each(function() {
+                    var $permissions = $('.perm-toggle[data-action="' + $(this).data('action') + '"]');
+                    var selected = $permissions.filter(':checked').length;
+                    $(this).prop('checked', $permissions.length > 0 && selected === $permissions.length)
+                        .prop('indeterminate', selected > 0 && selected < $permissions.length);
+                });
+
+                var $all = $('.perm-toggle');
+                var selectedAll = $all.filter(':checked').length;
+                $('#enable-all').prop('checked', $all.length > 0 && selectedAll === $all.length)
+                    .prop('indeterminate', selectedAll > 0 && selectedAll < $all.length);
+            }
 
             $('.perm-toggle').on('change', function() {
-                var $all = $('.perm-toggle');
-                $('#enable-all').prop('checked', $all.length === $all.filter(':checked').length);
+                syncToggles();
             });
 
-            $('.perm-toggle').trigger('change');
+            $('.module-toggle').on('change', function() {
+                $('.perm-toggle[data-group="' + $(this).data('group') + '"]').prop('checked', this.checked);
+                syncToggles();
+            });
+            syncToggles();
+            $('form').on('reset', function() {
+                setTimeout(syncToggles, 0);
+            });
         });
     </script>
 @endsection

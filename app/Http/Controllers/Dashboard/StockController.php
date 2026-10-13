@@ -180,7 +180,9 @@ class StockController extends Controller
 
     public function outOfStock(Request $request)
     {
-        $query = StockIn::with(['product', 'purchase'])->where('remaining_quantity', '<=', 0);
+        $query = StockIn::with(['product', 'purchase'])
+            ->where('remaining_quantity', '<=', 0)
+            ->whereHas('product', fn ($product) => $product->where('stock', '<=', 0));
 
         $stockIns = $this->searchByProduct($query, $request)
             ->latest()->paginate(10)->withQueryString();

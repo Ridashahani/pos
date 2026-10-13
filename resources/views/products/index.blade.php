@@ -53,9 +53,11 @@
                         {{-- <a href="{{ route('products.exportData') }}" class="btn btn-warning add-list mr-2 d-flex align-items-center">
                     <x-heroicon-o-arrow-down-tray class="w-5 h-5 mr-1" /> Export
                     </a> --}}
-                        <a href="{{ route('products.create') }}" class="btn btn-primary add-list d-flex align-items-center">
-                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Product
-                        </a>
+                        @can('create.products')
+                            <a href="{{ route('products.create') }}" class="btn btn-primary add-list d-flex align-items-center">
+                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Product
+                            </a>
+                        @endcan
                     </div>
                     <!-- end: Action Buttons -->
                 </div>
@@ -127,7 +129,7 @@
                                     </td>
                                     <td>{{ $product->name }}</td>
                                     <td>{{ $product->category->name }}</td>
-                                    <td>{{ number_format($product->price_including_gst, 2) }}</td>
+                                    <td>{{ number_format((float) $product->selling_price, 2) }}</td>
                                     <td>{{ $product->stock }}</td>
                                     <td>
                                         @if ($product->status)
@@ -142,21 +144,24 @@
                                                 title="View" href="{{ route('products.show', $product->id) }}">
                                                 <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                             </a>
-                                            <a class="btn btn-success mr-2" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Edit" href="{{ route('products.edit', $product->id) }}">
-                                                <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
-                                            </a>
-                                            </a>
-                                            <form action="{{ route('products.destroy', $product->id) }}" method="POST"
-                                                style="display:inline;">
-                                                @method('delete')
-                                                @csrf
-                                                <button type="submit" class="btn btn-danger border-0"
-                                                    onclick="return confirm('Are you sure you want to delete this record?')"
-                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Delete">
-                                                    <x-heroicon-o-trash class="w-5 h-5 mr-0" />
-                                                </button>
-                                            </form>
+                                            @can('edit.products')
+                                                <a class="btn btn-success mr-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                                                    title="Edit" href="{{ route('products.edit', $product->id) }}">
+                                                    <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
+                                                </a>
+                                            @endcan
+                                            @can('delete.products')
+                                                <form action="{{ route('products.destroy', $product->id) }}" method="POST"
+                                                    style="display:inline;">
+                                                    @method('delete')
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-danger border-0"
+                                                        onclick="return confirm('Are you sure you want to delete this record?')"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Delete">
+                                                        <x-heroicon-o-trash class="w-5 h-5 mr-0" />
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

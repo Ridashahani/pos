@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Redirect;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use App\Http\Requests\Sale\StoreSaleRequest;
+use Illuminate\Validation\ValidationException;
 
 class SaleController extends Controller
 {
@@ -135,6 +136,7 @@ class SaleController extends Controller
                     'product_id' => $content->id,
                     'quantity'   => $content->qty,
                     'unit_price' => $unitPrice,
+                    'discount'   => $lineDiscount,
                     'total'      => max(0, ($unitPrice * $content->qty) + $lineTax - $lineDiscount),
                 ]);
             }
@@ -181,24 +183,31 @@ class SaleController extends Controller
     {
         $sale_id = $request->id ?? $request->sale_id;
 
-        DB::transaction(function () use ($sale_id) {
-            $sale = Sale::whereKey($sale_id)->lockForUpdate()->firstOrFail();
+        try {
+            DB::transaction(function () use ($sale_id) {
+                $sale = Sale::whereKey($sale_id)->lockForUpdate()->firstOrFail();
 
-            if ($sale->status !== 'completed') {
-                $products = SaleDetails::where('sale_id', $sale_id)->with('product')->get();
+                if ($sale->status !== 'completed') {
+                    $products = SaleDetails::where('sale_id', $sale_id)->with('product')->get();
 
-                foreach ($products as $detail) {
-                    $product = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
+                    foreach ($products as $detail) {
+                        $product = Product::whereKey($detail->product_id)->lockForUpdate()->firstOrFail();
 
-                    app(InventoryService::class)->sell($sale, $detail);
-                    $product->decrement('stock', $detail->quantity);
+                        app(InventoryService::class)->sell($sale, $detail);
+                        $product->decrement('stock', $detail->quantity);
+                    }
+
+                    $sale->update(['status' => 'completed']);
                 }
+            });
+        } catch (ValidationException $e) {
+            $errorMsg = collect($e->errors())->flatten()->first() ?? 'Could not complete sale due to insufficient stock.';
+            return Redirect::route('sale.saleDetails', $sale_id)->withErrors(['error' => $errorMsg]);
+        } catch (\Exception $e) {
+            return Redirect::route('sale.saleDetails', $sale_id)->withErrors(['error' => 'Could not complete sale: ' . $e->getMessage()]);
+        }
 
-                $sale->update(['status' => 'completed']);
-            }
-        });
-
-        return Redirect::route('sale.pendingSales')->with('success', 'Sale has been completed!');
+        return Redirect::route('sale.completeSales')->with('success', 'Sale has been completed!');
     }
     public function returnSale(Sale $sale)
     {

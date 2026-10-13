@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -86,6 +87,38 @@ class PosControllerTest extends TestCase
         $response->assertViewIs('pos.index');
     }
 
+    public function test_pos_product_picker_search_returns_sellable_products(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.pos'],
+            ['group_name' => 'pos']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+        $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'POS Search Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $category = $this->createCategory();
+        $product = Product::create([
+            'name' => 'Searchable POS Product',
+            'slug' => 'searchable-pos-product',
+            'code' => 'POS-SEARCH-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'cost_price' => 50,
+            'selling_price' => 100,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/pos/products/search?term=Searchable');
+
+        $response->assertOk()
+            ->assertJsonCount(1, 'results')
+            ->assertJsonPath('results.0.id', $product->id)
+            ->assertJsonPath('results.0.name', 'Searchable POS Product')
+            ->assertJsonPath('pagination.more', false);
+    }
+
     public function test_pos_branch_selector_contains_the_users_active_branches(): void
     {
         $permission = Permission::firstOrCreate(
@@ -139,6 +172,72 @@ class PosControllerTest extends TestCase
 
         $response->assertOk()->assertJsonPath('success', true);
         $this->assertDatabaseHas('sales', ['branch_id' => $branch->id]);
+    }
+
+    public function test_pending_sale_can_be_completed_and_marked_as_completed(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'edit.sales'],
+            ['group_name' => 'sales']
+        );
+        Role::where('name', 'test-role')->first()->givePermissionTo($permission);
+
+        $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'Sale Completion Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $customer = Customer::factory()->create();
+        $category = $this->createCategory();
+        $product = Product::create([
+            'name' => 'Completion Product',
+            'slug' => 'completion-product',
+            'code' => 'COMPLETE-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'cost_price' => 40,
+            'selling_price' => 50,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
+        ]);
+
+        $stockIn = \App\Models\StockIn::create([
+            'product_id' => $product->id,
+            'quantity' => 5,
+            'remaining_quantity' => 5,
+            'cost_price' => 40,
+            'batch_no' => 'BATCH-001',
+            'branch_id' => $branch->id,
+        ]);
+
+        $sale = \App\Models\Sale::create([
+            'customer_id' => $customer->id,
+            'branch_id' => $branch->id,
+            'user_id' => $user->id,
+            'invoice_no' => 'INV-TEST-001',
+            'sale_date' => Carbon::now(),
+            'status' => 'pending',
+            'subtotal' => 100,
+            'discount' => 0,
+            'tax' => 0,
+            'grand_total' => 100,
+            'paid_amount' => 0,
+            'due_amount' => 100,
+            'payment_method' => 'Cash',
+        ]);
+
+        \App\Models\SaleDetails::create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'quantity' => 2,
+            'unit_price' => 50,
+            'total' => 100,
+        ]);
+
+        $response = $this->actingAs($user)->put('/sales/update/status', ['id' => $sale->id]);
+
+        $response->assertRedirect(route('sale.completeSales'));
+        $this->assertDatabaseHas('sales', ['id' => $sale->id, 'status' => 'completed']);
+        $this->assertDatabaseHas('sold_items', ['sale_id' => $sale->id, 'product_id' => $product->id, 'status' => 'sold']);
+        $this->assertDatabaseHas('stock_in', ['id' => $stockIn->id, 'remaining_quantity' => 3]);
     }
 
     public function test_pos_product_results_keep_a_stable_order(): void
@@ -426,6 +525,9 @@ class PosControllerTest extends TestCase
         );
         Role::where('name', 'test-role')->first()->givePermissionTo($permission);
         $user = $this->createAuthenticatedUser();
+        $branch = Branch::create(['name' => 'Discount Test Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
         $item = Cart::add([
             'id' => 'discount-test',
             'name' => 'Discount Test Item',
@@ -446,13 +548,15 @@ class PosControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('success', true);
-        $this->assertStringContainsString('PKR 195.00', $response->json('cart_html'));
-        $cartHtml = $response->json('cart_html');
+        $cartHtml = view('pos.cart-sidebar', ['productItem' => Cart::content()])->render();
+        $this->assertStringContainsString('PKR 195.00', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 200\.00"/', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-price">PKR 100.00', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-gross">PKR 200.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax-rate">10.00%', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-tax">PKR 20.00', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 220.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-discount">PKR 25.00', $cartHtml);
         $this->assertStringContainsString('class="pos-footer-net">PKR 195.00', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-tax"\s+value="PKR 20\.00"/', $cartHtml);
         $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-discount"\s+value="PKR 25\.00"/', $cartHtml);
@@ -465,12 +569,15 @@ class PosControllerTest extends TestCase
         ]);
 
         $quantityResponse->assertOk()->assertJsonPath('success', true);
-        $this->assertStringContainsString('PKR 305.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-gross">PKR 300.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-tax">PKR 30.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 330.00', $quantityResponse->json('cart_html'));
-        $this->assertStringContainsString('class="pos-footer-net">PKR 305.00', $quantityResponse->json('cart_html'));
-        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 300\.00"/', $quantityResponse->json('cart_html'));
+        $cartHtml = view('pos.cart-sidebar', ['productItem' => Cart::content()])->render();
+        $this->assertStringContainsString('PKR 305.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-gross">PKR 300.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax-rate">10.00%', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-tax">PKR 30.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-incl-tax">PKR 330.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-discount">PKR 25.00', $cartHtml);
+        $this->assertStringContainsString('class="pos-footer-net">PKR 305.00', $cartHtml);
+        $this->assertMatchesRegularExpression('/class="[^"]*pos-summary-price"\s+value="PKR 300\.00"/', $cartHtml);
         $this->assertEquals(305.0, (float) Cart::total(null, null, ''));
         $this->assertSame(25.0, (float) Cart::content()->first()->options->discount);
     }
@@ -483,10 +590,20 @@ class PosControllerTest extends TestCase
         );
         Role::where('name', 'test-role')->first()->givePermissionTo($permission);
         $user = $this->createAuthenticatedUser();
-        $product = $this->createProductWithCode('GST Rate Item', 'GST-RATE-001');
-        $product->update([
+        $branch = Branch::create(['name' => 'GST Rate Branch', 'address' => 'Test address']);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $category = $this->createCategory();
+        Setting::updateOrCreate(['key' => 'gst'], ['value' => '5']);
+        $product = Product::create([
+            'name' => 'GST Rate Item',
+            'slug' => 'gst-rate-item',
+            'code' => 'GST-RATE-001',
+            'category_id' => $category->id,
+            'stock' => 5,
             'selling_price' => 100,
-            'order_tax' => 17.5,
+            'gst_tax' => 17.5,
+            'expire_date' => Carbon::today()->addYear()->toDateString(),
         ]);
 
         $response = $this->actingAs($user)->postJson('/pos/add', [
@@ -501,7 +618,7 @@ class PosControllerTest extends TestCase
         $this->assertSame(17.5, (float) $cartItem->taxRate);
         $this->assertEquals(17.5, (float) Cart::tax(2, '.', ''));
         $this->assertStringContainsString('value="17.50"', $response->json('cart_html'));
-        $this->assertStringContainsString('class="pos-tax-amount">17.50</td>', $response->json('cart_html'));
+        $this->assertStringContainsString('class="pos-tax-amount">17.50</span>', $response->json('cart_html'));
     }
 
     public function test_updates_for_removed_cart_rows_return_the_current_cart(): void

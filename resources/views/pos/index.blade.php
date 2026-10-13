@@ -17,51 +17,9 @@
         </div>
 
         <div class="row pos-shell">
-            <!-- LEFT COLUMN: Product Catalog -->
-            <div class="col-md-12 col-lg-8 pos-catalog">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="card card-block card-stretch card-height">
-                            <div class="card-body">
-                                <div class="pos-category-tabs mb-3">
-                                    <button type="button" class="pos-tab active">All Product</button>
-                                    <button type="button" class="pos-tab">Category</button>
-                                    <button type="button" class="pos-tab">Brand</button>
-                                    <button type="button" class="pos-tab">Featured</button>
-                                </div>
-                                <!-- Filter & Search Form -->
-                                <form action="{{ route('pos.index') }}" method="get" class="mb-0" id="pos-search-form">
-                                    <div class="input-group pos-search-box">
-                                        <input type="text" class="form-control" name="search" id="pos_search"
-                                            placeholder="Search products..." value="{{ request('search') }}"
-                                            autocomplete="off" aria-label="Search products">
-                                        <div class="input-group-append">
-                                            <button type="submit" class="btn btn-primary pos-search-btn" title="Search">
-                                                <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                                            </button>
-                                            <button type="button" id="pos-search-clear"
-                                                class="btn btn-danger pos-search-btn {{ request('search') || request('category_id') ? '' : 'd-none' }}"
-                                                title="Clear search" aria-label="Clear search">
-                                                <x-heroicon-o-x-mark class="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <span id="pos-search-status" class="sr-only" role="status" aria-live="polite"></span>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product Grid -->
-                    <div id="pos-product-results" class="col-lg-12" aria-busy="false">
-                        @include('pos.product-grid', ['products' => $products])
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: Cart System -->
-            <div class="col-md-12 col-lg-4 pos-cart">
-                <div class="card border-0 shadow-lg sticky-top" style="top: 20px; z-index: 100;">
+            <!-- FULL WIDTH: Current Sale -->
+            <div class="col-12 pos-cart">
+                <div class="card border-0 shadow-lg">
                     <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between p-3">
                         <h5 class="mb-0 text-white">
                             <x-heroicon-o-shopping-cart class="w-5 h-5 mr-1 inline" /> Current Sale
@@ -74,7 +32,7 @@
                     <div class="card-body p-0">
                         <div class="pos-order-fields p-3 border-bottom">
                             <div class="row">
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label">Customer</label>
                                     <div class="input-group">
                                         <select class="form-control select2" id="customer_id" name="customer_id"
@@ -92,7 +50,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label">Biller</label>
                                     <select class="form-control">
                                         <option>Admin</option>
@@ -100,7 +58,7 @@
                                         <option>Cashier</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label" for="branch_id">Branch</label>
                                     <select class="form-control" id="branch_id" name="branch_id" @if ($branches->isEmpty()) disabled @else required @endif>
                                         @if ($branches->isEmpty())
@@ -116,11 +74,25 @@
                                         <small class="form-text text-danger">Create an active branch and assign it to your account before making a sale.</small>
                                     @endif
                                 </div>
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label">Reference No</label>
                                     <input class="form-control" type="text" placeholder="Reference No">
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Searchable product dropdown.
+                             Products are fetched on demand (30 per page, scroll for more),
+                             so no product list is rendered into this page. -->
+                        <div class="pos-product-picker p-3 border-bottom">
+                            <label class="pos-field-label" for="product_multiselect">Products</label>
+                            <select id="product_multiselect" class="form-control" style="width: 100%;">
+                                <option></option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Click the field, type to search by name or code, then pick a product to add it to the
+                                sale. Change quantities or remove products in the table below.
+                            </small>
                         </div>
 
                         <!-- Dynamic Cart Sidebar -->
@@ -247,9 +219,11 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Initialize Select2 on Load
-        window.addEventListener('load', function() {
-            $('.select2').select2({
+        // DOMContentLoaded (not "load"): "load" waits for every image on the page,
+        // which delayed the dropdown from becoming usable.
+        document.addEventListener('DOMContentLoaded', function() {
+            // Customer search (AJAX)
+            $('#customer_id').select2({
                 placeholder: " Select Customer",
                 allowClear: true,
                 width: 'resolve',
@@ -270,18 +244,81 @@
                     cache: true
                 }
             });
+
+            // Product dropdown: search bar first, products below it.
+            // Server-side search + pagination (30 per page, scroll for more): the browser
+            // never builds more than a screenful of rows, whatever the catalogue size.
+            const $products = $('#product_multiselect');
+
+            $products.select2({
+                placeholder: 'Search and select a product...',
+                width: '100%',
+                minimumResultsForSearch: 0,     // always show the search bar
+                ajax: {
+                    url: "{{ route('pos.products.search') }}",
+                    dataType: 'json',
+                    delay: 200,                 // debounce typing
+                    data: function(params) {
+                        return {
+                            term: params.term || '',
+                            page: params.page || 1
+                        };
+                    }
+                    // the endpoint already returns { results: [...], pagination: { more } }
+                },
+                templateResult: function(option) {
+                    if (option.loading || !option.id) return option.text;
+                    const $row = $('<span class="pos-opt"></span>');
+                    $row.append($('<img class="pos-opt-thumb" alt="" loading="lazy" decoding="async">')
+                        .attr('src', option.image));
+                    const $text = $('<span class="pos-opt-text"></span>');
+                    $text.append($('<span class="pos-opt-name"></span>').text(option.name));
+                    const meta = [
+                        option.code,
+                        Number(option.price).toLocaleString('en-US'),
+                        'Stock: ' + option.stock
+                    ].filter(Boolean).join('  |  ');
+                    $text.append($('<small class="pos-opt-meta"></small>').text(meta));
+                    $row.append($text);
+                    return $row;
+                },
+                templateSelection: function(option) {
+                    return option.name || option.text;
+                }
+            });
+
+            // Select2 4.1.0-rc.0 + jQuery 3.6+ does not focus the search box on open,
+            // so focus it ourselves and the cashier can type straight away.
+            $(document).on('select2:open', function() {
+                setTimeout(function() {
+                    const field = document.querySelector('.select2-search--dropdown .select2-search__field');
+                    if (field) field.focus();
+                }, 0);
+            });
+
+            // Picking a product adds it to the cart. Only the id is sent: the server
+            // reads name / price / image from the database.
+            $products.on('select2:select', function(e) {
+                // Reset the picker right away so the same product can be picked again.
+                setTimeout(window.syncProductSelect, 0);
+                window.posAddProduct({ id: e.params.data.id });
+            });
         });
 
-        // Helper: Get Selected Customer ID
-        function getCustomerId() {
-            return $('#customer_id').val();
-        }
+        // The picker is only an "add" control: it is cleared after every pick.
+        // The cart table below is the source of truth for what is in the sale.
+        window.syncProductSelect = function() {
+            const $products = $('#product_multiselect');
+            if (!$products.length || !$products.data('select2')) return;
+            $products.val(null).trigger('change.select2');
+        };
 
         /* =====================================================================
-         * CART ENGINE (same look as before, only the behaviour is fixed)
+         * CART ENGINE
          * - spinner arrows / typing update the numbers instantly (local maths)
          * - saves are debounced and sent ONE AT A TIME (no lost clicks)
-         * - the cart HTML is only re-rendered when nothing is being edited
+         * - qty / tax / discount saves get a tiny JSON reply (no HTML re-render)
+         * - the cart HTML is only redrawn when rows are added or removed
          * ===================================================================== */
         (function () {
             const container = document.getElementById('cart-sidebar-container');
@@ -342,6 +379,10 @@
                 set('.pos-summary-price', currency + ' ' + fmt(t.price));
                 set('.pos-summary-tax', currency + ' ' + fmt(t.tax));
                 set('.pos-summary-discount', currency + ' ' + fmt(t.discount));
+                // const footerRate = container.querySelector('.pos-footer-tax-rate');
+                // if (footerRate) footerRate.textContent = fmt(t.price > 0 ? (t.tax / t.price) * 100 : 0) + '%';
+                const footerDiscount = container.querySelector('.pos-footer-discount');
+                if (footerDiscount) footerDiscount.textContent = currency + ' ' + fmt(t.discount);
                 const total = document.getElementById('cart-total');
                 if (total) {
                     total.dataset.total = t.net;
@@ -366,15 +407,10 @@
 
             /* ---------- one request at a time ---------- */
             let chain = Promise.resolve();
-            let inflight = 0;
-            let lastData = null;
             const timers = new Map();
 
             function enqueue(task) {
-                inflight++;
-                chain = chain.then(task)
-                    .catch(err => console.error(err))
-                    .finally(() => { if (--inflight === 0) settle(); });
+                chain = chain.then(task).catch(err => console.error(err));
                 return chain;
             }
 
@@ -388,15 +424,6 @@
 
             function flushTimers() {
                 [...timers.values()].forEach(x => { clearTimeout(x.t); x.run(); });
-            }
-
-            // rowId changes whenever options change; keep the live DOM pointing at the current ids.
-            function syncRowIds(html) {
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                doc.querySelectorAll('tr[data-item-id]').forEach(n => {
-                    const live = rowFor(n.dataset.itemId);
-                    if (live) live.dataset.rowId = n.dataset.rowId;
-                });
             }
 
             async function saveField(itemId, field) {
@@ -426,19 +453,20 @@
 
                 if (res.ok && data?.success) {
                     input.dataset.saved = value;
-                    // No re-render: the numbers on screen were already calculated locally and
-                    // match the server. Only keep the row ids in sync so later saves hit the right row.
-                    syncRowIds(data.cart_html);
-                    if (field === 'qty' && num(value) === 0) render(data);   // line was removed, redraw once
+                    if (data.cart_html) {
+                        render(data);                      // a line was removed: redraw once
+                    } else if (data.row_id) {
+                        tr.dataset.rowId = data.row_id;    // row id changes when options change
+                    }
                 } else if (data?.cart_html) {
-                    render(data);                         // e.g. 409: row vanished, show the real cart
+                    render(data);                          // e.g. 409: row vanished, show the real cart
                 } else {
-                    input.value = input.dataset.saved;    // validation/server error: roll back
+                    input.value = input.dataset.saved;     // validation/server error: roll back
                     recalcSummary();
                 }
             }
 
-            /* ---------- rendering (only when nothing is being edited) ---------- */
+            /* ---------- rendering (only when rows are added / removed) ---------- */
             const KEEP = ['pay_amount', 'payment_type'];
 
             function render(data) {
@@ -455,13 +483,7 @@
                     const el = document.getElementById(id);
                     if (el && v !== undefined) el.value = v;
                 });
-                lastData = null;
-            }
-
-            function settle() {
-                const a = document.activeElement;
-                const editing = a && container.contains(a) && a.matches('input, select');
-                if (inflight === 0 && timers.size === 0 && lastData && !editing) render(lastData);
+                window.syncProductSelect();       // keep the product picker reset
             }
 
             /* ---------- native spinner arrows: don't leave the input "active" ---------- */
@@ -499,13 +521,10 @@
             document.addEventListener('pointerup', releaseSpinner);
             document.addEventListener('pointercancel', releaseSpinner);
 
-            /* ---------- events (delegated, so they survive re-renders) ---------- */
-            container.addEventListener('click', e => {
-                const btn = e.target.closest('[data-action="remove"]');
-                const tr = btn?.closest('tr[data-item-id]');
+            /* ---------- remove a line ---------- */
+            function removeItem(id) {
+                const tr = rowFor(id);
                 if (!tr) return;
-
-                const id = tr.dataset.itemId;
                 tr.style.opacity = .4;
                 flushTimers();
                 enqueue(async () => {
@@ -517,6 +536,15 @@
                     const data = await res.json();
                     if (data.cart_html) render(data);
                 });
+            }
+            window.posRemoveItem = removeItem;
+
+            /* ---------- events (delegated, so they survive re-renders) ---------- */
+            container.addEventListener('click', e => {
+                const btn = e.target.closest('[data-action="remove"]');
+                const tr = btn?.closest('tr[data-item-id]');
+                if (!tr) return;
+                removeItem(tr.dataset.itemId);
             });
 
             container.addEventListener('input', e => {
@@ -539,31 +567,42 @@
             });
 
             container.addEventListener('focusout', e => {
-                if (isField(e.target)) {
-                    const input = e.target;
-                    const tr = input.closest('tr');
-                    if (tr && num(input.value) !== num(input.dataset.saved)) {
-                        schedule(tr, fieldOf(input), 150);
-                    }
+                if (!isField(e.target)) return;
+                const input = e.target;
+                const tr = input.closest('tr');
+                if (tr && num(input.value) !== num(input.dataset.saved)) {
+                    schedule(tr, fieldOf(input), 150);
                 }
-                setTimeout(settle, 0);
             });
 
             /* ---------- add to cart ---------- */
+            let adding = 0;
+
             function postAdd(formData) {
                 flushTimers();
-                const cid = getCustomerId();
-                if (cid) formData.append('customer_id', cid);
+                container.classList.add('pos-busy');     // instant visual feedback
+                adding++;
                 return enqueue(async () => {
-                    const res = await fetch("{{ route('pos.addCart') }}", {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                        body: formData,
-                    });
-                    const data = await res.json();
-                    if (data.success) render(data); else alert(data.message || 'Failed to add item');
+                    try {
+                        const res = await fetch("{{ route('pos.addCart') }}", {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: formData,
+                        });
+                        const data = await res.json();
+                        if (data.success) render(data); else alert(data.message || 'Failed to add item');
+                    } finally {
+                        if (--adding === 0) container.classList.remove('pos-busy');
+                    }
                 });
             }
+
+            // Used by the product dropdown (only the product id is sent).
+            window.posAddProduct = function (p) {
+                const fd = new FormData();
+                fd.append('id', p.id);
+                return postAdd(fd);
+            };
 
             window.addToCart = function (event) {
                 event.preventDefault();
@@ -656,7 +695,7 @@
         }
 
         // Logic: Validate Payment & Show Summary Modal
-        function validateAndShowModal() {
+        async function validateAndShowModal() {
             // 1. Ensure Customer Selected
             var customerId = $('#customer_id').val();
             if (!customerId) {
@@ -684,8 +723,8 @@
                 return;
             }
 
-            // Make sure any pending quantity/tax/discount edits are saved.
-            if (window.posCartIdle) window.posCartIdle();
+            // Make sure any pending quantity/tax/discount edits are saved before opening modal.
+            if (window.posCartIdle) await window.posCartIdle();
 
             // 3. Update Modal UI
             document.getElementById('modal_total_display').innerText = totalText;
@@ -751,6 +790,9 @@
                         document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
                     }
 
+                    // Reset the product picker
+                    window.syncProductSelect();
+
                     alert('Sale Successful!');
 
                 } else {
@@ -761,167 +803,15 @@
                 alert('An error occurred while processing the sale.');
             }
         }
-
-        // AJAX product search
-        (function() {
-            const posSearchField = document.getElementById('pos_search');
-            const searchForm = posSearchField ? posSearchField.closest('form') : null;
-            const resultsContainer = document.getElementById('pos-product-results');
-            const clearButton = document.getElementById('pos-search-clear');
-            const searchStatus = document.getElementById('pos-search-status');
-
-            if (posSearchField && searchForm && resultsContainer) {
-                let debounceTimeout;
-                let activeRequest;
-                let scannerTimeout;
-
-                function syncClearButton() {
-                    const hasFilters = posSearchField.value.trim() !== '' || new URLSearchParams(window.location.search)
-                        .has('category_id');
-                    clearButton.classList.toggle('d-none', !hasFilters);
-                }
-
-                function getSearchUrl() {
-                    const url = new URL(window.location.href);
-                    const search = posSearchField.value.trim();
-
-                    if (search) {
-                        url.searchParams.set('search', search);
-                    } else {
-                        url.searchParams.delete('search');
-                    }
-
-                    url.searchParams.delete('page');
-                    return url;
-                }
-
-                async function loadProducts(url, historyMode = 'replace') {
-                    if (activeRequest) {
-                        activeRequest.abort();
-                    }
-
-                    const requestController = new AbortController();
-                    activeRequest = requestController;
-                    resultsContainer.setAttribute('aria-busy', 'true');
-                    searchForm.setAttribute('aria-busy', 'true');
-                    searchStatus.textContent = 'Searching products';
-
-                    try {
-                        const response = await fetch(url.toString(), {
-                            headers: {
-                                'Accept': 'application/json'
-                            },
-                            signal: requestController.signal
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Product search failed with status ' + response.status);
-                        }
-
-                        const data = await response.json();
-                        resultsContainer.innerHTML = data.html;
-                        searchStatus.textContent = data.total + (data.total === 1 ? ' product found' :
-                            ' products found');
-
-                        if (window.location.href !== url.href) {
-                            window.history[historyMode + 'State']({}, '', url);
-                        }
-
-                        syncClearButton();
-                    } catch (error) {
-                        if (error.name !== 'AbortError') {
-                            console.error('Unable to search products:', error);
-                            searchStatus.textContent = 'Unable to load products. Please try again.';
-                        }
-                    } finally {
-                        if (activeRequest === requestController) {
-                            resultsContainer.setAttribute('aria-busy', 'false');
-                            searchForm.setAttribute('aria-busy', 'false');
-                            activeRequest = null;
-                        }
-                    }
-                }
-
-                searchForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    window.clearTimeout(debounceTimeout);
-                    loadProducts(getSearchUrl(), 'push');
-                });
-
-                posSearchField.addEventListener('input', function() {
-                    syncClearButton();
-                    window.clearTimeout(debounceTimeout);
-                    debounceTimeout = window.setTimeout(function() {
-                        loadProducts(getSearchUrl());
-                    }, 250);
-                });
-
-                clearButton.addEventListener('click', function() {
-                    posSearchField.value = '';
-                    const url = new URL(searchForm.action);
-                    loadProducts(url, 'push');
-                });
-
-                resultsContainer.addEventListener('click', function(event) {
-                    const link = event.target.closest('.pagination a');
-                    if (!link) return;
-
-                    const url = new URL(link.href);
-                    if (url.origin !== window.location.origin) return;
-
-                    event.preventDefault();
-                    posSearchField.value = url.searchParams.get('search') || '';
-                    loadProducts(url, 'push');
-                });
-
-                window.addEventListener('popstate', function() {
-                    const url = new URL(window.location.href);
-                    posSearchField.value = url.searchParams.get('search') || '';
-                    loadProducts(url, 'replace');
-                });
-
-                // Barcode scanners commonly submit with Enter or paste.
-                function isMobileDevice() {
-                    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                        (window.innerWidth <= 768);
-                }
-
-                posSearchField.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.keyCode === 13) {
-                        if (scannerTimeout) {
-                            clearTimeout(scannerTimeout);
-                        }
-
-                        scannerTimeout = setTimeout(function() {
-                            searchForm.requestSubmit();
-                        }, 100);
-                    }
-                });
-
-                posSearchField.addEventListener('paste', function(e) {
-                    setTimeout(function() {
-                        searchForm.requestSubmit();
-                    }, 50);
-                });
-
-                if (isMobileDevice()) {
-                    setTimeout(function() {
-                        posSearchField.focus();
-                    }, 500);
-                }
-            }
-        })();
     </script>
 
     <!-- Page Specific Styles -->
     <style>
-        /* ---------- Cart table styles (moved verbatim from the partial so they are not re-injected on every render) ---------- */
+        /* ---------- Cart table styles ---------- */
         .pos-cart-table {
             min-width: 0;
             width: 100%;
-            /* table-layout: fixed; */
-            font-size: 10px;
-
+            font-size: 12px;
         }
 
         .pos-cart-product-name small {
@@ -934,15 +824,29 @@
             border-top: 0;
             color: #273142;
             font-weight: 900;
-            padding: .55rem .4rem;
-            white-space: nowrap;
+            font-size: 11px;
+            line-height: 1.15;
+            padding: .4rem .25rem;
+            white-space: normal;
+            vertical-align: middle;
         }
 
         .pos-cart-table td {
             border-top: 1px solid #edf0f4;
             color: #536071;
-            padding: .45rem .4rem;
+            padding: .3rem .25rem;
             white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .pos-cart-table th:first-child,
+        .pos-cart-table td:first-child {
+            padding-left: .5rem;
+        }
+
+        .pos-cart-table th:last-child,
+        .pos-cart-table td:last-child {
+            padding-right: .5rem;
         }
 
         .pos-cart-product-image {
@@ -951,10 +855,14 @@
             object-fit: contain;
         }
 
-        .pos-cart-product-name {
+        /* The product column soaks up all spare width, so every other column
+           shrinks to its content and the gaps between them disappear. */
+        .pos-cart-table td.pos-cart-product-name {
             color: #273142 !important;
             font-weight: 600;
-            max-width: 115px;
+            width: 100%;
+            min-width: 120px;
+            max-width: 1px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -1010,8 +918,18 @@
 
         .pos-discount-input {
             min-width: 50px;
-            max-width: 60px;
-            padding: 0.25rem 0.3rem;
+            max-width: 70px;
+            padding: 0.2rem 0.3rem;
+        }
+
+        .pos-cart-table .pos-quantity-input,
+        .pos-cart-table .pos-tax-rate-input {
+            padding: 0.2rem 0.3rem;
+        }
+
+        .pos-cart-table .form-control-sm {
+            height: 26px;
+            font-size: 11px;
         }
 
         .pos-discount-control {
@@ -1025,217 +943,26 @@
             padding: .2rem .35rem;
         }
 
-        /* ---------- Product list ---------- */
-        .product-grid .pos-product-row {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            background: #fff;
-            border: 1px solid #e5eaf0;
-            border-radius: 6px;
-            padding: .5rem .65rem;
-            transition: box-shadow .2s;
+        /* cart dims slightly while a product is being added */
+        .pos-busy .cart-items-wrapper {
+            opacity: .55;
+            pointer-events: none;
+            transition: opacity .12s;
         }
 
-        .product-grid .pos-product-row:hover {
-            box-shadow: 0 4px 12px rgba(37, 52, 72, .08);
-        }
-
-        /* Image + badge */
-        .pos-product-thumb {
-            position: relative;
-            flex: 0 0 70px;
-            width: 70px;
-            height: 56px;
-        }
-
-        .pos-product-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 4px;
-            display: block;
-        }
-
-        .pos-stock-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 22px;
-            height: 22px;
-            padding: 0 5px;
-            border-radius: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .65rem;
-            font-weight: 700;
-            color: #fff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
-        }
-
-        .pos-stock-badge.in {
-            background: #10b981;
-        }
-
-        .pos-stock-badge.low {
-            background: #ef4444;
-        }
-
-        /* Name + price */
-        .pos-product-info {
-            flex: 1 1 auto;
-            min-width: 0;
-            /* taake naam truncate ho */
-        }
-
-        .pos-product-name {
-            font-size: .85rem;
-            font-weight: 700;
-            color: #273142;
-            margin: 0 0 .15rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .pos-product-price {
-            font-size: .9rem;
-            font-weight: 800;
-        }
-
-        /* Add button */
-        .product-grid .add-to-cart-form {
-            margin: 0;
-            flex-shrink: 0;
-        }
-
-        .product-grid .pos-add-btn {
-            width: 40px;
-            height: 34px;
-            padding: 0;
-            border-radius: 17px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff !important;
-        }
-
-        .product-grid .pos-add-btn svg {
-            width: 18px;
-            height: 18px;
-            display: block;
-            stroke: #fff;
-        }
-
-        .product-grid .pos-add-btn:active {
-            transform: scale(.94);
-        }
-
+        /* ---------- Page shell ---------- */
         .pos-shell {
             align-items: flex-start;
-            background: #f8fafc;
+            /* background: #f8fafc; */
             margin: -1.5rem;
             min-height: calc(100vh - 80px);
             padding: 1.5rem;
         }
 
-        .pos-catalog {
-            order: 2;
-        }
-
-        .pos-cart {
-            order: 1;
-        }
-
-        .pos-catalog>.row>.col-lg-12:first-child .card,
         .pos-cart .card {
             border: 1px solid #e5eaf0;
             border-radius: 4px;
             box-shadow: none;
-        }
-
-        .pos-catalog>.row>.col-lg-12:first-child .card-body {
-            padding: .8rem;
-        }
-
-        .pos-category-tabs {
-            display: flex;
-            flex-wrap: nowrap;
-            /* never wrap: always one row */
-            gap: .35rem;
-        }
-
-        .pos-tab {
-            flex: 1 1 0;
-            /* four equal-width tabs */
-            min-width: 0;
-            /* lets them shrink below their text width */
-            background: #2f80ed;
-            border: 0;
-            border-radius: 3px;
-            color: #fff;
-            font-weight: 700;
-            font-size: clamp(.6rem, 1.6vw, .72rem);
-            /* text scales down when tight */
-            padding: .5rem .25rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        @media (min-width: 768px) {
-            .pos-tab {
-                padding: .5rem .6rem;
-            }
-        }
-
-        .pos-tab:nth-child(2) {
-            background: #2fc48e;
-        }
-
-        .pos-tab:nth-child(3) {
-            background: #f89a42;
-        }
-
-        .pos-tab:nth-child(4) {
-            background: #a40c72;
-        }
-
-        .pos-search-box {
-            flex-wrap: nowrap;
-        }
-
-        .pos-search-box .form-control {
-            height: 38px;
-            font-size: .85rem;
-            padding: .4rem .75rem;
-            border-radius: 4px 0 0 4px;
-        }
-
-        .pos-search-box .pos-search-btn {
-            height: 38px;
-            width: 42px;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0;
-            color: #fff;
-        }
-
-        .pos-search-box .input-group-append .pos-search-btn:last-child {
-            border-radius: 0 4px 4px 0;
-        }
-
-        .pos-search-box .pos-search-btn svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .pos-cart .card {
-            position: sticky;
-            top: 20px;
         }
 
         .pos-cart .card-header {
@@ -1255,7 +982,8 @@
             color: #fff !important;
         }
 
-        .pos-order-fields {
+        .pos-order-fields,
+        .pos-product-picker {
             background: #fff;
         }
 
@@ -1283,43 +1011,8 @@
             height: 34px;
         }
 
-        .product-grid .product-card {
-            border: 1px solid #e5eaf0;
-            border-radius: 4px;
-            box-shadow: none;
-        }
-
-        .product-grid .product-card:hover {
-            transform: none;
-            box-shadow: 0 4px 12px rgba(37, 52, 72, .08);
-        }
-
-        .product-grid .product-image {
-            height: 105px;
-            object-fit: contain;
-            padding: .45rem;
-        }
-
-        .product-grid .product-card .p-3 {
-            padding: .65rem !important;
-        }
-
-        .product-grid .product-card h6 {
-            font-size: .72rem !important;
-            line-height: 1.25;
-        }
-
-        .product-grid .product-card h5 {
-            font-size: .75rem !important;
-        }
-
-        .product-grid .product-card .btn {
-            font-size: .68rem;
-            padding: .25rem .5rem;
-        }
-
         .pos-cart .cart-items-wrapper {
-            height: 285px !important;
+            height: 380px !important;
         }
 
         .pos-cart .btn-lg {
@@ -1327,34 +1020,83 @@
             font-size: .78rem;
         }
 
-        @media (min-width: 992px) {
-            .pos-catalog {
-                flex: 0 0 36%;
-                max-width: 36%;
-            }
-
-            .pos-cart {
-                flex: 0 0 64%;
-                max-width: 64%;
-            }
-
-            .pos-catalog .col-lg-3,
-            .pos-catalog .col-md-4 {
-                flex: 0 0 50%;
-                max-width: 50%;
-            }
-        }
-
         @media (max-width: 991.98px) {
-
-            .pos-catalog,
-            .pos-cart {
-                max-width: 100%;
-            }
-
             .pos-cart {
                 margin-bottom: 1rem;
             }
+        }
+
+        /* ---------- Product dropdown ---------- */
+        .pos-product-picker .select2-container {
+            width: 100% !important;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single {
+            border: 1px solid #dfe5ec;
+            border-radius: 3px;
+            height: 38px;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+
+        .pos-product-picker .select2-container--default.select2-container--focus .select2-selection--single {
+            /* border-color: #2f80ed; */
+        }
+
+        /* search bar = first row of the dropdown */
+        .select2-search--dropdown {
+            padding: 8px;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #dfe5ec;
+            border-radius: 3px;
+            font-size: .8rem;
+            padding: 6px 8px;
+        }
+
+        /* taller list so more products are visible at once */
+        .select2-container--default .select2-results > .select2-results__options {
+            max-height: 340px;
+        }
+
+        /* dropdown rows (the dropdown itself is rendered in <body>) */
+        .pos-opt {
+            align-items: center;
+            display: flex;
+            gap: .6rem;
+        }
+
+        .pos-opt-thumb {
+            background: #f1f3f6;
+            border-radius: 4px;
+            flex: 0 0 34px;
+            height: 34px;
+            object-fit: cover;
+            width: 34px;
+        }
+
+        .pos-opt-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.2;
+        }
+
+        .pos-opt-name {
+            font-size: .82rem;
+            font-weight: 600;
+        }
+
+        .pos-opt-meta {
+            font-size: .7rem;
+            opacity: .75;
         }
 
         /* Modern Scrollbar for Cart */
@@ -1375,54 +1117,7 @@
             background: #9ca3af;
         }
 
-        /* Product Card Hover Effects */
-        .product-card {
-            border: 1px solid #f3f4f6;
-            border-radius: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #fff;
-            overflow: hidden;
-        }
-
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: #e5e7eb;
-        }
-
-        .product-image {
-            height: 180px;
-            width: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .product-card:hover .product-image {
-            transform: scale(1.05);
-        }
-
-        .image-container {
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Circular Buttons */
-        .btn-circle {
-            width: 28px;
-            height: 28px;
-            padding: 0;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-
-        .btn-circle:hover {
-            background-color: #f3f4f6;
-        }
-
-        /* Select2 Styling Overrides */
+        /* Select2 Styling Overrides (customer field) */
         .select2-container--default .select2-selection--single {
             border: 1px solid #e5e7eb;
             border-radius: 12px;

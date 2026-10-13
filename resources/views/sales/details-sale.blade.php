@@ -8,6 +8,18 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-lg-12">
+                @if ($errors->has('error'))
+                    <div class="alert alert-danger" role="alert">
+                        <x-heroicon-o-exclamation-triangle class="w-5 h-5 mr-1 inline" />
+                        {{ $errors->first('error') }}
+                    </div>
+                @endif
+                @if (session('success'))
+                    <div class="alert alert-success" role="alert">
+                        <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" />
+                        {{ session('success') }}
+                    </div>
+                @endif
                 <div class="card">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">

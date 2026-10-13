@@ -255,19 +255,21 @@
                                     <td class="text-nowrap">{{ number_format($tx->commission, 2) }}</td>
                                     <td>{{ $tx->transaction_date->timezone(config('app.timezone'))->format('d M Y, h:i A') }}</td>
                                     <td>
-                                        <div class="payment-row-actions">
-                                        <a href="{{ route('payments.edit', $tx) }}" class="btn btn-light btn-sm mr-1" title="Edit transaction">
-                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                        </a>
-                                        <form action="{{ route('payments.destroy', $tx) }}" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Are you sure you want to delete this transaction?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-light btn-sm" title="Delete transaction">
-                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                            </button>
-                                        </form>
-                                        </div>
+                                        @can('edit.payments')
+                                            <a href="{{ route('payments.edit', $tx) }}" class="btn btn-light btn-sm mr-1" title="Edit transaction">
+                                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                            </a>
+                                        @endcan
+                                        @can('delete.payments')
+                                            <form action="{{ route('payments.destroy', $tx) }}" method="POST" class="d-inline"
+                                                onsubmit="return confirm('Are you sure you want to delete this transaction?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-light btn-sm" title="Delete transaction">
+                                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                </button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                                 @empty

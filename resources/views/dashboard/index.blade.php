@@ -34,6 +34,39 @@
                 </div>
             </div>
 
+            <!-- Sales Summary Cards -->
+            @php
+                $summary = [
+                    ['label' => "Today's Sales", 'value' => $today_sales, 'color' => 'primary', 'icon' => 'calendar'],
+                    ['label' => 'Weekly Sales', 'value' => $weekly_sales, 'color' => 'info', 'icon' => 'calendar-days'],
+                    ['label' => 'Monthly Sales', 'value' => $month_sales, 'color' => 'warning', 'icon' => 'chart-bar'],
+                    [
+                        'label' => 'Total Sales',
+                        'value' => $total_sales,
+                        'color' => 'success',
+                        'icon' => 'currency-dollar',
+                    ],
+                ];
+            @endphp
+
+            @foreach ($summary as $item)
+                <div class="col-lg-3 col-md-6">
+                    <div class="card card-block card-stretch card-height">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center card-total-sale">
+                                <div class="icon iq-icon-box-2 bg-{{ $item['color'] }}-light">
+                                    <x-dynamic-component :component="'heroicon-o-' . $item['icon']" class="w-6 h-6 text-{{ $item['color'] }}" />
+                                </div>
+                                <div>
+                                    <p class="mb-2">{{ $item['label'] }}</p>
+                                    <h4>PKR {{ number_format($item['value'], 2) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+
             <!-- Metric Cards -->
             <div class="col-lg-3 col-md-6">
                 <div class="card card-block card-stretch card-height">

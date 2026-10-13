@@ -35,6 +35,18 @@ class ProductController extends Controller
         return is_numeric($rate) ? (float) $rate : 0.0;
     }
 
+    private function setVariationAttributes(array &$data): void
+    {
+        $variations = Variation::whereIn('id', $data['variation_ids'] ?? [])->get();
+        $selectedTypes = array_unique(array_map('strval', $data['variation_types'] ?? []));
+        $availableTypes = $variations->pluck('types')->flatten()->map('strval')->unique()->values()->all();
+
+        $data['variation_ids'] = $variations->pluck('id')->values()->all();
+        $data['variation_id'] = $variations->first()?->id;
+        $data['variation'] = $variations->pluck('name')->implode(', ') ?: null;
+        $data['variation_types'] = array_values(array_intersect($selectedTypes, $availableTypes));
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -47,21 +59,23 @@ class ProductController extends Controller
         }
 
         $products = QueryBuilder::for(Product::class)
-            ->allowedSorts([
-                'name',
-                'selling_price',
-                'status',
-                AllowedSort::callback('category.name', function ($query, $descending) {
-                    $query->join('categories', 'products.category_id', '=', 'categories.id')
-                        ->orderBy('categories.name', $descending ? 'DESC' : 'ASC')
-                        ->select('products.*');
-                })
-            ])
-            ->allowedFilters(['name'])
-            ->filter(request(['search']))
-            ->with(['category'])
-            ->paginate($row)
-            ->appends(request()->query());
+    ->defaultSort('-created_at')   // latest first by default
+    ->allowedSorts([
+        'name',
+        'selling_price',
+        'status',
+        'created_at',              // optional: lets users sort by it via ?sort=created_at
+        AllowedSort::callback('category.name', function ($query, $descending) {
+            $query->join('categories', 'products.category_id', '=', 'categories.id')
+                ->orderBy('categories.name', $descending ? 'DESC' : 'ASC')
+                ->select('products.*');
+        }),
+    ])
+    ->allowedFilters(['name'])
+    ->filter(request(['search']))
+    ->with(['category'])
+    ->paginate($row)
+    ->appends(request()->query());
 
         return view('products.index', [
             'products' => $products,
@@ -86,6 +100,7 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $validatedData = $request->validated();
+        $this->setVariationAttributes($validatedData);
 
         $validatedData['product_type']  = $validatedData['product_type'] ?? 'single';
         $validatedData['cost_price']    = $validatedData['cost_price'] ?? 0;
@@ -175,19 +190,13 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         $validatedData = $request->validated();
+        $this->setVariationAttributes($validatedData);
 
         $gstRate = $validatedData['gst_tax'] ?? $product->gst_tax;
         if ($gstRate === null || $gstRate === '') {
             $gstRate = Setting::get('gst', 0);
         }
         $validatedData['gst_tax'] = $this->normalizeGstRate($gstRate);
-
-        if (!empty($validatedData['variation_ids'])) {
-            $variations = Variation::whereIn('id', $validatedData['variation_ids'])->get();
-            $validatedData['variation_id']    = $validatedData['variation_ids'][0];
-            $validatedData['variation']       = $variations->pluck('name')->implode(', ');
-            $validatedData['variation_types'] = $variations->pluck('types')->flatten()->unique()->values()->all();
-        }
 
         $validatedData['slug'] = Str::slug($validatedData['name']);
 

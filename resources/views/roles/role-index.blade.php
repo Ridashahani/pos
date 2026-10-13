@@ -16,10 +16,12 @@
                     <div>
                         <h4 class="mb-3">Role List</h4>
                     </div>
-                    <div>
-                        <a href="{{ route('role.create') }}" class="btn btn-primary add-list"><x-heroicon-o-plus
-                                class="w-5 h-5 mr-3" />Create Role</a>
-                    </div>
+                    @can('create.roles')
+                        <div>
+                            <a href="{{ route('role.create') }}" class="btn btn-primary add-list"><x-heroicon-o-plus
+                                    class="w-5 h-5 mr-3" />Create Role</a>
+                        </div>
+                    @endcan
                 </div>
             </div>
 
@@ -44,21 +46,25 @@
                                             <td>{{ $role->created_at->format('d M Y') }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center list-action">
-                                                    <a class="btn btn-primary mr-2" data-toggle="tooltip"
-                                                        data-placement="top" title="Edit"
-                                                        href="{{ route('role.edit', $role->id) }}">
-                                                        <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
-                                                    </a>
-                                                    <form action="{{ route('role.destroy', $role->id) }}" method="POST"
-                                                        style="display:inline;">
-                                                        @method('delete')
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-danger border-0"
-                                                            onclick="return confirm('Are you sure you want to delete this role?')"
-                                                            data-toggle="tooltip" data-placement="top" title="Delete">
-                                                            <x-heroicon-o-trash class="w-5 h-5 mr-0" />
-                                                        </button>
-                                                    </form>
+                                                    @can('edit.roles')
+                                                        <a class="btn btn-primary mr-2" data-toggle="tooltip"
+                                                            data-placement="top" title="Edit"
+                                                            href="{{ route('role.edit', $role->id) }}">
+                                                            <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
+                                                        </a>
+                                                    @endcan
+                                                    @can('delete.roles')
+                                                        <form action="{{ route('role.destroy', $role->id) }}" method="POST"
+                                                            style="display:inline;">
+                                                            @method('delete')
+                                                            @csrf
+                                                            <button type="submit" class="btn btn-danger border-0"
+                                                                onclick="return confirm('Are you sure you want to delete this role?')"
+                                                                data-toggle="tooltip" data-placement="top" title="Delete">
+                                                                <x-heroicon-o-trash class="w-5 h-5 mr-0" />
+                                                            </button>
+                                                        </form>
+                                                    @endcan
                                                 </div>
                                             </td>
                                         </tr>

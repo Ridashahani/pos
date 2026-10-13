@@ -22,11 +22,23 @@ class DashboardController extends Controller
         $complete_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('status', 'completed')->count();
         $pending_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('status', 'pending')->count();
 
-        // 2. Today's Snapshot
-        $today_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))
-            ->whereDate('created_at', \Carbon\Carbon::today())
+        // 2. Sales Summary (Today / Week / Month / Total)
+        $salesBase = fn() => Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId));
+
+        $today_sales = $salesBase()->whereDate('created_at', today())->sum('grand_total');
+
+        $weekly_sales = $salesBase()
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
             ->sum('grand_total');
 
+        $month_sales = $salesBase()
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('grand_total');
+
+        $total_sales = $salesBase()->sum('grand_total');
+
+        // 3. Top Selling Products
         $top_products = DB::table('sale_details')
             ->join('products', 'sale_details.product_id', '=', 'products.id')
             ->join('sales', 'sale_details.sale_id', '=', 'sales.id')
@@ -73,6 +85,9 @@ class DashboardController extends Controller
             'complete_sales' => $complete_sales,
             'pending_sales' => $pending_sales,
             'today_sales' => $today_sales,
+            'weekly_sales' => $weekly_sales,
+            'month_sales' => $month_sales,
+            'total_sales' => $total_sales,
             'top_products' => $top_products,
             'chart_data' => json_encode($chart_data),
             'recent_sales' => $recent_sales,
