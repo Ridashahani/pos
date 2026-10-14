@@ -221,7 +221,9 @@
                                                 <th>Status</th>
                                             @endif
                                         @elseif ($type === 'out-of-stock')
-                                        @else
+                                            <th>Branches</th>
+                                        @elseif ($type === 'stock-transfer')
+                                            <th>Variation</th>
                                             <th>From</th>
                                             <th>To</th>
                                             <th>Status</th>
@@ -246,7 +248,12 @@
                                                 </td>
                                             @endif
                                             <td>{{ $row['product'] }}</td>
-                                            <td>{{ number_format($row['quantity']) }}</td>
+                                            @if ($type === 'out-of-stock')
+                                                <td>{{ number_format($row['quantity']) }}</td>
+                                                <td>{{ $row['branches'] }}</td>
+                                            @else
+                                                <td>{{ number_format($row['quantity']) }}</td>
+                                            @endif
                                             @if ($type === 'stock-in')
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_cost'], 2) }}</td>
                                                 <td>{{ $row['supplier'] }}</td>
@@ -259,8 +266,8 @@
                                                 @if ($type === 'sold-items')
                                                     <td><span class="badge {{ $row['status'] === 'returned' ? 'bg-warning' : 'bg-success' }}">{{ ucfirst($row['status']) }}</span></td>
                                                 @endif
-                                            @elseif ($type === 'out-of-stock')
-                                            @else
+                                            @elseif ($type === 'stock-transfer')
+                                                <td>{{ $row['variation'] }}</td>
                                                 <td>{{ $row['from'] }}</td>
                                                 <td>{{ $row['to'] }}</td>
                                                 <td>
@@ -297,7 +304,8 @@
                                                     @endcan
                                                 </td>
                                             @elseif ($type === 'out-of-stock')
-                                                <td class="text-center">
+                                                <td>
+                                                    <div class="d-flex flex-nowrap justify-content-center align-items-center">
                                                     @can('create.sales')
                                                         <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
                                                             class="btn btn-primary btn-sm mr-1">Purchase again</a>
@@ -309,17 +317,19 @@
                                                     @endcan
                                                     @can('delete.stocks')
                                                         <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Delete this exhausted stock record? Records linked to sales or transfers cannot be deleted.');">
+                                                            onsubmit="return confirm('Delete one exhausted batch? Other matching batches may remain in this grouped row. Records linked to sales or transfers cannot be deleted.');">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete stock-in record" aria-label="Delete stock-in record">
+                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete one exhausted batch" aria-label="Delete one exhausted batch">
                                                                 <x-heroicon-o-trash class="w-4 h-4 text-danger" />
                                                             </button>
                                                         </form>
                                                     @endcan
+                                                    </div>
                                                 </td>
                                             @elseif ($type === 'stock-transfer')
-                                                <td class="text-center">
+                                                <td>
+                                                    <div class="d-flex flex-nowrap justify-content-center align-items-center">
                                                     @if (!empty($row['id']))
                                                         @can('edit.stocks')
                                                             <a href="{{ route('stock.transfer.edit', $row['id']) }}"
@@ -339,6 +349,7 @@
                                                             </form>
                                                         @endcan
                                                     @endif
+                                                    </div>
                                                 </td>
                                             @endif
                                         </tr>
