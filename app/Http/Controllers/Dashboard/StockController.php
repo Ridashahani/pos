@@ -440,7 +440,7 @@ class StockController extends Controller
             ->where(function ($q) use ($transfer) {
                 $q->where('remaining_quantity', '>', 0);
                 // edit mein purani batch bhi dikhao chahe uska maal 0 ho
-                if ($transfer?->stock_in_id) {
+                if ($transfer?->stock_in_id !== null) {
                     $q->orWhere('id', $transfer->stock_in_id);
                 }
             })

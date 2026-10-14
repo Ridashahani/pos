@@ -22,6 +22,7 @@ use App\Http\Controllers\Dashboard\VariationController;
 use App\Http\Controllers\Dashboard\UnitController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentAccountController;
+use App\Http\Controllers\PaymentTransferController;
 use App\Http\Controllers\BranchSelectionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserBranchController;
@@ -146,18 +147,24 @@ Route::middleware('permission:access.sales')->group(function () {
     Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchases.returns');
     Route::get('/purchases/returns/{purchaseReturn}', [PurchaseReturnController::class, 'show'])->name('purchases.returns.show');
 });
+$registerCrudRoutes('/purchases', PurchaseController::class, 'sales');
 Route::middleware('permission:edit.sales')->group(function () {
     Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');
     Route::post('/sales/{sale}/return', [SaleController::class, 'returnSale'])->name('sale.return');
     Route::post('/sales/update/due', [SaleController::class, 'updateDue'])->name('sale.updateDue');
 });
-Route::middleware('permission:create.sales')->get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
-Route::middleware('permission:create.sales')->post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
-$registerCrudRoutes('purchases', PurchaseController::class, 'sales');
-$registerCrudRoutes('branches', BranchController::class, 'stocks');
-$registerCrudRoutes('expenses', ExpenseController::class, 'stocks');
-$registerCrudRoutes('payment-accounts', PaymentAccountController::class, 'payments', ['index', 'create', 'store', 'edit', 'update', 'destroy']);
-$registerCrudRoutes('payments', PaymentController::class, 'payments');
+// Branches
+Route::resource('branches', BranchController::class);
+// Expense
+Route::resource('expenses', ExpenseController::class);
+// Payments
+Route::middleware(['permission:access.payments'])->group(function () {
+    Route::post('/payment-accounts/{paymentAccount}/daily-opening-balance', [PaymentAccountController::class, 'storeDailyOpeningBalance'])
+        ->name('payment-accounts.daily-opening-balance');
+    Route::resource('payment-accounts', PaymentAccountController::class)->except(['show']);
+    Route::post('/payments/transfers', [PaymentTransferController::class, 'store'])->name('payment-transfers.store');
+    Route::resource('payments', PaymentController::class);
+});
 // privacy policy and terms of use of service
 Route::get('/privacy-policy', function () {
     return view('backend.privacy-policy');
