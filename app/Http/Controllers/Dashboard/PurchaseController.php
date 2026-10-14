@@ -10,7 +10,6 @@ use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\StockIn;
-use App\Models\Variation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -55,7 +54,6 @@ class PurchaseController extends Controller
 
         return view('purchases.create', [
             'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
-            'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => $user->allowedBranches(),
         ]);
@@ -106,7 +104,6 @@ class PurchaseController extends Controller
         return view('purchases.edit', [
             'purchase' => $purchase,
             'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
-            'variations' => Variation::orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => $user->allowedBranches(),
         ]);

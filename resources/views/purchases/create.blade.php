@@ -456,54 +456,6 @@
                     <div class="mb-2" style="font-size:.8rem;">
                         Selected: <strong id="selected-product-name" class="text-primary"> None </strong>
                     </div>
-                    @php
-                    $variationData = $variations
-                    ->map(function ($variation) {
-                    $types = collect($variation->types ?? [])
-                    ->map(
-                    fn($t) => is_array($t)
-                    ? $t['value'] ?? ($t['name'] ?? '')
-                    : (is_object($t)
-                    ? $t->value ?? ($t->name ?? '')
-                    : $t),
-                    )
-                    ->filter(fn($t) => $t !== '' && $t !== null)
-                    ->values()
-                    ->all();
-
-                    return ['id' => $variation->id, 'name' => $variation->name, 'types' => $types];
-                    })
-                    ->filter(fn($v) => count($v['types']) > 0)
-                    ->values();
-                    @endphp
-
-                    <div class="form-group mb-2">
-                        <label class="pp-label">Variation</label>
-                        <div class="pp-multi" id="variation-dd">
-                            <button type="button" id="variation-btn"
-                                class="form-control form-control-sm pp-multi-btn">Select Variation</button>
-                            <div class="pp-multi-menu" id="variation-menu">
-                                @foreach ($variationData as $v)
-                                <label class="pp-check">
-                                    <input type="checkbox" class="variation-check" value="{{ $v['id'] }}">
-                                    {{ $v['name'] }}
-                                </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group mb-2">
-                        <label class="pp-label">Value</label>
-                        <div class="pp-multi" id="value-dd">
-                            <button type="button" id="value-btn"
-                                class="form-control form-control-sm pp-multi-btn">Select Value</button>
-                            <div class="pp-multi-menu" id="value-menu">
-                                <div class="text-muted" style="font-size:.75rem;">Select variation first</div>
-                            </div>
-                        </div>
-                    </div>
-
                     <button type="button" id="add-item-btn" class="btn btn-primary btn-sm btn-block">Add to
                         Purchase</button>
                 </div>
@@ -591,142 +543,29 @@
             selectedName.textContent = selectedProduct.name;
         });
 
-        // ---- Variation + Value picker (both multi-select) ----
-        const variationTypes = @json($variationData);
-        const varDd = document.getElementById('variation-dd');
-        const valDd = document.getElementById('value-dd');
-        const varBtn = document.getElementById('variation-btn');
-        const valBtn = document.getElementById('value-btn');
-        const varMenu = document.getElementById('variation-menu');
-        const valMenu = document.getElementById('value-menu');
-
-        const pickedVars = new Set();
-        const pickedVals = new Set();
-
-        const findVar = id => variationTypes.find(v => String(v.id) === String(id));
-
-        [
-            [varDd, varBtn],
-            [valDd, valBtn]
-        ].forEach(([dd, btn]) => {
-            btn.addEventListener('click', () => dd.classList.toggle('open'));
-        });
-        document.addEventListener('click', e => {
-            [varDd, valDd].forEach(dd => {
-                if (!dd.contains(e.target)) dd.classList.remove('open');
-            });
-        });
-
-        function updateButtons() {
-            const names = [...pickedVars].map(id => findVar(id)?.name).filter(Boolean);
-            varBtn.textContent = names.length ? names.join(', ') : 'Select Variation';
-
-            const vals = [...pickedVals].map(k => k.split('||')[1]);
-            valBtn.textContent = vals.length ? vals.join(', ') : 'Select Value';
-        }
-
-        function renderValues() {
-            // drop values whose variation was unticked
-            [...pickedVals].forEach(k => {
-                if (!pickedVars.has(k.split('||')[0])) pickedVals.delete(k);
-            });
-
-            if (!pickedVars.size) {
-                valMenu.innerHTML =
-                    '<div class="text-muted" style="font-size:.75rem;">Select variation first</div>';
-            } else {
-                valMenu.innerHTML = [...pickedVars].map(id => {
-                    const v = findVar(id);
-                    return `<div class="pp-group">${esc(v.name)}</div>` + v.types.map(t => `
-                        <label class="pp-check">
-                            <input type="checkbox" class="value-check" data-id="${esc(id)}" data-value="${esc(t)}"
-                                ${pickedVals.has(id + '||' + t) ? 'checked' : ''}> ${esc(t)}
-                        </label>`).join('');
-                }).join('');
-            }
-            updateButtons();
-        }
-
-        varMenu.addEventListener('change', function(e) {
-            const cb = e.target.closest('.variation-check');
-            if (!cb) return;
-            cb.checked ? pickedVars.add(cb.value) : pickedVars.delete(cb.value);
-            renderValues();
-        });
-
-        valMenu.addEventListener('change', function(e) {
-            const cb = e.target.closest('.value-check');
-            if (!cb) return;
-            const key = cb.dataset.id + '||' + cb.dataset.value;
-            cb.checked ? pickedVals.add(key) : pickedVals.delete(key);
-            updateButtons();
-        });
-
         addBtn.addEventListener('click', function() {
             if (!selectedProduct) {
                 alert('Select Product first.');
                 return;
             }
-
-            const groups = [];
-            for (const id of pickedVars) {
-                const v = findVar(id);
-                const opts = [...pickedVals]
-                    .filter(k => k.split('||')[0] === String(id))
-                    .map(k => ({
-                        variation_id: id,
-                        name: v.name,
-                        value: k.split('||')[1]
-                    }));
-                if (!opts.length) {
-                    alert(`${v.name} ki value select karein.`);
-                    return;
-                }
-                groups.push(opts);
-            }
-
-            const combos = groups.reduce((acc, g) => acc.flatMap(a => g.map(x => [...a, x])), [
-                []
-            ]);
-            combos.forEach(c => {
-                const label = c.length ? c.map(v => `${v.name}: ${v.value}`).join(', ') :
-                    'Standard';
-                addRow(selectedProduct, label, c);
-            });
-
-            // reset picker
-            pickedVars.clear();
-            pickedVals.clear();
-            varMenu.querySelectorAll('.variation-check').forEach(cb => cb.checked = false);
-            renderValues();
+            addRow(selectedProduct);
         });
 
         // ---- Rows ----
-        function addRow(product, label, variations) {
+        function addRow(product) {
             const rowId = rowCounter++;
             const row = document.createElement('tr');
             row.className = 'purchase-item';
 
-            let varInputs = '';
-            variations.forEach((v, i) => {
-                varInputs += `
-                    <input type="hidden" name="items[${rowId}][variations][${i}][variation_id]" value="${esc(v.variation_id)}">
-                    <input type="hidden" name="items[${rowId}][variations][${i}][name]" value="${esc(v.name)}">
-                    <input type="hidden" name="items[${rowId}][variations][${i}][value]" value="${esc(v.value)}">`;
-            });
-
             row.innerHTML = `
                 <td class="row-no"></td>
-                <td class="pp-name" title="${esc(product.name)} — ${esc(label)}">
-                    ${esc(product.name)}<small>${esc(label)}</small>
-                </td>
+                <td class="pp-name" title="${esc(product.name)}">${esc(product.name)}</td>
                 <td><input type="number" class="form-control quantity-input" name="items[${rowId}][quantity]" value="1" min="1"></td>
                 <td><input type="number" class="form-control cost-input" name="items[${rowId}][unit_price]" value="${product.price.toFixed(2)}" min="0" step="0.01"></td>
                 <td class="amount-cell">PKR ${product.price.toFixed(2)}</td>
                 <td>
                     <button type="button" class="btn btn-link text-danger p-0 remove-product" title="Remove product">&times;</button>
                     <input type="hidden" name="items[${rowId}][product_id]" value="${esc(product.id)}">
-                    ${varInputs}
                 </td>`;
             items.appendChild(row);
             refresh();
