@@ -183,6 +183,13 @@ class SaleController extends Controller
     {
         $sale_id = $request->id ?? $request->sale_id;
 
+        // Block completion if there is still a due amount outstanding
+        $saleCheck = Sale::findOrFail($sale_id);
+        if ($saleCheck->due_amount > 0) {
+            return Redirect::route('sale.saleDetails', $sale_id)
+                ->withErrors(['error' => 'Cannot complete this sale. Due amount of PKR ' . number_format($saleCheck->due_amount, 2) . ' is still pending. Please pay the due amount first.']);
+        }
+
         try {
             DB::transaction(function () use ($sale_id) {
                 $sale = Sale::whereKey($sale_id)->lockForUpdate()->firstOrFail();
@@ -324,6 +331,7 @@ class SaleController extends Controller
             'paid_amount' => $paid_pay,
         ]);
 
-        return Redirect::route('sale.pendingDue')->with('success', 'Due Amount Updated Successfully!');
+        // Redirect back to sale details so user can complete the sale if due is now cleared
+        return Redirect::route('sale.saleDetails', $sale_id)->with('success', 'Due Amount Updated Successfully!');
     }
 }

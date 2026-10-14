@@ -19,14 +19,14 @@
         <div class="row">
             <!-- Banner / Welcome Section -->
             <div class="col-lg-12 mb-4">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                     <div>
                         <h3 class="font-weight-bold">Dashboard Overview</h3>
                         <!-- <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
                             store today.
                         </p> -->
                     </div>
-                    <div>
+                    <div class="mt-3 mt-md-0">
                         <a href="{{ route('pos.index') }}" class="btn btn-primary">
                             <x-heroicon-o-computer-desktop class="w-5 h-5 mr-2" />
                             Go to POS
@@ -51,7 +51,7 @@
             @endphp
 
             @foreach ($summary as $item)
-                <div class="col-lg-3 col-md-6">
+                <div class="col-12 col-sm-6 col-xl-3 mb-3">
                     <div class="card card-block card-stretch card-height">
                         <div class="card-body">
                             <div class="d-flex align-items-center card-total-sale">
@@ -69,16 +69,16 @@
             @endforeach
 
             <!-- Metric Cards -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center  card-total-sale">
                             <div class="icon iq-icon-box-2 bg-info-light">
                                 <x-heroicon-o-banknotes class="w-6 h-6 text-info" />
                             </div>
                             <div>
                                 <p class="mb-2">Total Paid</p>
-                                <h4>PKR:{{ number_format($total_paid, 2) }}</h4>
+                                <h4>PKR {{ number_format($total_paid, 2) }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -88,16 +88,16 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center  card-total-sale">
                             <div class="icon iq-icon-box-2 bg-danger-light">
                                 <x-heroicon-o-credit-card class="w-6 h-6 text-danger" />
                             </div>
                             <div>
                                 <p class="mb-2">Total Due</p>
-                                <h4>PKR:{{ number_format($total_due, 2) }}</h4>
+                                <h4>PKR {{ number_format($total_due, 2) }}</h4>
                             </div>
                         </div>
                         <div class="iq-progress-bar mt-2">
@@ -107,10 +107,10 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center  card-total-sale">
                             <div class="icon iq-icon-box-2 bg-success-light">
                                 <x-heroicon-o-check-circle class="w-6 h-6 text-success" />
                             </div>
@@ -119,17 +119,17 @@
                                 <h4>{{ $complete_sales }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
+                        <div class="iq-progress-bar mt-4">
                             <span class="bg-success iq-progress progress-1" data-percent="75" style="width: 75%;"></span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center  card-total-sale">
                             <div class="icon iq-icon-box-2 bg-warning-light">
                                 <x-heroicon-o-clock class="w-6 h-6 text-warning" />
                             </div>
@@ -146,21 +146,21 @@
             </div>
 
             <!-- Sales Chart -->
-            <div class="col-lg-12">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 mb-4">
+                <div class="card card-block card-stretch">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
                             <h4 class="card-title">Monthly Sales Overview ({{ date('Y') }})</h4>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="monthly-sales-chart"></div>
+                        <div id="monthly-sales-chart" style="min-height: 250px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Section: Recent Sales & Top Products -->
-            <div class="col-lg-7 col-md-12">
+            <div class="col-12 col-xl-7 mb-4">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
@@ -214,7 +214,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-5 col-md-12">
+            <div class="col-12 col-xl-5 mb-4">
                 <div class="card card-block card-stretch card-height">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
@@ -268,7 +268,8 @@
                         type: 'area',
                         toolbar: {
                             show: false
-                        }
+                        },
+                        parentHeightOffset: 0
                     },
                     dataLabels: {
                         enabled: false
@@ -298,7 +299,23 @@
                             opacityTo: 0.9,
                             stops: [0, 90, 100]
                         }
-                    }
+                    },
+                    responsive: [{
+                        breakpoint: 576,
+                        options: {
+                            chart: {
+                                height: 250
+                            },
+                            xaxis: {
+                                labels: {
+                                    rotate: -45,
+                                    style: {
+                                        fontSize: '10px'
+                                    }
+                                }
+                            }
+                        }
+                    }]
                 };
 
                 var chart = new ApexCharts(document.querySelector("#monthly-sales-chart"), options);
@@ -309,3 +326,27 @@
         });
     </script>
 @endsection
+<style>
+    .card-total-sale .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 56px;
+        height: 56px;
+        margin-right: .75rem;
+    }
+
+    .card-total-sale .icon svg {
+        margin: 0;
+    }
+
+    .card-total-sale>div:last-child {
+        min-width: 0;
+    }
+
+    .card-total-sale h4 {
+        font-size: clamp(.85rem, 0.5rem + .8vw, 1.1rem);
+        word-break: break-word;
+    }
+</style>
