@@ -22,8 +22,9 @@
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
                         <h3 class="font-weight-bold">Dashboard Overview</h3>
-                        <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
-                            store today.</p>
+                        <!-- <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
+                            store today.
+                        </p> -->
                     </div>
                     <div>
                         <a href="{{ route('pos.index') }}" class="btn btn-primary">
