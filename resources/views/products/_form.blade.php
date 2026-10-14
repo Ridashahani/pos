@@ -90,6 +90,22 @@
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
+                    @if (auth()->user()->isAdmin())
+                        <div class="form-group col-md-6">
+                            <label for="branch_id">Branch <span class="text-danger">*</span></label>
+                            <select name="branch_id" id="branch_id" class="form-control" required>
+                                <option value="">Select Branch</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}" @selected((string) $field('branch_id') === (string) $branch->id)>
+                                        {{ $branch->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('branch_id')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
                     <div class="form-group col-md-6"><label>Product Name <span
                                 class="text-danger">*</span></label><input name="name" value="{{ $field('name') }}"
                             class="form-control" placeholder="Enter Name" required></div>
@@ -204,9 +220,8 @@
                         @error('gst_tax')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <!-- <small class="form-text text-muted">Price after GST: <span
-                                id="price_including_gst">0.00</span>
-                            </small> -->
+                        <small class="form-text text-muted">Price after GST: <span
+                            id="price_including_gst">0.00</span></small>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Multiple Images</label>

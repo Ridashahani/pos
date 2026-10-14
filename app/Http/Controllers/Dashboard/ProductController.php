@@ -100,6 +100,9 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $validatedData = $request->validated();
+        $validatedData['branch_id'] = $request->user()->isAdmin()
+            ? $validatedData['branch_id']
+            : $request->user()->active_branch_id;
         $this->setVariationAttributes($validatedData);
 
         $validatedData['product_type']  = $validatedData['product_type'] ?? 'single';
@@ -190,6 +193,9 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, Product $product)
     {
         $validatedData = $request->validated();
+        $validatedData['branch_id'] = $request->user()->isAdmin()
+            ? $validatedData['branch_id']
+            : ($request->user()->active_branch_id ?? $product->branch_id);
         $this->setVariationAttributes($validatedData);
 
         $gstRate = $validatedData['gst_tax'] ?? $product->gst_tax;

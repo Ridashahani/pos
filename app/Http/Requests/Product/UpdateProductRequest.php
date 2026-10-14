@@ -52,7 +52,7 @@ class UpdateProductRequest extends FormRequest
                 'integer',
                 Rule::exists('subcategories', 'id')->where('category_id', $this->input('category_id')),
             ],
-            'branch_id' => 'nullable|integer|exists:branches,id',
+            'branch_id' => [$this->user()->isAdmin() ? 'required' : 'nullable', 'integer', 'exists:branches,id'],
             'supplier_id' => 'nullable|integer|exists:suppliers,id',
             'note' => 'nullable|string|max:5000',
             'product_type' => 'nullable|string|max:50',

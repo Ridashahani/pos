@@ -129,7 +129,7 @@
                                     </td>
                                     <td>{{ $product->name }}</td>
                                     <td>{{ $product->category->name }}</td>
-                                    <td>{{ number_format((float) $product->selling_price, 2) }}</td>
+                                    <td>{{ number_format($product->price_including_gst, 2) }}</td>
                                     <td>{{ $product->stock }}</td>
                                     <td>
                                         @if ($product->status)
