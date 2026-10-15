@@ -68,15 +68,24 @@
                 </div>
                 @enderror
             </div>
+            @if (!$user->isAdmin())
             <div class="form-group col-md-6">
-                <label for="location">Location</label>
-                <input type="text" class="form-control @error('location') is-invalid @enderror" id="location" name="location" value="{{ old('location', $user->location) }}">
-                @error('location')
+                <label for="active_branch_id">Branch <span class="text-danger">*</span></label>
+                <select class="form-control @error('active_branch_id') is-invalid @enderror" id="active_branch_id" name="active_branch_id" required>
+                    <option value="" disabled {{ !$user->active_branch_id ? 'selected' : '' }}>Select Branch</option>
+                    @foreach ($user->branches()->where(function($q) { $q->where('status', 'Active')->orWhere('status', 1)->orWhere('status', true); })->orderBy('name')->get() as $branch)
+                        <option value="{{ $branch->id }}" {{ old('active_branch_id', $user->active_branch_id) == $branch->id ? 'selected' : '' }}>
+                            {{ $branch->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('active_branch_id')
                 <div class="invalid-feedback">
                     {{ $message }}
                 </div>
                 @enderror
             </div>
+            @endif
         </div>
         <!-- end: Input Data -->
         <div class="mt-2">

@@ -1,91 +1,11 @@
 @extends('dashboard.body.main')
 
 @section('container')
-    <style>
-        .invoice-page {
-            background: #f5f7fb;
-            margin: -1.5rem;
-            min-height: calc(100vh - 80px);
-            padding: 2rem 1rem;
-        }
-
-        .invoice-card {
-            background: #fff;
-            border: 1px solid #e5eaf0;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(31, 41, 55, .07);
-            overflow: hidden;
-        }
-
-        .invoice-toolbar {
-            background: #fff;
-            border-bottom: 1px solid #e5eaf0;
-            padding: 1.25rem 1.5rem;
-        }
-
-        .invoice-kicker {
-            color: #2f80ed;
-            font-size: .7rem;
-            font-weight: 700;
-            letter-spacing: .08em;
-            text-transform: uppercase;
-        }
-
-        .invoice-sheet {
-            padding: 2.5rem;
-        }
-
-        .invoice-brand {
-            color: #1f2937;
-            font-size: 1.5rem;
-            font-weight: 800;
-            letter-spacing: .02em;
-        }
-
-        .invoice-number {
-            color: #2f80ed;
-            font-size: 1.35rem;
-            font-weight: 800;
-        }
-
-        .invoice-table thead th {
-            background: #f5f8fc;
-            border: 0;
-            color: #657286;
-            font-size: .7rem;
-            letter-spacing: .05em;
-            padding: .8rem .65rem;
-            text-transform: uppercase;
-        }
-
-        .invoice-table tbody td {
-            border-color: #edf0f4;
-            color: #3d4858;
-            padding: .9rem .65rem;
-            vertical-align: middle;
-        }
-
-        .invoice-summary {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 1.1rem;
-        }
-
-        .invoice-summary .total-row {
-            border-top: 1px solid #dfe5ec;
-            color: #1f2937;
-            font-size: 1.05rem;
-            font-weight: 800;
-            margin-top: .6rem;
-            padding-top: .8rem;
-        }
-
-        @media (max-width: 767.98px) {
-            .invoice-sheet {
-                padding: 1.25rem;
-            }
-        }
-    </style>
+    @php
+        $shopName = \App\Models\Setting::get('shop_name', 'POS Shop');
+        $shopAddress = \App\Models\Setting::get('shop_address', '');
+        $shopPhone = \App\Models\Setting::get('shop_phone', '');
+    @endphp
 
     <div class="container-fluid">
         <div class="invoice-page">
@@ -119,9 +39,15 @@
                                 <!-- Company Header -->
                                 <div class="row mb-5">
                                     <div class="col-6">
-                                        <h3 class="invoice-brand mb-1">POS SHOP</h3>
-                                        <p class="text-muted mb-0">123 Commerce Avenue</p>
-                                        <p class="text-muted">Islamabad, Pakistan</p>
+                                        <h3 class="invoice-brand mb-1">{{ $shopName }}</h3>
+                                        @if($sale->branch)
+                                            <p class="text-muted mb-0 font-weight-bold">{{ $sale->branch->name }}</p>
+                                            <p class="text-muted mb-0">{{ $sale->branch->address }}</p>
+                                            <p class="text-muted">{{ $sale->branch->phone ? 'Tel: ' . $sale->branch->phone : '' }}</p>
+                                        @else
+                                            <p class="text-muted mb-0">{{ $shopAddress }}</p>
+                                            <p class="text-muted">{{ $shopPhone ? 'Tel: ' . $shopPhone : '' }}</p>
+                                        @endif
                                     </div>
                                     <div class="col-6 text-right">
                                         <h6 class="text-uppercase text-muted font-weight-bold letter-spacing-2 mb-2">Invoice
@@ -197,7 +123,7 @@
                                                 <tr>
                                                     <td class="text-muted">Subtotal</td>
                                                     <td class="text-right font-weight-bold">
-                                                        {{ number_format($sale->sub_total, 2) }}</td>
+                                                        {{ number_format($sale->subtotal, 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Discount</td>
@@ -207,17 +133,17 @@
                                                 <tr>
                                                     <td class="text-muted">Tax (VAT)</td>
                                                     <td class="text-right font-weight-bold">
-                                                        {{ number_format($sale->vat, 2) }}</td>
+                                                        {{ number_format($sale->tax, 2) }}</td>
                                                 </tr>
                                                 <tr class="border-top">
                                                     <td class="text-dark font-weight-bold pt-3 h5">Total</td>
                                                     <td class="text-primary font-weight-bold text-right pt-3 h5">
-                                                        {{ number_format($sale->total, 2) }}</td>
+                                                        {{ number_format($sale->grand_total, 2) }}</td>
                                                 </tr>
                                                 <tr>
                                                     <td class="text-muted">Paid</td>
                                                     <td class="text-success text-right font-weight-bold">
-                                                        {{ number_format($sale->pay_amount, 2) }}</td>
+                                                        {{ number_format($sale->paid_amount, 2) }}</td>
                                                 </tr>
                                             </table>
                                         </div>
@@ -246,4 +172,91 @@
             window.open(url, 'PrintReceipt', `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`);
         }
     </script>
+
+
+    <style>
+        .invoice-page {
+            background: #f5f7fb;
+            margin: -1.5rem;
+            min-height: calc(100vh - 80px);
+            padding: 2rem 1rem;
+        }
+
+        .invoice-card {
+            background: #fff;
+            border: 1px solid #e5eaf0;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(31, 41, 55, .07);
+            overflow: hidden;
+        }
+
+        .invoice-toolbar {
+            background: #fff;
+            border-bottom: 1px solid #e5eaf0;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .invoice-kicker {
+            color: #2f80ed;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .invoice-sheet {
+            padding: 2.5rem;
+        }
+
+        .invoice-brand {
+            color: #1f2937;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: .02em;
+        }
+
+        .invoice-number {
+            color: #2f80ed;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .invoice-table thead th {
+            background: #f5f8fc;
+            border: 0;
+            color: #657286;
+            font-size: .7rem;
+            letter-spacing: .05em;
+            padding: .8rem .65rem;
+            text-transform: uppercase;
+        }
+
+        .invoice-table tbody td {
+            border-color: #edf0f4;
+            color: #3d4858;
+            padding: .9rem .65rem;
+            vertical-align: middle;
+        }
+
+        .invoice-summary {
+            /* background: #f8fafc; */
+            border-radius: 8px;
+            padding: 1.1rem;
+        }
+
+        .invoice-summary .total-row {
+            border-top: 1px solid #dfe5ec;
+            color: #1f2937;
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-top: .6rem;
+            padding-top: .8rem;
+        }
+
+        @media (max-width: 767.98px) {
+            .invoice-sheet {
+                padding: 1.25rem;
+            }
+        }
+    </style>
 @endsection

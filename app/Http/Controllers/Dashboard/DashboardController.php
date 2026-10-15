@@ -12,17 +12,37 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $branchId = $user->activeBranchFilter();
+
         // 1. Key Metrics
-        $total_paid = Sale::sum('pay_amount');
-        $total_due = Sale::sum('due_amount');
-        $complete_sales = Sale::where('sale_status', 'complete')->count();
-        $pending_sales = Sale::where('sale_status', 'pending')->count();
+        $total_paid = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('paid_amount');
+        $total_due = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))->sum('due_amount');
+        $complete_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('status', 'completed')->count();
+        $pending_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))->where('status', 'pending')->count();
 
-        // 2. Today's Snapshot
-        $today_sales = Sale::whereDate('created_at', \Carbon\Carbon::today())->sum('total');
+        // 2. Sales Summary (Today / Week / Month / Total)
+        $salesBase = fn() => Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId));
 
+        $today_sales = $salesBase()->whereDate('created_at', today())->sum('grand_total');
+
+        $weekly_sales = $salesBase()
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('grand_total');
+
+        $month_sales = $salesBase()
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('grand_total');
+
+        $total_sales = $salesBase()->sum('grand_total');
+
+        // 3. Top Selling Products
         $top_products = DB::table('sale_details')
             ->join('products', 'sale_details.product_id', '=', 'products.id')
+            ->join('sales', 'sale_details.sale_id', '=', 'sales.id')
+            ->when($branchId, fn($q) => $q->where('sales.branch_id', $branchId))
             ->select(
                 'products.name as product_name',
                 'products.image as product_image',
@@ -35,10 +55,11 @@ class DashboardController extends Controller
             ->get();
 
         // 4. Monthly Sales Data for Chart (Current Year)
-        $monthly_sales = Sale::select(
-            DB::raw('SUM(total) as total_amount'),
-            DB::raw('MONTH(created_at) as month')
-        )
+        $monthly_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->select(
+                DB::raw('SUM(grand_total) as total_amount'),
+                DB::raw('MONTH(created_at) as month')
+            )
             ->whereYear('created_at', date('Y'))
             ->groupBy('month')
             ->orderBy('month')
@@ -52,7 +73,8 @@ class DashboardController extends Controller
         }
 
         // 5. Recent Transactions
-        $recent_sales = Sale::with('customer')
+        $recent_sales = Sale::when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->with('customer')
             ->latest()
             ->take(5)
             ->get();
@@ -63,6 +85,9 @@ class DashboardController extends Controller
             'complete_sales' => $complete_sales,
             'pending_sales' => $pending_sales,
             'today_sales' => $today_sales,
+            'weekly_sales' => $weekly_sales,
+            'month_sales' => $month_sales,
+            'total_sales' => $total_sales,
             'top_products' => $top_products,
             'chart_data' => json_encode($chart_data),
             'recent_sales' => $recent_sales,

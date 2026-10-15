@@ -48,9 +48,11 @@
                     <h4 class="mb-2">Branches</h4>
                     <p class="mb-0 text-muted">Store branches and locations.</p>
                 </div>
-                <a href="{{ route('branches.create') }}" class="btn btn-primary add-list d-flex align-items-center mt-3 mt-md-0">
-                    <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Branch
-                </a>
+                @can('create.stocks')
+                    <a href="{{ route('branches.create') }}" class="btn btn-primary add-list d-flex align-items-center mt-3 mt-md-0">
+                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Branch
+                    </a>
+                @endcan
             </div>
         </div>
 
@@ -108,16 +110,20 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <a href="{{ route('branches.edit', $branch) }}" class="btn btn-light btn-sm mr-1" title="Edit branch">
-                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
-                                        </a>
-                                        <form action="{{ route('branches.destroy', $branch) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-light btn-sm" title="Delete branch">
-                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                            </button>
-                                        </form>
+                                        @can('edit.stocks')
+                                            <a href="{{ route('branches.edit', $branch) }}" class="btn btn-light btn-sm mr-1" title="Edit branch">
+                                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                            </a>
+                                        @endcan
+                                        @can('delete.stocks')
+                                            <form action="{{ route('branches.destroy', $branch) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-light btn-sm" title="Delete branch">
+                                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                </button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                                 @empty

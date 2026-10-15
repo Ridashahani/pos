@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Branch;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -57,6 +58,7 @@ class ProductControllerTest extends TestCase
             'stock' => 10,
             'buying_price' => 100,
             'selling_price' => 150,
+            'condition' => 'used',
         ]);
 
         $response->assertRedirect('/products');
@@ -65,7 +67,54 @@ class ProductControllerTest extends TestCase
         $this->assertDatabaseHas('products', [
             'name' => 'Test Product',
             'code' => 'MANUAL-CODE-123',
+            'condition' => 'used',
         ]);
+    }
+
+    public function test_product_sale_price_is_saved_and_listed_without_adding_gst(): void
+    {
+        $user = $this->createAuthenticatedUser();
+        $role = Role::where('name', 'test-role')->firstOrFail();
+        foreach (['access.products', 'create.products'] as $permissionName) {
+            $permission = Permission::firstOrCreate(
+                ['name' => $permissionName],
+                ['group_name' => 'product']
+            );
+            $role->givePermissionTo($permission);
+        }
+
+        $branch = Branch::create([
+            'name' => 'Product Test Branch',
+            'address' => '123 Test Street',
+            'status' => 'Active',
+        ]);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+        $category = $this->createCategory();
+
+        $response = $this->actingAs($user)->post('/products', [
+            'name' => 'GST Price Product',
+            'code' => 'GST-PRICE-001',
+            'category_id' => $category->id,
+            'stock' => 10,
+            'buying_price' => 80,
+            'selling_price' => 123.45,
+            'gst_tax' => 18,
+            'status' => 1,
+        ]);
+
+        $response->assertRedirect('/products');
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('products', [
+            'code' => 'GST-PRICE-001',
+            'selling_price' => 123.45,
+            'gst_tax' => 18,
+        ]);
+
+        $this->actingAs($user)->get('/products')
+            ->assertOk()
+            ->assertSee('123.45')
+            ->assertDontSee('145.67');
     }
 
     public function test_product_code_is_auto_generated_when_not_provided(): void

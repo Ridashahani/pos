@@ -47,9 +47,11 @@
                         </p>
                     </div>
                     <div class="d-flex align-items-center">
-                        <a href="{{ route('categories.create') }}" class="btn btn-primary add-list d-flex align-items-center mr-3">
-                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Create Category
-                        </a>
+                        @can('create.categories')
+                            <a href="{{ route('categories.create') }}" class="btn btn-primary add-list d-flex align-items-center mr-3">
+                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Create Category
+                            </a>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -113,22 +115,26 @@
                                     <td>
                                         <div class="d-flex align-items-center list-action">
                                             <!-- Edit Button -->
-                                            <a class="btn btn-success mr-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"
-                                                href="{{ route('categories.edit', $category->slug) }}">
-                                                <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
-                                            </a>
+                                            @can('edit.categories')
+                                                <a class="btn btn-success mr-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit"
+                                                    href="{{ route('categories.edit', $category->slug) }}">
+                                                    <x-heroicon-o-pencil class="w-5 h-5 mr-0" />
+                                                </a>
+                                            @endcan
 
                                             <!-- Delete Button -->
-                                            <form action="{{ route('categories.destroy', $category->slug) }}" method="POST"
-                                                class="d-inline">
-                                                @method('delete')
-                                                @csrf
-                                                <button type="submit" class="btn btn-danger border-0"
-                                                    onclick="return confirm('Are you sure you want to delete this record?')"
-                                                    data-toggle="tooltip" data-placement="top" title="Delete">
-                                                    <x-heroicon-o-trash class="w-5 h-5 mr-0" />
-                                                </button>
-                                            </form>
+                                            @can('delete.categories')
+                                                <form action="{{ route('categories.destroy', $category->slug) }}" method="POST"
+                                                    class="d-inline">
+                                                    @method('delete')
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-danger border-0"
+                                                        onclick="return confirm('Are you sure you want to delete this record?')"
+                                                        data-toggle="tooltip" data-placement="top" title="Delete">
+                                                        <x-heroicon-o-trash class="w-5 h-5 mr-0" />
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

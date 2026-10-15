@@ -19,7 +19,6 @@ class StorePaymentAccountRequest extends FormRequest
             'type' => 'required|in:jazzcash,easypaisa,bank',
             'account_number' => ['nullable', 'string', 'max:255', Rule::unique('payment_accounts', 'account_number')],
             'holder_name' => 'nullable|string|max:255',
-            'opening_balance' => 'required|numeric|min:0',
             'status' => 'required|in:active,inactive',
         ];
     }

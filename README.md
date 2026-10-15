@@ -84,11 +84,19 @@ php artisan key:generate
 
 ### 4. Database Setup & Seeding
 
-Run the migrations and seeders to populate the database with realistic test data (Indonesian/English locale supported):
+For a new local database, run the migrations and seeders to populate it with realistic test data (Indonesian/English locale supported):
 
 ```bash
-php artisan migrate:fresh --seed
+php artisan migrate --seed
 ```
+
+After pulling updates, apply only new migrations:
+
+```bash
+php artisan migrate
+```
+
+Do not run `php artisan migrate:fresh --seed` on a database you need to keep. It drops all tables and their data before rebuilding them. Seeders are intended for initial local setup and may create duplicate records if run again.
 
 ### 5. Create Storage Link
 

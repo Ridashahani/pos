@@ -20,14 +20,22 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
         ]);
 
-        $user = User::updateOrCreate(['email' => 'user@gmail.com'], [
-            'name' => 'User',
-            'username' => 'user',
-            'email' => 'user@gmail.com',
+        $manager = User::updateOrCreate(['email' => 'manager@gmail.com'], [
+            'name' => 'Manager',
+            'username' => 'manager',
+            'email' => 'manager@gmail.com',
+            'password' => Hash::make('password'),
+        ]);
+
+         $cashier = User::updateOrCreate(['email' => 'cashier@gmail.com'], [
+            'name' => 'Cashier',
+            'username' => 'cashier',
+            'email' => 'cashier@gmail.com',
             'password' => Hash::make('password'),
         ]);
 
         $admin->syncRoles('Admin');
-        $user->syncRoles('Staff');
+        $manager->syncRoles('Manager');
+        $cashier->syncRoles('Cashier');
     }
 }

@@ -2,6 +2,13 @@
 
 @section('container')
     <div class="container-fluid">
+        @if (session('success'))
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+        @endif
+
         <div class="row">
             <div class="col-lg-12">
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
@@ -76,18 +83,120 @@
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h4 class="card-title mb-0">{{ $title }} Records</h4>
                         @if ($type === 'stock-transfer')
-                            <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary">
-                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
-                            </a>
+                            <div class="d-flex flex-wrap align-items-center">
+                                <form method="GET" action="{{ url()->current() }}"
+                                    class="form-group row align-items-center mb-0 mr-2" style="width: 300px; max-width: 100%;">
+                                    <div class="col-sm-12">
+                                        <div class="input-group">
+                                            <input type="search" id="search" name="search" value="{{ request('search') }}"
+                                                class="form-control" placeholder="Search product" aria-label="Search product">
+                                            <div class="input-group-append">
+                                                <button type="submit" class="input-group-text bg-primary" aria-label="Search">
+                                                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                @can('create.stocks')
+                                    <a href="{{ route('stock.transfer.create') }}" class="btn btn-primary mr-2">
+                                        <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add Stock Transfer
+                                    </a>
+                                @endcan
+                                @can('delete.stocks')
+                                    <form method="POST" action="{{ route('stock.transfer.clear') }}"
+                                        onsubmit="return confirm('Delete all stock transfer records? Stock will be returned.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Clear All</button>
+                                    </form>
+                                @endcan
+                            </div>
                         @elseif (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
-                            <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center">
-                                <input type="search" name="search" value="{{ request('search') }}"
-                                    class="form-control mr-2" placeholder="Search product" aria-label="Search product">
-                                <button type="submit" class="btn btn-primary">Search</button>
-                            </form>
+                            <div class="d-flex align-items-center">
+                                <form method="GET" action="{{ url()->current() }}"
+                                    class="form-group row align-items-center mb-0 mr-2" style="width: 300px; max-width: 100%;"
+                                    @if ($type === 'stock-in') id="stock-in-search-form" @endif>
+                                    <div class="col-sm-12">
+                                        <div class="input-group">
+                                            <input type="search" name="search" value="{{ request('search') }}"
+                                                @if ($type === 'stock-in') id="stock-in-search" @else id="search" @endif
+                                                class="form-control" placeholder="Search product" aria-label="Search product">
+                                            <div class="input-group-append">
+                                                <button type="submit" class="input-group-text bg-primary" aria-label="Search">
+                                                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                @if (in_array($type, ['sold-items', 'out-of-stock']))
+                                    @can('delete.stocks')
+                                        <form method="POST" action="{{ route("stock.{$type}.clear") }}"
+                                            onsubmit="return confirm('{{ $type === 'out-of-stock' ? 'Delete all out-of-stock records? Records linked to sales or transfers will be skipped.' : 'Delete all sold item records?' }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger">Clear All</button>
+                                        </form>
+                                    @endcan
+                                @endif
+                            </div>
                         @endif
                     </div>
                     <div class="card-body p-0">
+                        @if ($type === 'stock-in')
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead class="bg-white text-uppercase">
+                                        <tr class="ligth ligth-data">
+                                            <th>No</th>
+                                            <th>Product_Name</th>
+                                            <th>Variation</th>
+                                            <th>Branch</th>
+                                            <th>Purchase Price</th>
+                                            <th class="text-right text-nowrap">Available Qty</th>
+                                            <th>Low Stock</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="ligth-body">
+                                        @forelse ($rows as $row)
+                                            <tr>
+                                                <td>{{ $pagination->firstItem() + $loop->index }}</td>
+                                                <td>{{ $row['product'] }}</td>
+                                                <td>{{ $row['variation'] }}</td>
+                                                <td>{{ $row['branch'] }}</td>
+                                                <td>{{ $row['currency'] }} {{ number_format($row['cost_price'], 2) }}</td>
+                                                <td class="text-right">
+                                                    <span class="badge {{ $row['remaining_quantity'] > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                        {{ number_format($row['remaining_quantity']) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if ($row['remaining_quantity'] < 5)
+                                                        <span class="text-danger d-inline-flex align-items-center">
+                                                            <x-heroicon-o-x-circle class="w-5 h-5 mr-1" /> Low Stock
+                                                        </span>
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <a href="{{ route('stock.in.details', $row['stock_in_id']) }}"
+                                                        class="btn btn-info btn-sm d-inline-flex align-items-center" title="View details" aria-label="View details">
+                                                        <x-heroicon-o-eye class="w-4 h-4 mr-1" /> View Details
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="8" class="text-center text-muted py-4">No stock records found.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
                         <div class="table-responsive">
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
@@ -108,19 +217,23 @@
                                             <th>Unit Sold Price</th>
                                             <th>Net Sold Price</th>
                                             <th>Destination</th>
+                                            @if ($type === 'sold-items' && ($show_branch ?? false))
+                                                <th>Branch</th>
+                                            @endif
                                             @if ($type === 'sold-items')
                                                 <th>Status</th>
                                             @endif
                                         @elseif ($type === 'out-of-stock')
-                                            <th>Action</th>
-                                        @else
+                                            <th>Branches</th>
+                                        @elseif ($type === 'stock-transfer')
+                                            <th>Variation</th>
                                             <th>From</th>
                                             <th>To</th>
                                             <th>Status</th>
                                         @endif
                                         @if ($type === 'stock-in')
                                             <th>Action</th>
-                                        @elseif ($type === 'stock-transfer')
+                                        @elseif (in_array($type, ['stock-transfer', 'sold-items', 'out-of-stock']))
                                             <th class="text-center">Actions</th>
                                         @endif
                                     </tr>
@@ -133,12 +246,17 @@
                                             @if ($type === 'stock-in')
                                                 <td>
                                                     <img class="avatar-60 rounded"
-                                                        src="{{ $row['image'] ? asset('assets/images/product/' . $row['image']) : asset('assets/images/product/default.webp') }}"
+                                                        src="{{ \App\Models\Product::imageUrl($row['image'] ?? null) }}"
                                                         alt="{{ $row['product'] }}">
                                                 </td>
                                             @endif
                                             <td>{{ $row['product'] }}</td>
-                                            <td>{{ number_format($row['quantity']) }}</td>
+                                            @if ($type === 'out-of-stock')
+                                                <td>{{ number_format($row['quantity']) }}</td>
+                                                <td>{{ $row['branches'] }}</td>
+                                            @else
+                                                <td>{{ number_format($row['quantity']) }}</td>
+                                            @endif
                                             @if ($type === 'stock-in')
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_cost'], 2) }}</td>
                                                 <td>{{ $row['supplier'] }}</td>
@@ -148,15 +266,14 @@
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_price'], 2) }}</td>
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['net_sold_price'], 2) }}</td>
                                                 <td>{{ $row['destination'] }}</td>
+                                                @if ($type === 'sold-items' && ($show_branch ?? false))
+                                                    <td>{{ $row['branch'] }}</td>
+                                                @endif
                                                 @if ($type === 'sold-items')
                                                     <td><span class="badge {{ $row['status'] === 'returned' ? 'bg-warning' : 'bg-success' }}">{{ ucfirst($row['status']) }}</span></td>
                                                 @endif
-                                            @elseif ($type === 'out-of-stock')
-                                                <td>
-                                                    <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
-                                                        class="btn btn-primary btn-sm">Purchase again</a>
-                                                </td>
-                                            @else
+                                            @elseif ($type === 'stock-transfer')
+                                                <td>{{ $row['variation'] }}</td>
                                                 <td>{{ $row['from'] }}</td>
                                                 <td>{{ $row['to'] }}</td>
                                                 <td>
@@ -173,23 +290,72 @@
                                                         <x-heroicon-o-eye class="w-5 h-5" />
                                                     </a>
                                                 </td>
-                                            @elseif ($type === 'stock-transfer')
+                                            @elseif ($type === 'sold-items')
                                                 <td class="text-center">
-                                                    @if (!empty($row['id']))
-                                                        <a href="{{ route('stock.transfer.edit', $row['id']) }}"
-                                                            class="btn btn-light btn-sm mr-1" title="Edit stock transfer"
-                                                            aria-label="Edit stock transfer">
-                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                    @can('access.sales')
+                                                        <a href="{{ route('sale.saleDetails', $row['sale_id']) }}"
+                                                            class="btn btn-light btn-sm mr-1" title="View sale" aria-label="View sale">
+                                                            <x-heroicon-o-eye class="w-4 h-4" />
                                                         </a>
-                                                        <form action="{{ route('stock.transfer.destroy', $row['id']) }}" method="POST" class="d-inline">
+                                                    @endcan
+                                                    @can('delete.stocks')
+                                                        <form action="{{ route('stock.sold-items.destroy', $row['sold_item_id']) }}" method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Delete this sold item record?');">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete stock transfer"
-                                                                aria-label="Delete stock transfer">
+                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete sold item" aria-label="Delete sold item">
                                                                 <x-heroicon-o-trash class="w-4 h-4 text-danger" />
                                                             </button>
                                                         </form>
+                                                    @endcan
+                                                </td>
+                                            @elseif ($type === 'out-of-stock')
+                                                <td>
+                                                    <div class="d-flex flex-nowrap justify-content-center align-items-center">
+                                                    @can('create.sales')
+                                                        <a href="{{ route('purchases.create', ['product_id' => $row['product_id']]) }}"
+                                                            class="btn btn-primary btn-sm mr-1">Purchase again</a>
+                                                    @endcan
+                                                    @can('edit.products')
+                                                        <a href="{{ route('products.edit', $row['product_id']) }}" class="btn btn-light btn-sm mr-1" title="Edit product" aria-label="Edit product">
+                                                            <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                        </a>
+                                                    @endcan
+                                                    @can('delete.stocks')
+                                                        <form action="{{ route('stock.out-of-stock.destroy', $row['stock_in_id']) }}" method="POST" class="d-inline"
+                                                            onsubmit="return confirm('Delete one exhausted batch? Other matching batches may remain in this grouped row. Records linked to sales or transfers cannot be deleted.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-light btn-sm" title="Delete one exhausted batch" aria-label="Delete one exhausted batch">
+                                                                <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                    </div>
+                                                </td>
+                                            @elseif ($type === 'stock-transfer')
+                                                <td>
+                                                    <div class="d-flex flex-nowrap justify-content-center align-items-center">
+                                                    @if (!empty($row['id']))
+                                                        @can('edit.stocks')
+                                                            <a href="{{ route('stock.transfer.edit', $row['id']) }}"
+                                                                class="btn btn-light btn-sm mr-1" title="Edit stock transfer"
+                                                                aria-label="Edit stock transfer">
+                                                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                                            </a>
+                                                        @endcan
+                                                        @can('delete.stocks')
+                                                            <form action="{{ route('stock.transfer.destroy', $row['id']) }}" method="POST" class="d-inline">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="btn btn-light btn-sm" title="Delete stock transfer"
+                                                                    aria-label="Delete stock transfer">
+                                                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                                                </button>
+                                                            </form>
+                                                        @endcan
                                                     @endif
+                                                    </div>
                                                 </td>
                                             @endif
                                         </tr>
@@ -201,8 +367,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        @endif
                     </div>
-                    @if (in_array($type, ['stock-in', 'stock-out', 'sold-items', 'out-of-stock']))
+                    @if (isset($pagination) && $pagination->total() > 10)
                         <div class="card-footer d-flex justify-content-between align-items-center">
                             <span class="text-muted small">{{ $total_products }} matching records</span>
                             {{ $pagination->links() }}
@@ -212,4 +379,13 @@
             </div>
         </div>
     </div>
+    @if ($type === 'stock-in')
+        <script>
+            document.getElementById('stock-in-search')?.addEventListener('search', function () {
+                if (this.value.trim() === '') {
+                    document.getElementById('stock-in-search-form')?.requestSubmit();
+                }
+            });
+        </script>
+    @endif
 @endsection

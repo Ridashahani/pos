@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;  
+use Illuminate\Database\Eloquent\Builder;
 
 class Branch extends Model
 {
@@ -15,8 +15,13 @@ class Branch extends Model
     {
         return $query->when($search, function ($query) use ($search) {
             $query->where('name', 'like', "%{$search}%")
-            ->orwhere('address', 'like', "%{$search}%")
-            ->orWhere('phone', 'like', "%{$search}%");
+                ->orwhere('address', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
         });
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_branch', 'branch_id', 'user_id');
     }
 }

@@ -13,43 +13,45 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = [
-            'access.pos' => 'pos',
-            'access.customers' => 'customer',
-            'access.suppliers' => 'supplier',
-            'access.categories' => 'category',
-            'access.products' => 'product',
-            'access.sales' => 'sale',
-            'access.stocks' => 'stock',
-            'access.roles' => 'roles',
-            'access.users' => 'user',
-            'access.payments' => 'payment',
+        // group_name => plural name (permission naming ke liye)
+        $modules = [
+            'customer' => 'customers',
+            'supplier' => 'suppliers',
+            'category' => 'categories',
+            'product'  => 'products',
+            'sale'     => 'sales',
+            'stock'    => 'stocks',
+            'roles'    => 'roles',
+            'user'     => 'users',
+            'payment'  => 'payments',
         ];
 
-        Permission::whereIn('name', [
-            'access.pos', 'access.customers', 'access.suppliers', 'access.categories', 'access.products',
-            'access.sales', 'access.stocks', 'access.roles', 'access.users',
-            'access.payments',
-        ])->delete();
+        // POS ki sirf access permission
+        Permission::firstOrCreate(['name' => 'access.pos'], ['group_name' => 'pos']);
 
-        foreach ($permissions as $name => $group) {
-            Permission::firstOrCreate(['name' => $name], ['group_name' => $group]);
+        foreach ($modules as $group => $plural) {
+            foreach (['access', 'create', 'edit', 'delete'] as $action) {
+                Permission::firstOrCreate(
+                    ['name' => "{$action}.{$plural}"],
+                    ['group_name' => $group]
+                );
+            }
         }
 
-        Role::whereNotIn('name', ['Admin', 'Staff'])->get()->each->delete();
+        Role::whereNotIn('name', ['Admin', 'Manager', 'Cashier'])->get()->each->delete();
 
-        $admin = Role::firstOrCreate(['name' => 'Admin']);
-        $staff = Role::firstOrCreate(['name' => 'Staff']);
+        $admin   = Role::firstOrCreate(['name' => 'Admin']);
+        $manager = Role::firstOrCreate(['name' => 'Manager']);
+        $cashier = Role::firstOrCreate(['name' => 'Cashier']);
 
         $admin->syncPermissions(Permission::all());
-        $staff->syncPermissions([
-            'access.pos',
-            'access.customers',
-            'access.suppliers',
-            'access.categories',
-            'access.products',
-            'access.sales',
-            'access.payments',
-        ]);
+
+        $manager->syncPermissions(
+            Permission::whereIn('group_name', ['pos', 'customer', 'supplier', 'category', 'product', 'sale', 'stock', 'payment'])->get()
+        );
+
+        $cashier->syncPermissions(
+            Permission::whereIn('group_name', ['pos', 'customer', 'sale', 'payment'])->get()
+        );
     }
 }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->unsignedInteger('quantity_limit')->nullable();
             $table->foreignId('supplier_id')->nullable()->constrained()->nullOnDelete();
             $table->string('warehouse')->nullable();
-            $table->string('status')->default('received');
+$table->boolean('status')->default(true);
             $table->text('note')->nullable();
             $table->string('product_type')->default('single');
             $table->string('variation')->nullable();
@@ -27,8 +27,8 @@ return new class extends Migration
             $table->decimal('product_price', 12, 2)->nullable();
             $table->decimal('wholesale_price', 12, 2)->nullable();
             $table->decimal('special_price', 12, 2)->nullable();
-            $table->unsignedInteger('stock_alert')->default(0);
-            $table->decimal('order_tax', 8, 2)->default(0);
+            $table->unsignedInteger('stock_alert_level')->default(0);
+            $table->decimal('gst_tax', 8, 2)->default(0);
             $table->string('tax_type')->nullable();
             $table->unsignedInteger('add_product_quantity')->default(0);
             $table->json('images')->nullable();
@@ -43,7 +43,7 @@ return new class extends Migration
                 'brand', 'barcode_symbology', 'product_unit', 'sale_unit', 'purchase_unit',
                 'quantity_limit', 'supplier_id', 'warehouse', 'status', 'note', 'product_type',
                 'variation', 'variation_types', 'variation_type', 'product_cost', 'product_price',
-                'wholesale_price', 'special_price', 'stock_alert', 'order_tax', 'tax_type',
+                'wholesale_price', 'special_price', 'stock_alert_level', 'gst_tax', 'tax_type',
                 'add_product_quantity', 'images',
             ]);
         });

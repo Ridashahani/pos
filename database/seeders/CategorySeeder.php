@@ -14,20 +14,17 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Smartphones',
-            'Mobile Accessories',
-            'Chargers & Cables',
-            'Mobile Covers & Cases',
-            'Screen Protectors',
-            'Power Banks',
-            'Earbuds & Headphones',
-            'Smartwatches'
+            'Accessories',
+            'Mobile',
+           
         ];
 
         foreach ($categories as $category) {
-            Category::create([
+            $slug = Str::slug($category);
+
+            Category::updateOrCreate(['slug' => $slug], [
                 'name' => $category,
-                'slug' => Str::slug($category),
+                'slug' => $slug,
             ]);
         }
     }

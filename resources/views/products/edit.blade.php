@@ -2,6 +2,8 @@
 
 @section('specificpagestyles')
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://unpkg.com/gijgo@1.9.14/js/gijgo.min.js" type="text/javascript"></script>
 <link href="https://unpkg.com/gijgo@1.9.14/css/gijgo.min.css" rel="stylesheet" type="text/css" />
 @endsection
@@ -27,7 +29,7 @@
         <div class="profile-img-edit">
             <div class="crm-profile-img-edit">
                 <img class="crm-profile-pic rounded-circle avatar-100" id="image-preview"
-                    src="{{ $product->image ? asset('storage/products/' . $product->image) : asset('assets/images/product/default.webp') }}"
+                    src="{{ \App\Models\Product::imageUrl($product->image) }}"
                     alt="profile-pic">
             </div>
         </div>
@@ -61,10 +63,14 @@
     </div>
 
     <div class="form-group col-md-4">
-        <label for="brand">Brand</label>
-        <input type="text" class="form-control @error('brand') is-invalid @enderror" id="brand" name="brand"
-            value="{{ old('brand', $product->brand) }}">
-        @error('brand') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label for="brand_id">Brand</label>
+        <select class="form-control @error('brand_id') is-invalid @enderror" id="brand_id" name="brand_id">
+            <option value="">Choose Brand</option>
+            @foreach ($brands as $brand)
+            <option value="{{ $brand->id }}" @selected((string) old('brand_id', $product->brand_id) === (string) $brand->id)>{{ $brand->name }}</option>
+            @endforeach
+        </select>
+        @error('brand_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     <div class="form-group col-md-4">
@@ -144,6 +150,18 @@
         <input type="number" class="form-control @error('selling_price') is-invalid @enderror" id="selling_price"
             name="selling_price" value="{{ old('selling_price', $product->selling_price) }}" required>
         @error('selling_price')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+        @enderror
+    </div>
+
+    <div class="form-group col-md-6">
+        <label for="gst_tax">GST (%)</label>
+        <input type="number" step="0.01" min="0" max="100"
+            class="form-control @error('gst_tax') is-invalid @enderror" id="gst_tax" name="gst_tax"
+            value="{{ old('gst_tax', $product->gst_tax ?? $defaultGst) }}">
+        @error('gst_tax')
         <div class="invalid-feedback">
             {{ $message }}
         </div>

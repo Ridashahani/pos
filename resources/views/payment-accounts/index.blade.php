@@ -1,17 +1,111 @@
 @extends('dashboard.body.main')
 
 @section('container')
+<style>
+    .payment-page-title {
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .payment-account-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .payment-account-table thead.bg-primary th {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.2;
+        padding: 12px 10px;
+        vertical-align: middle;
+    }
+
+    .payment-account-table td {
+        color: #1f2937;
+        vertical-align: middle;
+    }
+
+    .payment-account-table {
+        min-width: 1120px;
+    }
+
+    .payment-account-table th,
+    .payment-account-table td {
+        padding: 12px 10px;
+    }
+
+    .payment-account-table th:last-child,
+    .payment-account-table td:last-child {
+        position: sticky;
+        right: 0;
+        min-width: 100px;
+        z-index: 2;
+        background: #fff;
+        box-shadow: -5px 0 8px rgba(20, 35, 55, 0.08);
+        white-space: nowrap;
+    }
+
+    .payment-account-table thead th:last-child {
+        z-index: 3;
+        background-color: #2bb8dc;
+    }
+
+    .payment-account-table td:last-child .btn {
+        margin: 0 2px;
+    }
+
+    .payment-account-table th:nth-child(1),
+    .payment-account-table td:nth-child(1) {
+        min-width: 120px;
+    }
+
+    .payment-account-table th:nth-child(3),
+    .payment-account-table td:nth-child(3) {
+        min-width: 155px;
+    }
+
+    .payment-account-table th:nth-child(4),
+    .payment-account-table td:nth-child(4),
+    .payment-account-table th:nth-child(6),
+    .payment-account-table td:nth-child(6) {
+        min-width: 130px;
+        white-space: nowrap;
+    }
+
+    .payment-account-table th:nth-child(5),
+    .payment-account-table td:nth-child(5) {
+        min-width: 250px;
+    }
+
+    .payment-account-table th:nth-child(8),
+    .payment-account-table td:nth-child(8),
+    .payment-account-table th:nth-child(9),
+    .payment-account-table td:nth-child(9),
+    .payment-account-table th:nth-child(7),
+    .payment-account-table td:nth-child(7) {
+        white-space: nowrap;
+    }
+
+    .payment-account-table td:nth-child(5) form {
+        min-width: 225px;
+    }
+</style>
 <div class="container-fluid">
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
         <div>
-            <h4 class="mb-2">Payment Accounts</h4>
+            <h4 class="payment-page-title mb-2">Payment Accounts</h4>
             <p class="mb-0 text-muted">Manage the shop owner's JazzCash, Easypaisa and bank accounts.</p>
         </div>
         <div class="mt-3 mt-md-0">
             <a href="{{ route('payments.index') }}" class="btn btn-light mr-2">Payments</a>
-            <a href="{{ route('payment-accounts.create') }}" class="btn btn-primary">
-                <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Add Account
-            </a>
+            @can('access.payments')
+                <a href="{{ route('payment-accounts.create') }}" class="btn btn-primary">
+                    <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Add Account
+                </a>
+            @endcan
         </div>
     </div>
 
@@ -19,15 +113,139 @@
     <div class="alert text-white bg-success" role="alert">{{ session('success') }}</div>
     @endif
 
+    <h5 class="payment-account-section-title mb-2">Account Type Stats</h5>
+    <div class="payment-type-stats-grid">
+        @foreach (['bank' => 'Bank', 'jazzcash' => 'JazzCash', 'easypaisa' => 'Easypaisa'] as $type => $label)
+        @php($stats = $accountTypeStats[$type])
+        <div class="card payment-type-stats-card payment-account-summary-card-{{ $type }} mb-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>{{ $label }}</strong>
+                    <small>{{ $stats['accounts_count'] }} {{ \Illuminate\Support\Str::plural('account', $stats['accounts_count']) }}</small>
+                </div>
+                <div class="payment-type-stats-metrics">
+                    <span>Previous Balance <strong>Rs {{ number_format($stats['previous_balance'], 0) }}</strong></span>
+                    <span>Today's Opening <strong>Rs {{ number_format($stats['opening_balance'], 0) }}</strong></span>
+                    <span>Current Balance <strong>Rs {{ number_format($stats['current_balance'], 0) }}</strong></span>
+                    <span>Transactions <strong>{{ number_format($stats['transactions_count']) }}</strong></span>
+                    <span>Transactions Amount <strong>Rs {{ number_format($stats['total_transaction_amount'], 0) }}</strong></span>
+                    <span>Transfers In / Out <strong>Rs {{ number_format($stats['total_transferred_in'], 0) }} / {{ number_format($stats['total_transferred_out'], 0) }}</strong></span>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    <style>
+        .payment-type-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .payment-type-stats-card {
+            color: #fff;
+            border: 0;
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(20, 35, 55, 0.2);
+            overflow: hidden;
+        }
+
+        .payment-type-stats-card .card-body {
+            padding: 10px 12px;
+        }
+
+        .payment-type-stats-card .card-body>.d-flex {
+            margin-bottom: 3px !important;
+        }
+
+        .payment-type-stats-card .card-body>.d-flex strong {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .payment-type-stats-card small {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+        }
+
+        .payment-type-stats-metrics {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .payment-type-stats-metrics span {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .payment-type-stats-metrics strong {
+            color: #fff;
+            white-space: nowrap;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .payment-account-summary-card-bank {
+            color: #fff;
+            background-image: linear-gradient(120deg, #0b3768 0%, #1769aa 48%, #398bd0 100%);
+            border-top: 2px solid #0b3a6b;
+        }
+
+        .payment-account-summary-card-easypaisa {
+            color: #fff;
+            background-image: linear-gradient(120deg, #064326 0%, #0c8045 48%, #25a765 100%);
+            border-top: 2px solid #064628;
+        }
+
+        .payment-account-summary-card-jazzcash {
+            color: #fff;
+            background-image: linear-gradient(120deg, #741722 0%, #b62435 48%, #e04b57 100%);
+            border-top: 2px solid #741722;
+        }
+
+        .payment-account-summary-card:not(.payment-account-summary-card-bank):not(.payment-account-summary-card-easypaisa):not(.payment-account-summary-card-jazzcash) {
+            color: #fff;
+            background-image: linear-gradient(120deg, #352258 0%, #69449e 48%, #9470c8 100%);
+            border-top: 2px solid #352258;
+        }
+
+        @media (max-width: 575.98px) {
+            .payment-type-stats-grid {
+                gap: 8px;
+            }
+
+            .payment-type-stats-card .card-body {
+                padding: 5px;
+            }
+
+            .payment-type-stats-metrics {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                font-size: 12px;
+            }
+
+            .payment-type-stats-metrics strong {
+                font-size: 12px;
+            }
+        }
+    </style>
+
     <div class="card card-block card-stretch card-height">
         <div class="card-body table-responsive">
-            <table class="table mb-0">
+            <table class="table payment-account-table mb-0">
                 <thead class="bg-primary text-white">
                     <tr>
                         <th>Name</th>
                         <th>Type</th>
                         <th>Account Number</th>
-                        <th>Opening Balance</th>
+                        <th>Previous Balance</th>
+                        <th>Add Today's Balance</th>
                         <th>Current Balance</th>
                         <th>Transactions</th>
                         <th>Status</th>
@@ -35,35 +253,53 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($accounts as $account)
+                    @forelse ($accounts as $accountRow)
                     <tr>
-                        <td>{{ $account->name }}</td>
-                        <td>{{ ucfirst($account->type) }}</td>
-                        <td>{{ $account->account_number ?: '-' }}</td>
-                        <td>Rs {{ number_format($account->opening_balance, 2) }}</td>
-                        <td>Rs {{ number_format($account->balance, 2) }}</td>
-                        <td>{{ $account->transactions_count }}</td>
+                        <td>{{ $accountRow->name }}</td>
+                        <td>{{ $accountRow->type }}</td>
+                        <td>{{ $accountRow->account_number ?: '-' }}</td>
+                        <td>Rs {{ number_format($accountRow->previous_balance, 2) }}</td>
                         <td>
-                            <span class="badge {{ $account->status === 'active' ? 'badge-success' : 'badge-secondary' }}">
-                                {{ ucfirst($account->status) }}
+                            <form action="{{ route('payment-accounts.daily-opening-balance', $accountRow) }}" method="POST" class="d-flex align-items-center">
+                                @csrf
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    name="opening_balance"
+                                    value="{{ old('opening_balance', $accountRow->opening_balance_addition) }}"
+                                    placeholder="Add amount"
+                                    class="form-control form-control-sm mr-2 @error('opening_balance') is-invalid @enderror"
+                                    style="min-width: 125px;"
+                                    required
+                                >
+                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                            </form>
+                            @error('opening_balance') <small class="text-danger">{{ $message }}</small> @enderror
+                        </td>
+                        <td>Rs {{ number_format($accountRow->available_balance, 2) }}</td>
+                        <td>{{ $accountRow->transactions_count }}</td>
+                        <td>
+                            <span class="badge {{ $accountRow->status === 'active' ? 'badge-success' : 'badge-secondary' }}">
+                                {{ ucfirst($accountRow->status) }}
                             </span>
                         </td>
                         <td>
-                            <a href="{{ route('payment-accounts.edit', $account) }}" class="btn btn-light btn-sm" title="Edit account">
-                                <x-heroicon-o-pencil-square class="w-4 h-4" />
+                            <a href="{{ route('payment-accounts.edit', $accountRow) }}" class="btn btn-light btn-sm" title="Edit account">
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
                             </a>
-                            <form action="{{ route('payment-accounts.destroy', $account) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete or deactivate this account?');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-light btn-sm" title="Delete or deactivate account">
-                                    <x-heroicon-o-trash class="w-4 h-4 text-danger" />
-                                </button>
+                            <form action="{{ route('payment-accounts.destroy', $accountRow) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete or deactivate this account?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-light btn-sm" title="Delete or deactivate account">
+                                        <x-heroicon-o-trash class="w-4 h-4 text-danger" />
+                                    </button>
                             </form>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-4">No payment accounts found.</td>
+                        <td colspan="9" class="text-center py-4">No payment accounts found.</td>
                     </tr>
                     @endforelse
                 </tbody>

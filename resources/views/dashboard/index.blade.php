@@ -5,7 +5,7 @@
         <!-- Success Message -->
         <div class="row">
             <div class="col-lg-12">
-                @if(session()->has('success'))
+                @if (session()->has('success'))
                     <div class="alert text-white bg-success" role="alert">
                         <div class="iq-alert-text">{{ session('success') }}</div>
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -19,13 +19,11 @@
         <div class="row">
             <!-- Banner / Welcome Section -->
             <div class="col-lg-12 mb-4">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                     <div>
                         <h3 class="font-weight-bold">Dashboard Overview</h3>
-                        <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
-                            store today.</p>
                     </div>
-                    <div>
+                    <div class="mt-3 mt-md-0">
                         <a href="{{ route('pos.index') }}" class="btn btn-primary">
                             <x-heroicon-o-computer-desktop class="w-5 h-5 mr-2" />
                             Go to POS
@@ -34,68 +32,96 @@
                 </div>
             </div>
 
+            <!-- Sales Summary Cards -->
+            @php
+                $summary = [
+                    ['label' => "Today's Sales", 'value' => $today_sales, 'color' => 'primary', 'icon' => 'calendar'],
+                    ['label' => 'Weekly Sales', 'value' => $weekly_sales, 'color' => 'info', 'icon' => 'calendar-days'],
+                    ['label' => 'Monthly Sales', 'value' => $month_sales, 'color' => 'warning', 'icon' => 'chart-bar'],
+                    [
+                        'label' => 'Total Sales',
+                        'value' => $total_sales,
+                        'color' => 'success',
+                        'icon' => 'currency-dollar',
+                    ],
+                ];
+            @endphp
+
+            @foreach ($summary as $item)
+                <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                    <div class="card w-100 h-100 mb-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center card-total-sale">
+                                <div class="icon iq-icon-box-2 bg-{{ $item['color'] }}-light">
+                                    <x-dynamic-component :component="'heroicon-o-' . $item['icon']" class="w-6 h-6 text-{{ $item['color'] }}" />
+                                </div>
+                                <div>
+                                    <p class="mb-2">{{ $item['label'] }}</p>
+                                    <h4>PKR {{ number_format($item['value'], 2) }}</h4>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+
             <!-- Metric Cards -->
-            <div class="col-lg-3 col-md-6">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-info-light">
                                 <x-heroicon-o-banknotes class="w-6 h-6 text-info" />
                             </div>
                             <div>
                                 <p class="mb-2">Total Paid</p>
-                                <h4>PKR:{{ number_format($total_paid, 2) }}</h4>
+                                <h4>PKR {{ number_format($total_paid, 2) }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-info iq-progress progress-1" data-percent="85" style="width: 85%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-danger-light">
                                 <x-heroicon-o-credit-card class="w-6 h-6 text-danger" />
                             </div>
                             <div>
                                 <p class="mb-2">Total Due</p>
-                                <h4>PKR:{{ number_format($total_due, 2) }}</h4>
+                                <h4>PKR {{ number_format($total_due, 2) }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-danger iq-progress progress-1" data-percent="40" style="width: 40%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-success-light">
                                 <x-heroicon-o-check-circle class="w-6 h-6 text-success" />
                             </div>
                             <div>
                                 <p class="mb-2">Complete Sales</p>
-                                <h4>{{ $complete_sales}}</h4>
+                                <h4>{{ $complete_sales }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-success iq-progress progress-1" data-percent="75" style="width: 75%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-warning-light">
                                 <x-heroicon-o-clock class="w-6 h-6 text-warning" />
                             </div>
@@ -104,30 +130,28 @@
                                 <h4>{{ $pending_sales }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-warning iq-progress progress-1" data-percent="25" style="width: 25%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
             <!-- Sales Chart -->
-            <div class="col-lg-12">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 mb-4">
+                <div class="card card-block card-stretch">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
                             <h4 class="card-title">Monthly Sales Overview ({{ date('Y') }})</h4>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="monthly-sales-chart"></div>
+                        <div id="monthly-sales-chart" style="min-height: 250px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Bottom Section: Recent Sales & Top Products -->
-            <div class="col-lg-7 col-md-12">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-xl-7 mb-4 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
                             <h4 class="card-title">Recent Sales</h4>
@@ -150,19 +174,20 @@
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @forelse(($recent_sales ) as $sale)
+                                    @forelse($recent_sales as $sale)
                                         <tr>
                                             <td>{{ $sale->created_at->format('d M Y') }}</td>
                                             <td>{{ $sale->customer->name ?? 'Walk-in Customer' }}</td>
-                                            <td>${{ number_format($sale->total, 2) }}</td>
+                                            <td>PKR {{ number_format($sale->grand_total, 2) }}</td>
                                             <td>
                                                 <span
-                                                    class="badge {{ $sale->sale_status == 'complete' ? 'bg-success' : 'bg-warning' }}">
-                                                    {{ ucfirst($sale->sale_status) }}
+                                                    class="badge {{ $sale->status == 'completed' ? 'bg-success' : 'bg-warning' }}">
+                                                    {{ ucfirst($sale->status) }}
                                                 </span>
                                             </td>
                                             <td>
-                                                <a class="btn btn-primary btn-sm" href="{{ route('sale.saleDetails', $sale->id) }}">
+                                                <a class="btn btn-primary btn-sm"
+                                                    href="{{ route('sale.saleDetails', $sale->id) }}">
                                                     <x-heroicon-o-eye class="w-4 h-4" />
                                                 </a>
                                             </td>
@@ -179,8 +204,8 @@
                 </div>
             </div>
 
-            <div class="col-lg-5 col-md-12">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-xl-5 mb-4 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
                             <h4 class="card-title">Top Selling Products</h4>
@@ -213,7 +238,7 @@
                         </div>
                     </div>
                 </div>
-                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -221,7 +246,7 @@
 @section('specificpagescripts')
     <!-- ApexCharts -->
     <script>
-            document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             if (typeof ApexCharts !== 'undefined') {
                 var options = {
                     series: [{
@@ -233,7 +258,8 @@
                         type: 'area',
                         toolbar: {
                             show: false
-                        }
+                        },
+                        parentHeightOffset: 0
                     },
                     dataLabels: {
                         enabled: false
@@ -242,13 +268,14 @@
                         curve: 'smooth'
                     },
                     xaxis: {
-                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct',
+                            'Nov',
                             'Dec'
                         ],
                     },
                     tooltip: {
                         y: {
-                            formatter: function (val) {
+                            formatter: function(val) {
                                 return "PKR " + val
                             }
                         }
@@ -262,7 +289,23 @@
                             opacityTo: 0.9,
                             stops: [0, 90, 100]
                         }
-                    }
+                    },
+                    responsive: [{
+                        breakpoint: 576,
+                        options: {
+                            chart: {
+                                height: 250
+                            },
+                            xaxis: {
+                                labels: {
+                                    rotate: -45,
+                                    style: {
+                                        fontSize: '10px'
+                                    }
+                                }
+                            }
+                        }
+                    }]
                 };
 
                 var chart = new ApexCharts(document.querySelector("#monthly-sales-chart"), options);
@@ -273,3 +316,82 @@
         });
     </script>
 @endsection
+<style>
+    .card-total-sale .icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 56px;
+        height: 56px;
+        margin-right: .75rem;
+    }
+
+    .card-total-sale .icon svg {
+        margin: 0;
+    }
+
+    .card-total-sale>div:last-child {
+        min-width: 0;
+    }
+
+    .card-total-sale h4 {
+        font-size: clamp(.85rem, 0.5rem + .8vw, 1.1rem);
+        word-break: break-word;
+    }
+
+    .card-total-sale p {
+        font-size: clamp(.75rem, .6rem + .4vw, .95rem);
+        margin-bottom: .25rem !important;
+    }
+
+    .card-title {
+        font-size: clamp(.95rem, .8rem + .5vw, 1.15rem);
+    }
+
+    .table td,
+    .table th {
+        font-size: clamp(.75rem, .65rem + .3vw, .9rem);
+        white-space: nowrap;
+    }
+
+    /* Flex children ko shrink hone do, taake side scroll na aaye */
+    .row>[class*="col-"] {
+        min-width: 0;
+    }
+
+    .card,
+    .card-body,
+    .table-responsive {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .content-page,
+    .container-fluid {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    @media (max-width: 575.98px) {
+        .card-total-sale .icon {
+            width: 44px;
+            height: 44px;
+            margin-right: .5rem;
+        }
+
+        .card-body {
+            padding: .85rem;
+        }
+
+        .container-fluid {
+            padding-left: .75rem;
+            padding-right: .75rem;
+        }
+    }
+</style>

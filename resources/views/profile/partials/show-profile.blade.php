@@ -35,9 +35,11 @@
             <label for="job_description">Job Description</label>
             <input type="text" class="form-control bg-white" id="job_description" value="{{  auth()->user()->job_description ?? '' }}" readonly>
         </div>
+        @if (!auth()->user()->isAdmin())
         <div class="form-group col-md-6">
-            <label for="location">Location</label>
-            <input type="text" class="form-control bg-white" id="location" value="{{  auth()->user()->location ?? 'Unknown' }}" readonly>
+            <label for="branch">Branch</label>
+            <input type="text" class="form-control bg-white" id="branch" value="{{ auth()->user()->activeBranch->name ?? 'No Branch Selected' }}" readonly>
         </div>
+        @endif
     </div>
 </div>

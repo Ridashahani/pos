@@ -45,6 +45,17 @@ Index Of Script
 (function (jQuery) {
   "use strict";
 
+  jQuery(function () {
+    jQuery(".alert.bg-success, .alert.alert-success").each(function () {
+      var successAlert = jQuery(this);
+      setTimeout(function () {
+        successAlert.fadeOut(500, function () {
+          successAlert.remove();
+        });
+      }, 3000);
+    });
+  });
+
   /*---------------------------------------------------------------------
         Tooltip
         -----------------------------------------------------------------------*/

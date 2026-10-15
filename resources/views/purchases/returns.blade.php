@@ -14,42 +14,91 @@
                     </a>
                 </div>
             </div>
-
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
+
+                        {{-- Search --}}
+                        <form action="{{ route('purchases.returns') }}" method="GET"
+                            class="d-flex flex-wrap align-items-center gap-3 mb-4">
+
+                            <div class="d-flex align-items-center gap-2 ml-2">
+
+                                <select name="search_by" class="form-control" style="width: 170px;">
+                                    <option value="return_no" @selected(request('search_by', 'return_no') == 'return_no')>
+                                        Return No
+                                    </option>
+                                    <option value="purchase_no" @selected(request('search_by') == 'purchase_no')>
+                                        Purchase No
+                                    </option>
+                                </select>
+
+                                <input type="text" name="search" value="{{ request('search') }}"
+                                    class="form-control ml-2 d-flex" placeholder="Search for..." style="width: 350px;">
+                            </div>
+
+                            <button type="submit" class="btn btn-outline-primary d-flex align-items-center ml-2">
+                                <x-heroicon-o-magnifying-glass class="w-4 h-4 mr-1" />
+                                Search
+                            </button>
+
+                            <a href="{{ route('purchases.returns') }}"
+                                class="btn btn-outline-secondary d-flex align-items-center ml-2">
+                                <x-heroicon-o-arrow-path class="w-4 h-4 mr-1" />
+                                Reset
+                            </a>
+                        </form>
+
+                        {{-- Table --}}
                         <div class="table-responsive rounded mb-3">
                             <table class="table mb-0">
                                 <thead class="bg-white text-uppercase">
                                     <tr class="ligth ligth-data">
                                         <th>No.</th>
+                                        <th>Return No</th>
                                         <th>Purchase No</th>
                                         <th>Supplier</th>
-                                        <th>Purchase Date</th>
-                                        <th>Items</th>
+                                        <th>Return Date</th>
+                                        <th>Qty</th>
                                         <th>Total</th>
                                         <th>Reason</th>
                                         <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="ligth-body">
-                                    @foreach ($purchases as $purchase)
+                                    @forelse ($returns as $return)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $purchase['number'] }}</td>
-                                            <td>{{ $purchase['supplier'] }}</td>
-                                            <td>{{ $purchase['date'] }}</td>
-                                            <td>{{ $purchase['items'] }}</td>
-                                            <td>{{ $purchase['total'] }}</td>
-                                            <td>{{ $purchase['reason'] }}</td>
-                                            <td><span class="badge badge-success">Return</span></td>
+                                            <td>{{ $return->return_no }}</td>
+                                            <td>{{ $return->purchase->purchase_no ?? '-' }}</td>
+                                            <td>{{ $return->purchase->supplier->name ?? '-' }}</td>
+                                            <td>{{ $return->return_date->format('Y-m-d') }}</td>
+                                            <td>{{ $return->returned_qty }}</td>
+                                            <td>PKR {{ number_format($return->total_amount, 2) }}</td>
+                                            <td>{{ Str::limit($return->reason, 40) }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge badge-{{ $return->status === 'approved' ? 'success' : 'warning' }}">
+                                                    {{ ucfirst($return->status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('purchases.returns.show', $return) }}"
+                                                    class="btn btn-sm btn-light border" title="View">
+                                                    <x-heroicon-o-eye class="w-4 h-4" />
+                                                </a>
+                                            </td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center text-muted py-4">No returns found.</td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                         </div>
-                        <p class="text-muted mb-0">These are the same static purchase records shown in the purchase list.
-                        </p>
+
                     </div>
                 </div>
             </div>

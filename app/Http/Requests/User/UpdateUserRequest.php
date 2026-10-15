@@ -40,7 +40,9 @@ class UpdateUserRequest extends FormRequest
                 'alpha_dash:ascii',
                 Rule::unique('users', 'username')->ignore($userId),
             ],
-            'role' => 'nullable|exists:roles,name',
+            'role' => 'nullable',
+            'branch_ids' => 'nullable|array',
+            'branch_ids.*' => 'exists:branches,id',
         ];
 
         // Only validate password if it is provided

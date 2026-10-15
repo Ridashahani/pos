@@ -17,142 +17,9 @@
         </div>
 
         <div class="row pos-shell">
-            <!-- LEFT COLUMN: Product Catalog -->
-            <div class="col-md-12 col-lg-8 pos-catalog">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="card card-block card-stretch card-height">
-                            <div class="card-body">
-                                <div class="pos-category-tabs mb-3 px-3">
-                                    <button type="button" class="pos-tab active">All Product</button>
-                                    <button type="button" class="pos-tab">Category</button>
-                                    <button type="button" class="pos-tab px-4">Brand</button>
-                                    <button type="button" class="pos-tab">Featured</button>
-                                </div>
-                                <!-- Filter & Search Form -->
-                                <form action="{{ route('pos.index') }}" method="get">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <!-- Search Input -->
-                                        <div class="form-group row mb-0 col-md-5">
-                                            <div class="input-group pos-search-box">
-                                                <input type="text" class="form-control" name="search" id="pos_search"
-                                                    placeholder="Search by name or barcode..."
-                                                    value="{{ request('search') }}" autocomplete="off">
-                                                <div class="input-group-append">
-                                                    <button type="submit" class="input-group-text bg-primary text-white">
-                                                        <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                                                    </button>
-                                                    @if (request('search') || request('category_id'))
-                                                        <a href="{{ route('pos.index') }}"
-                                                            class="input-group-text bg-danger text-white">
-                                                            <x-heroicon-o-x-mark class="w-5 h-5" />
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Category Filter -->
-                                        <div class="form-group row mb-0 col-md-4">
-                                            <select class="form-control" name="category_id" onchange="this.form.submit()">
-                                                <option value="">All Categories</option>
-                                                @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}"
-                                                        {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                                                        {{ $category->name }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <!-- Pagination Limit -->
-                                        <div class="form-group row mb-0 col-md-3">
-                                            <select class="form-control" name="row" onchange="this.form.submit()">
-                                                <option value="10" {{ request('row') == '10' ? 'selected' : '' }}>10 /
-                                                    Page</option>
-                                                <option value="20" {{ request('row') == '20' ? 'selected' : '' }}>20 /
-                                                    Page</option>
-                                                <option value="50" {{ request('row') == '50' ? 'selected' : '' }}>50 /
-                                                    Page</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product Grid -->
-                    <div class="col-lg-12">
-                        <div class="row product-grid">
-                            @forelse($products as $product)
-                                <div class="col-lg-6 col-md-4 col-sm-6 mb-3">
-                                    <div class="product-card h-100 d-flex flex-column">
-                                        <!-- Product Image -->
-                                        <div class="image-container">
-                                            <img src="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}"
-                                                class="product-image" alt="{{ $product->name }}">
-
-                                            <!-- Stock Badge -->
-                                            <span class="badge position-absolute shadow-sm"
-                                                style="top: 12px; right: 12px; font-size: 0.75rem; padding: 0.5em 0.8em; {{ $product->stock > 10 ? 'background-color: #10b981; color: white;' : 'background-color: #ef4444; color: white;' }}">
-                                                Stock: {{ $product->stock }}
-                                            </span>
-                                        </div>
-
-                                        <!-- Product Content -->
-                                        <div class="p-3 d-flex flex-column flex-grow-1">
-                                            <h6 class="font-weight-bold text-dark text-truncate mb-2"
-                                                title="{{ $product->name }}" style="font-size: 0.95rem;">
-                                                {{ $product->name }}
-                                            </h6>
-
-                                            <div class="d-flex align-items-center justify-content-between mt-auto">
-                                                <h5 class="text-primary font-weight-bolder mb-0" style="font-size: 1.1rem;">
-                                                    {{ number_format($product->selling_price) }}
-                                                </h5>
-
-                                                <!-- Add to Cart Form -->
-                                                <form class="add-to-cart-form" onsubmit="addToCart(event)">
-                                                    <input type="hidden" name="id" value="{{ $product->id }}">
-                                                    <input type="hidden" name="name" value="{{ $product->name }}">
-                                                    <input type="hidden" name="price"
-                                                        value="{{ $product->selling_price }}">
-                                                    <input type="hidden" name="code" value="{{ $product->code }}">
-                                                    <input type="hidden" name="image"
-                                                        value="{{ $product->image ? asset('assets/images/product/' . $product->image) : asset('assets/images/product/default.webp') }}">
-                                                    <button type="submit"
-                                                        class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center">
-                                                        <x-heroicon-o-plus class="w-4 h-4 mr-1" /> Add
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="col-12">
-                                    <div class="alert alert-info text-center">
-                                        <x-heroicon-o-information-circle class="w-6 h-6 mx-auto mb-2" />
-                                        No products found.
-                                    </div>
-                                </div>
-                            @endforelse
-                        </div>
-
-                        <!-- Pagination Links -->
-                        <div class="row mt-3">
-                            <div class="col-12 d-flex justify-content-center">
-                                {{ $products->links() }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT COLUMN: Cart System -->
-            <div class="col-md-12 col-lg-4 pos-cart">
-                <div class="card border-0 shadow-lg sticky-top" style="top: 20px; z-index: 100;">
+            <!-- FULL WIDTH: Current Sale -->
+            <div class="col-12 pos-cart">
+                <div class="card border-0 shadow-lg">
                     <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between p-3">
                         <h5 class="mb-0 text-white">
                             <x-heroicon-o-shopping-cart class="w-5 h-5 mr-1 inline" /> Current Sale
@@ -165,7 +32,7 @@
                     <div class="card-body p-0">
                         <div class="pos-order-fields p-3 border-bottom">
                             <div class="row">
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label">Customer</label>
                                     <div class="input-group">
                                         <select class="form-control select2" id="customer_id" name="customer_id"
@@ -183,25 +50,49 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label">Biller</label>
                                     <select class="form-control">
                                         <option>Admin</option>
-                                        <option>Staff</option>
+                                        <option>Manager</option>
+                                        <option>Cashier</option>
                                     </select>
                                 </div>
-                                <div class="col-md-6 form-group mb-2">
-                                    <label class="pos-field-label">Branches</label>
-                                    <select class="form-control">
-                                        <option>Main Branch</option>
-                                        <option>Mobile Store</option>
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
+                                    <label class="pos-field-label" for="branch_id">Branch</label>
+                                    <select class="form-control" id="branch_id" name="branch_id" @if ($branches->isEmpty()) disabled @else required @endif>
+                                        @if ($branches->isEmpty())
+                                            <option value="" selected>No active branches available</option>
+                                        @else
+                                            <option value="" disabled @if (!$selectedBranchId) selected @endif>Select a branch</option>
+                                            @foreach ($branches as $branch)
+                                                <option value="{{ $branch->id }}" @if ((string) $selectedBranchId === (string) $branch->id) selected @endif>{{ $branch->name }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
+                                    @if ($branches->isEmpty())
+                                        <small class="form-text text-danger">Create an active branch and assign it to your account before making a sale.</small>
+                                    @endif
                                 </div>
-                                <div class="col-md-6 form-group mb-2">
+                                <div class="col-md-6 col-lg-3 form-group mb-2">
                                     <label class="pos-field-label">Reference No</label>
                                     <input class="form-control" type="text" placeholder="Reference No">
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Searchable product dropdown.
+                             Products are fetched on demand (30 per page, scroll for more),
+                             so no product list is rendered into this page. -->
+                        <div class="pos-product-picker p-3 border-bottom">
+                            <label class="pos-field-label" for="product_multiselect">Products</label>
+                            <select id="product_multiselect" class="form-control" style="width: 100%;">
+                                <option></option>
+                            </select>
+                            <small class="form-text text-muted">
+                                Click the field, type to search by name or code, then pick a product to add it to the
+                                sale. Change quantities or remove products in the table below.
+                            </small>
                         </div>
 
                         <!-- Dynamic Cart Sidebar -->
@@ -236,7 +127,13 @@
                                 <tr>
                                     <td class="text-muted font-weight-bold">Total Bill:</td>
                                     <td class="text-right font-weight-bold h5 text-primary" id="modal_total_display">
-                                        {{ Cart::total() }}
+                                        @php
+                                            $paymentItems = Cart::content();
+                                            $paymentSubtotal = $paymentItems->sum(fn ($item) => (float) ($item->options->original_price ?? $item->price) * $item->qty);
+                                            $paymentDiscount = $paymentItems->sum(fn ($item) => (float) ($item->options->discount ?? 0) * $item->qty);
+                                            $paymentTax = $paymentItems->sum(fn ($item) => (float) ($item->options->tax ?? 0) * $item->qty);
+                                        @endphp
+                                        {{ number_format(max(0, $paymentSubtotal - $paymentDiscount + $paymentTax), 2) }}
                                     </td>
                                 </tr>
                                 <tr>
@@ -248,11 +145,10 @@
                                     <td class="text-right font-weight-bold h5 text-success" id="modal_pay_amount">0.00
                                     </td>
                                 </tr>
-                                {{-- <tr class="border-top">
-                                <td class="text-muted font-weight-bold">Change:</td>
-                                <td class="text-right font-weight-bold h5 text-danger" id="modal_change_amount">0.00
-                                </td>
-                            </tr> --}}
+                                <tr class="border-top" id="modal_due_row">
+                                    <td class="text-muted font-weight-bold">Due Amount:</td>
+                                    <td class="text-right font-weight-bold h5 text-danger" id="modal_due_amount">0.00</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -323,9 +219,20 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Initialize Select2 on Load
-        window.addEventListener('load', function() {
-            $('.select2').select2({
+        const posCartProductIds = new Set();
+
+        function refreshPosCartProductIds() {
+            posCartProductIds.clear();
+            document.querySelectorAll('#cart-sidebar-container tr[data-item-id]').forEach(row => {
+                posCartProductIds.add(row.dataset.itemId);
+            });
+        }
+
+        // DOMContentLoaded (not "load"): "load" waits for every image on the page,
+        // which delayed the dropdown from becoming usable.
+        document.addEventListener('DOMContentLoaded', function() {
+            // Customer search (AJAX)
+            $('#customer_id').select2({
                 placeholder: " Select Customer",
                 allowClear: true,
                 width: 'resolve',
@@ -346,156 +253,408 @@
                     cache: true
                 }
             });
+
+            // Product dropdown: search bar first, products below it.
+            // Server-side search + pagination (30 per page, scroll for more): the browser
+            // never builds more than a screenful of rows, whatever the catalogue size.
+            const $products = $('#product_multiselect');
+
+            $products.select2({
+                placeholder: 'Search and select a product...',
+                width: '100%',
+                closeOnSelect: false,
+                minimumResultsForSearch: 0,     // always show the search bar
+                ajax: {
+                    url: "{{ route('pos.products.search') }}",
+                    dataType: 'json',
+                    delay: 200,                 // debounce typing
+                    data: function(params) {
+                        return {
+                            term: params.term || '',
+                            page: params.page || 1
+                        };
+                    }
+                    // the endpoint already returns { results: [...], pagination: { more } }
+                },
+                templateResult: function(option) {
+                    if (option.loading || !option.id) return option.text;
+                    const $row = $('<span class="pos-opt"></span>');
+                    const inCart = posCartProductIds.has(String(option.id));
+                    if (inCart) {
+                        $row.addClass('pos-opt-in-cart');
+                    }
+                    $row.append($('<img class="pos-opt-thumb" alt="" loading="lazy" decoding="async">')
+                        .attr('src', option.image));
+                    const $text = $('<span class="pos-opt-text"></span>');
+                    $text.append($('<span class="pos-opt-name"></span>').text(option.name));
+                    const meta = [
+                        option.code,
+                        Number(option.price).toLocaleString('en-US'),
+                        'Stock: ' + option.stock
+                    ].filter(Boolean).join('  |  ');
+                    $text.append($('<small class="pos-opt-meta"></small>').text(meta));
+                    $row.append($text);
+                    // if (inCart) {
+                    //     $row.append($('<span class="pos-opt-status">In cart</span>'));
+                    // }
+                    return $row;
+                },
+                templateSelection: function(option) {
+                    return option.name || option.text;
+                }
+            });
+
+            // Select2 4.1.0-rc.0 + jQuery 3.6+ does not focus the search box on open,
+            // so focus it ourselves and the cashier can type straight away.
+            $(document).on('select2:open', function(event) {
+                if (event.target === $products[0]) refreshPosCartProductIds();
+                setTimeout(function() {
+                    const field = document.querySelector('.select2-search--dropdown .select2-search__field');
+                    if (field) field.focus();
+                }, 0);
+            });
+
+            // Clicking a product toggles whether it is in the cart. Only the id is sent:
+            // the server reads name / price / image from the database.
+            $products.on('select2:select', function(e) {
+                setTimeout(window.syncProductSelect, 0);
+                const id = String(e.params.data.id);
+                if (posCartProductIds.has(id)) {
+                    window.posRemoveItem(id);
+                } else {
+                    window.posAddProduct({ id });
+                }
+            });
         });
 
-        // Helper: Get Selected Customer ID
-        function getCustomerId() {
-            return $('#customer_id').val();
-        }
+        // The picker is only an "add" control: it is cleared after every pick.
+        // The cart table below is the source of truth for what is in the sale.
+        window.syncProductSelect = function() {
+            const $products = $('#product_multiselect');
+            if (!$products.length || !$products.data('select2')) return;
+            $products.val(null).trigger('change.select2');
+        };
 
-        // Logic: Add Item to Cart (AJAX)
-        async function addToCart(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const customerId = getCustomerId();
+        /* =====================================================================
+         * CART ENGINE
+         * - spinner arrows / typing update the numbers instantly (local maths)
+         * - saves are debounced and sent ONE AT A TIME (no lost clicks)
+         * - qty / tax / discount saves get a tiny JSON reply (no HTML re-render)
+         * - the cart HTML is only redrawn when rows are added or removed
+         * ===================================================================== */
+        (function () {
+            const container = document.getElementById('cart-sidebar-container');
+            const badge = document.getElementById('cart-count-badge');
+            const CSRF = '{{ csrf_token() }}';
+            const FIELDS = {
+                qty:      { sel: '.pos-quantity-input', url: "{{ url('pos/update') }}/",   key: 'qty' },
+                discount: { sel: '.pos-discount-input', url: "{{ url('pos/discount') }}/", key: 'discount' },
+                rate:     { sel: '.pos-tax-rate-input', url: "{{ url('pos/tax-rate') }}/", key: 'tax_rate' },
+            };
+            const ALL_FIELDS = Object.values(FIELDS).map(f => f.sel).join(',');
+            const fmt = n => new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(n);
+            const num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : 0; };
+            const rows = () => [...container.querySelectorAll('tr[data-item-id]')];
+            const rowFor = id => rows().find(tr => tr.dataset.itemId === String(id));
+            const fieldOf = input => Object.keys(FIELDS).find(k => input.matches(FIELDS[k].sel));
+            const isField = el => el instanceof Element && el.matches(ALL_FIELDS);
 
-            if (customerId) formData.append('customer_id', customerId);
+            /* ---------- instant local calculation ---------- */
+            function recalcRow(tr) {
+                const qtyIn = tr.querySelector(FIELDS.qty.sel);
+                const max = qtyIn.max ? parseInt(qtyIn.max, 10) : Infinity;
+                const qty = Math.min(max, Math.max(0, parseInt(qtyIn.value, 10) || 0));
+                const rate = Math.min(100, Math.max(0, num(tr.querySelector(FIELDS.rate.sel).value)));
+                const discIn = tr.querySelector(FIELDS.discount.sel);
+                const unit = num(tr.dataset.unitPrice);
+                const gross = unit * qty;
+                const tax = gross * rate / 100;
+                const incl = gross + tax;
+                const discount = Math.min(Math.max(0, num(discIn.value)), incl);
+                const net = incl - discount;
 
-            try {
-                const response = await fetch("{{ route('pos.addCart') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: formData
+                tr.querySelector('.pos-gross-amount').textContent = fmt(gross);
+                tr.querySelector('.pos-tax-amount').textContent = fmt(tax);
+                tr.querySelector('.pos-incl-tax-amount').textContent = fmt(incl);
+                tr.querySelector('.pos-net-amount').textContent = tr.dataset.currency + ' ' + fmt(net);
+                discIn.max = incl.toFixed(2);
+                return { qty, unit, tax, discount, net, currency: tr.dataset.currency };
+            }
+
+            function recalcSummary() {
+                const t = { items: 0, price: 0, tax: 0, discount: 0, net: 0 };
+                let currency = 'PKR';
+                rows().forEach(tr => {
+                    const c = recalcRow(tr);
+                    t.items += c.qty;
+                    t.price += c.unit * c.qty;
+                    t.tax += c.tax;
+                    t.discount += c.discount;
+                    t.net += c.net;
+                    currency = c.currency;
                 });
-                const data = await response.json();
-                if (data.success) {
-                    // Update Cart Sidebar HTML
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    // Update Cart Count Badge
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
+                const set = (sel, v) => { const el = container.querySelector(sel); if (el) el.value = v; };
+                set('.pos-summary-items', t.items);
+                set('.pos-summary-price', currency + ' ' + fmt(t.price));
+                set('.pos-summary-tax', currency + ' ' + fmt(t.tax));
+                set('.pos-summary-discount', currency + ' ' + fmt(t.discount));
+                // const footerRate = container.querySelector('.pos-footer-tax-rate');
+                // if (footerRate) footerRate.textContent = fmt(t.price > 0 ? (t.tax / t.price) * 100 : 0) + '%';
+                const footerDiscount = container.querySelector('.pos-footer-discount');
+                if (footerDiscount) footerDiscount.textContent = currency + ' ' + fmt(t.discount);
+                const total = document.getElementById('cart-total');
+                if (total) {
+                    total.dataset.total = t.net;
+                    total.textContent = currency + ' ' + fmt(t.net);
                 }
-            } catch (error) {
-                console.error('Error adding to cart:', error);
-            }
-        }
-        async function addManualItem() {
-            const name = document.getElementById('manual_item_name').value.trim();
-            const price = parseFloat(document.getElementById('manual_item_price').value);
-            const tax = parseFloat(document.getElementById('manual_item_tax').value) || 0;
-            const discount = parseFloat(document.getElementById('manual_item_discount').value) || 0;
-
-            if (!name || isNaN(price) || price <= 0) {
-                alert('Please enter item name and valid price!');
-                return;
+                badge.innerText = t.items + ' items';
+                if (typeof calculateChange === 'function') calculateChange();
             }
 
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('price', price);
-            formData.append('tax', tax);
-            formData.append('discount', discount);
-            formData.append('is_manual', 1);
+            function normalize(input) {
+                const field = fieldOf(input);
+                if (field === 'qty') {
+                    const max = input.max ? parseInt(input.max, 10) : Infinity;
+                    input.value = Math.min(max, Math.max(0, parseInt(input.value, 10) || 0));
+                } else if (field === 'rate') {
+                    input.value = Math.min(100, Math.max(0, num(input.value)));
+                } else if (field === 'discount') {
+                    input.value = recalcRow(input.closest('tr')).discount;
+                }
+                recalcSummary();
+            }
 
-            const customerId = getCustomerId();
-            if (customerId) formData.append('customer_id', customerId);
+            /* ---------- one request at a time ---------- */
+            let chain = Promise.resolve();
+            const timers = new Map();
 
-            try {
-                const response = await fetch("{{ route('pos.addCart') }}", {
+            function enqueue(task) {
+                chain = chain.then(task).catch(err => console.error(err));
+                return chain;
+            }
+
+            function schedule(tr, field, delay = 400) {
+                const id = tr.dataset.itemId;
+                const key = id + '|' + field;
+                clearTimeout(timers.get(key)?.t);
+                const run = () => { timers.delete(key); enqueue(() => saveField(id, field)); };
+                timers.set(key, { t: setTimeout(run, delay), run });
+            }
+
+            function flushTimers() {
+                [...timers.values()].forEach(x => { clearTimeout(x.t); x.run(); });
+            }
+
+            async function saveField(itemId, field) {
+                const tr = rowFor(itemId);
+                if (!tr) return;
+                const f = FIELDS[field];
+                const input = tr.querySelector(f.sel);
+                const focused = document.activeElement === input;
+
+                // Still typing / still holding the spinner: wait for the final value.
+                if (focused && (input.value === '' || (field === 'qty' && num(input.value) === 0))) return;
+
+                normalize(input);
+                if (num(input.value) === num(input.dataset.saved)) return;
+
+                const value = input.value;
+                const res = await fetch(f.url + tr.dataset.rowId, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': CSRF,
                         'Accept': 'application/json'
                     },
-                    body: formData
+                    body: JSON.stringify({ [f.key]: value }),
                 });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
+                const data = await res.json().catch(() => null);
+
+                if (res.ok && data?.success) {
+                    input.dataset.saved = value;
+                    if (data.cart_html) {
+                        render(data);                      // a line was removed: redraw once
+                    } else if (data.row_id) {
+                        tr.dataset.rowId = data.row_id;    // row id changes when options change
+                    }
+                } else if (data?.cart_html) {
+                    render(data);                          // e.g. 409: row vanished, show the real cart
                 } else {
-                    alert(data.message || 'Failed to add item');
+                    input.value = input.dataset.saved;     // validation/server error: roll back
+                    recalcSummary();
                 }
-            } catch (error) {
-                console.error('Error adding manual item:', error);
             }
-        }
 
-        // Logic: Update Item Quantity (AJAX)
-        async function updateCart(rowId, qty) {
-            const customerId = getCustomerId();
-            try {
-                const response = await fetch("{{ url('pos/update') }}/" + rowId, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        qty: qty,
-                        customer_id: customerId
-                    })
+            /* ---------- rendering (only when rows are added / removed) ---------- */
+            const KEEP = ['pay_amount', 'payment_type'];
+
+            function render(data) {
+                const wrap = container.querySelector('.cart-items-wrapper');
+                const top = wrap ? wrap.scrollTop : 0;
+                const kept = KEEP.map(id => [id, document.getElementById(id)?.value]);
+
+                container.innerHTML = data.cart_html;
+                badge.innerText = data.cart_count + ' items';
+                refreshPosCartProductIds();
+
+                const newWrap = container.querySelector('.cart-items-wrapper');
+                if (newWrap) newWrap.scrollTop = top;
+                kept.forEach(([id, v]) => {
+                    const el = document.getElementById(id);
+                    if (el && v !== undefined) el.value = v;
                 });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error updating cart:', error);
+                window.syncProductSelect();       // keep the product picker reset
             }
-        }
 
-        async function applyDiscount(rowId, button) {
-            const input = button.closest('.pos-discount-control').querySelector('.pos-discount-input');
-            const discount = input.value;
-            try {
-                const response = await fetch("{{ url('pos/discount') }}/" + rowId, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        discount: discount
-                    })
+            /* ---------- native spinner arrows: don't leave the input "active" ---------- */
+            let spinnerPointer = null;
+
+            document.addEventListener('pointerdown', function (event) {
+                if (!(event.target instanceof Element)) return;
+                const input = event.target.closest(ALL_FIELDS);
+                if (!input || event.button !== 0 || !container.contains(input)) {
+                    spinnerPointer = null;
+                    return;
+                }
+
+                const bounds = input.getBoundingClientRect();
+                const spinnerWidth = 18;
+                const rtl = window.getComputedStyle(input).direction === 'rtl';
+                const clickedSpinner = rtl
+                    ? event.clientX <= bounds.left + spinnerWidth
+                    : event.clientX >= bounds.right - spinnerWidth;
+
+                if (clickedSpinner) input.classList.add('pos-quantity-spinner-active');
+                spinnerPointer = clickedSpinner ? { input, pointerId: event.pointerId } : null;
+            });
+
+            function releaseSpinner(event) {
+                const sp = spinnerPointer;
+                if (!sp || sp.pointerId !== event.pointerId) return;
+                spinnerPointer = null;
+                requestAnimationFrame(() => {
+                    if (!sp.input.isConnected) return;
+                    sp.input.classList.remove('pos-quantity-spinner-active');
+                    if (document.activeElement === sp.input) sp.input.blur();   // focusout saves the final value
                 });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error updating discount:', error);
             }
-        }
+            document.addEventListener('pointerup', releaseSpinner);
+            document.addEventListener('pointercancel', releaseSpinner);
 
-        // Logic: Remove Item from Cart (AJAX)
-        async function deleteCart(rowId) {
-            const customerId = getCustomerId();
-            try {
-                const response = await fetch("{{ url('pos/delete') }}/" + rowId + "?customer_id=" + (customerId ||
-                    ''), {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
+            /* ---------- remove a line ---------- */
+            function removeItem(id) {
+                const tr = rowFor(id);
+                if (!tr) return;
+                tr.style.opacity = .4;
+                flushTimers();
+                enqueue(async () => {
+                    const row = rowFor(id);
+                    if (!row) return;
+                    const res = await fetch("{{ url('pos/delete') }}/" + row.dataset.rowId, {
+                        headers: { 'Accept': 'application/json' },
+                    });
+                    const data = await res.json();
+                    if (data.cart_html) render(data);
+                });
+            }
+            window.posRemoveItem = removeItem;
+
+            /* ---------- events (delegated, so they survive re-renders) ---------- */
+            container.addEventListener('click', e => {
+                const btn = e.target.closest('[data-action="remove"]');
+                const tr = btn?.closest('tr[data-item-id]');
+                if (!tr) return;
+                removeItem(tr.dataset.itemId);
+            });
+
+            container.addEventListener('input', e => {
+                if (!isField(e.target)) return;
+                const field = fieldOf(e.target);
+                recalcSummary();                                    // instant numbers
+                if (e.target.value === '') return;                  // wait until a value is typed
+                if (field === 'qty' && num(e.target.value) === 0) return;   // 0 (= remove) only on commit
+                schedule(e.target.closest('tr'), field);
+            });
+
+            container.addEventListener('change', e => {
+                if (!isField(e.target)) return;
+                normalize(e.target);
+                schedule(e.target.closest('tr'), fieldOf(e.target), 150);
+            });
+
+            container.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && isField(e.target)) e.target.blur();
+            });
+
+            container.addEventListener('focusout', e => {
+                if (!isField(e.target)) return;
+                const input = e.target;
+                const tr = input.closest('tr');
+                if (tr && num(input.value) !== num(input.dataset.saved)) {
+                    schedule(tr, fieldOf(input), 150);
+                }
+            });
+
+            /* ---------- add to cart ---------- */
+            let adding = 0;
+
+            function postAdd(formData) {
+                flushTimers();
+                container.classList.add('pos-busy');     // instant visual feedback
+                adding++;
+                return enqueue(async () => {
+                    try {
+                        const res = await fetch("{{ route('pos.addCart') }}", {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                            body: formData,
+                        });
+                        const data = await res.json();
+                        if (data.success) render(data); else alert(data.message || 'Failed to add item');
+                    } finally {
+                        if (--adding === 0) container.classList.remove('pos-busy');
                     }
                 });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
-                    document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
-                }
-            } catch (error) {
-                console.error('Error deleting cart:', error);
             }
-        }
+
+            // Used by the product dropdown (only the product id is sent).
+            window.posAddProduct = function (p) {
+                const fd = new FormData();
+                fd.append('id', p.id);
+                return postAdd(fd);
+            };
+
+            window.addToCart = function (event) {
+                event.preventDefault();
+                return postAdd(new FormData(event.target));
+            };
+
+            window.addManualItem = function () {
+                const name = document.getElementById('manual_item_name').value.trim();
+                const price = parseFloat(document.getElementById('manual_item_price').value);
+                if (!name || isNaN(price) || price <= 0) {
+                    alert('Please enter item name and valid price!');
+                    return;
+                }
+
+                const fd = new FormData();
+                fd.append('name', name);
+                fd.append('price', price);
+                fd.append('tax', parseFloat(document.getElementById('manual_item_tax').value) || 0);
+                fd.append('discount', parseFloat(document.getElementById('manual_item_discount').value) || 0);
+                fd.append('is_manual', 1);
+                return postAdd(fd);
+            };
+
+            // Used by the payment flow: save everything pending and wait for the server.
+            window.posCartIdle = function () {
+                flushTimers();
+                return chain;
+            };
+        })();
 
         // Logic: Create New Customer (AJAX)
         async function storeCustomer(event) {
@@ -535,10 +694,11 @@
 
         // Logic: Real-time Change Calculation
         function calculateChange() {
-            const totalText = document.getElementById('cart-total').innerText;
-            const totalAmount = parseFloat(totalText.replace(/,/g, ''));
-            const payInput = parseFloat(document.getElementById('pay_amount').value);
             const changeElement = document.getElementById('change_amount');
+            if (!changeElement) return;   // the Change row is commented out in the partial
+
+            const totalAmount = parseFloat(document.getElementById('cart-total').dataset.total) || 0;
+            const payInput = parseFloat(document.getElementById('pay_amount').value);
 
             if (!isNaN(payInput) && payInput >= 0) {
                 const change = payInput - totalAmount;
@@ -558,7 +718,7 @@
         }
 
         // Logic: Validate Payment & Show Summary Modal
-        function validateAndShowModal() {
+        async function validateAndShowModal() {
             // 1. Ensure Customer Selected
             var customerId = $('#customer_id').val();
             if (!customerId) {
@@ -567,32 +727,39 @@
             }
             document.getElementById('modal_customer_id').value = customerId;
 
+            const branchSelect = document.getElementById('branch_id');
+            if (!branchSelect?.value) {
+                alert(branchSelect?.options.length > 1 ? 'Please select a branch first.' : 'No active branch is available for this account.');
+                return;
+            }
+
             // 2. Validate Payment Amount
-            const totalText = document.getElementById('cart-total').innerText;
-            const totalAmount = parseFloat(totalText.replace(/,/g, ''));
+            const totalEl = document.getElementById('cart-total');
+            const totalText = totalEl.innerText.trim();
+            const totalAmount = parseFloat(totalEl.dataset.total) || 0;
             const payElement = document.getElementById('pay_amount');
             const payAmount = parseFloat(payElement ? payElement.value : 0);
             const method = document.getElementById('payment_type').value;
 
-            if (isNaN(payAmount) || payAmount <= 0) {
+            if (isNaN(payAmount) || payAmount < 0) {
                 alert('Please enter a valid amount!');
                 return;
             }
 
-            if (payAmount < totalAmount) {
-                alert('Insufficient payment! Total amount is ' + totalText);
-                return;
-            }
+            // Make sure any pending quantity/tax/discount edits are saved before opening modal.
+            if (window.posCartIdle) await window.posCartIdle();
 
             // 3. Update Modal UI
             document.getElementById('modal_total_display').innerText = totalText;
             document.getElementById('modal_payment_method').innerText = method;
-            document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
-                ",");
+            document.getElementById('modal_pay_amount').innerText = payAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
-            // const change = payAmount - totalAmount;
-            // document.getElementById('modal_change_amount').innerText = change.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,
-            //     ",");
+            // Due amount
+            const due = Math.max(0, totalAmount - payAmount);
+            const dueRow = document.getElementById('modal_due_row');
+            const dueEl = document.getElementById('modal_due_amount');
+            dueEl.innerText = due.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            dueRow.style.display = due > 0 ? '' : 'none';
 
             // 4. Show Modal
             $('#paymentModal').modal('show');
@@ -602,10 +769,14 @@
         async function submitOrder(event) {
             event.preventDefault();
 
+            // Wait until every pending cart edit has reached the server.
+            if (window.posCartIdle) await window.posCartIdle();
+
             // Construct FormData manually since inputs are in Sidebar, not in this Form
             const formData = new FormData();
             formData.append('_token', '{{ csrf_token() }}');
             formData.append('customer_id', document.getElementById('modal_customer_id').value);
+            formData.append('branch_id', document.getElementById('branch_id').value);
 
             const paymentTypeElem = document.getElementById('payment_type');
             const payAmountElem = document.getElementById('pay_amount');
@@ -635,6 +806,7 @@
                     // Reset UI
                     if (data.cart_html) {
                         document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
+                        refreshPosCartProductIds();
                     }
 
                     // Update Cart Count Badge
@@ -642,10 +814,8 @@
                         document.getElementById('cart-count-badge').innerText = data.cart_count + ' items';
                     }
 
-                    // Optional: Reset Pay Input
-                    if (payAmountElem) payAmountElem.value = '';
-                    if (document.getElementById('change_amount')) document.getElementById('change_amount').innerText =
-                        '0.00';
+                    // Reset the product picker
+                    window.syncProductSelect();
 
                     alert('Sale Successful!');
 
@@ -657,234 +827,166 @@
                 alert('An error occurred while processing the sale.');
             }
         }
-
-        // Barcode Scanner Handling for POS Search
-        (function() {
-            const posSearchField = document.getElementById('pos_search');
-            const searchForm = posSearchField ? posSearchField.closest('form') : null;
-
-            if (posSearchField && searchForm) {
-                let scannerTimeout;
-
-                // Auto-focus search field on mobile devices
-                function isMobileDevice() {
-                    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                        (window.innerWidth <= 768);
-                }
-
-                // Handle scanner input (scanners typically send Enter after barcode)
-                posSearchField.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter' || e.keyCode === 13) {
-                        // Clear any existing timeout
-                        if (scannerTimeout) {
-                            clearTimeout(scannerTimeout);
-                        }
-
-                        const searchValue = posSearchField.value.trim();
-                        if (searchValue) {
-                            // Check if this looks like a barcode scan (fast input + Enter)
-                            // Barcode scanners typically input very quickly
-                            scannerTimeout = setTimeout(function() {
-                                // Submit the form to search
-                                searchForm.submit();
-                            }, 100);
-                        }
-                    }
-                });
-
-                // Handle paste events (some scanners use paste)
-                posSearchField.addEventListener('paste', function(e) {
-                    setTimeout(function() {
-                        const pastedValue = posSearchField.value.trim();
-                        if (pastedValue) {
-                            // Auto-submit on paste (likely from scanner)
-                            searchForm.submit();
-                        }
-                    }, 50);
-                });
-
-                // Auto-focus on mobile for better scanner experience
-                if (isMobileDevice()) {
-                    setTimeout(function() {
-                        posSearchField.focus();
-                    }, 500);
-                }
-            }
-        })();
     </script>
 
     <!-- Page Specific Styles -->
     <style>
-        .product-grid .pos-product-row {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            background: #fff;
-            border: 1px solid #e5eaf0;
-            border-radius: 6px;
-            padding: .5rem .65rem;
-            transition: box-shadow .2s;
-        }
-
-        .product-grid .pos-product-row:hover {
-            box-shadow: 0 4px 12px rgba(37, 52, 72, .08);
-        }
-
-        /* Image + badge */
-        .pos-product-thumb {
-            position: relative;
-            flex: 0 0 70px;
-            width: 70px;
-            height: 56px;
-        }
-
-        .pos-product-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 4px;
-            display: block;
-        }
-
-        .pos-stock-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 22px;
-            height: 22px;
-            padding: 0 5px;
-            border-radius: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .65rem;
-            font-weight: 700;
-            color: #fff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
-        }
-
-        .pos-stock-badge.in {
-            background: #10b981;
-        }
-
-        .pos-stock-badge.low {
-            background: #ef4444;
-        }
-
-        /* Name + price */
-        .pos-product-info {
-            flex: 1 1 auto;
+        /* ---------- Cart table styles ---------- */
+        .pos-cart-table {
             min-width: 0;
-            /* taake naam truncate ho */
+            width: 100%;
+            font-size: 12px;
         }
 
-        .pos-product-name {
-            font-size: .85rem;
-            font-weight: 700;
+        .pos-cart-product-name small {
+            display: block;
+            font-size: .70rem;
+        }
+
+        .pos-cart-table th {
+            background: #fafbfd;
+            border-top: 0;
             color: #273142;
-            margin: 0 0 .15rem;
+            font-weight: 900;
+            font-size: 11px;
+            line-height: 1.15;
+            padding: .4rem .25rem;
+            white-space: normal;
+            vertical-align: middle;
+        }
+
+        .pos-cart-table td {
+            border-top: 1px solid #edf0f4;
+            color: #536071;
+            padding: .3rem .25rem;
             white-space: nowrap;
+            vertical-align: middle;
+        }
+
+        .pos-cart-table th:first-child,
+        .pos-cart-table td:first-child {
+            padding-left: .5rem;
+        }
+
+        .pos-cart-table th:last-child,
+        .pos-cart-table td:last-child {
+            padding-right: .5rem;
+        }
+
+        .pos-cart-product-image {
+            height: 30px;
+            width: 38px;
+            object-fit: contain;
+        }
+
+        /* The product column soaks up all spare width, so every other column
+           shrinks to its content and the gaps between them disappear. */
+        .pos-cart-table td.pos-cart-product-name {
+            color: #273142 !important;
+            font-weight: 600;
+            width: 100%;
+            min-width: 120px;
+            max-width: 1px;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .pos-product-price {
-            font-size: .9rem;
-            font-weight: 800;
-        }
-
-        /* Add button */
-        .product-grid .add-to-cart-form {
-            margin: 0;
-            flex-shrink: 0;
-        }
-
-        .product-grid .pos-add-btn {
-            width: 40px;
-            height: 34px;
-            padding: 0;
-            border-radius: 17px;
-            display: inline-flex;
+        .pos-quantity-control {
             align-items: center;
-            justify-content: center;
-            color: #fff !important;
+            display: flex;
+            gap: .25rem;
         }
 
-        .product-grid .pos-add-btn svg {
-            width: 18px;
-            height: 18px;
+        .pos-quantity-input.pos-quantity-spinner-active:focus,
+        .pos-tax-rate-input.pos-quantity-spinner-active:focus,
+        .pos-discount-input.pos-quantity-spinner-active:focus {
+            border-color: #ced4da;
+            box-shadow: none;
+            outline: 0;
+        }
+
+        .pos-quantity-control span {
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .pos-quantity-button {
+            background: #fff;
+            border: 1px solid #b9d5ff;
+            border-radius: 3px;
+            color: #2f80ed;
+            height: 16px;
+            line-height: 20px;
+            padding: 0;
+            width: 16px;
+        }
+
+        .pos-quantity-add {
+            background: #2f80ed;
+            color: #fff;
+        }
+
+        .pos-cart-summary label {
+            color: #273142;
             display: block;
-            stroke: #fff;
+            font-size: .70rem;
+            font-weight: 700;
+            margin-bottom: .25rem;
         }
 
-        .product-grid .pos-add-btn:active {
-            transform: scale(.94);
+        .pos-cart-summary .form-control {
+            border-color: #e1e6ed;
+            color: #8490a0;
+            font-size: .7rem;
         }
 
+        .pos-discount-input {
+            min-width: 50px;
+            max-width: 70px;
+            padding: 0.2rem 0.3rem;
+        }
+
+        .pos-cart-table .pos-quantity-input,
+        .pos-cart-table .pos-tax-rate-input {
+            padding: 0.2rem 0.3rem;
+        }
+
+        .pos-cart-table .form-control-sm {
+            height: 26px;
+            font-size: 11px;
+        }
+
+        .pos-discount-control {
+            align-items: center;
+            display: flex;
+            gap: .20rem;
+        }
+
+        .pos-discount-apply {
+            font-size: .62rem;
+            padding: .2rem .35rem;
+        }
+
+        /* cart dims slightly while a product is being added */
+        .pos-busy .cart-items-wrapper {
+            opacity: .55;
+            pointer-events: none;
+            transition: opacity .12s;
+        }
+
+        /* ---------- Page shell ---------- */
         .pos-shell {
             align-items: flex-start;
-            background: #f8fafc;
+            /* background: #f8fafc; */
             margin: -1.5rem;
             min-height: calc(100vh - 80px);
             padding: 1.5rem;
         }
 
-        .pos-catalog {
-            order: 2;
-        }
-
-        .pos-cart {
-            order: 1;
-        }
-
-        .pos-catalog>.row>.col-lg-12:first-child .card,
         .pos-cart .card {
             border: 1px solid #e5eaf0;
             border-radius: 4px;
             box-shadow: none;
-        }
-
-        .pos-catalog>.row>.col-lg-12:first-child .card-body {
-            padding: .8rem;
-        }
-
-        .pos-category-tabs {
-            display: flex;
-            gap: .45rem;
-        }
-
-        .pos-tab {
-            background: #2f80ed;
-            border: 0;
-            border-radius: 3px;
-            color: #fff;
-            font-size: .72rem;
-            font-weight: 700;
-            padding: .5rem .75rem;
-        }
-
-        .pos-tab:nth-child(2) {
-            background: #2fc48e;
-        }
-
-        .pos-tab:nth-child(3) {
-            background: #f89a42;
-        }
-
-        .pos-tab:nth-child(4) {
-            background: #a40c72;
-        }
-
-        .pos-search-box .form-control,
-        .pos-catalog select {
-            border-radius: 3px;
-            font-size: .72rem;
-            height: 34px;
-        }
-
-        .pos-cart .card {
-            position: sticky;
-            top: 20px;
         }
 
         .pos-cart .card-header {
@@ -904,7 +1006,8 @@
             color: #fff !important;
         }
 
-        .pos-order-fields {
+        .pos-order-fields,
+        .pos-product-picker {
             background: #fff;
         }
 
@@ -932,43 +1035,8 @@
             height: 34px;
         }
 
-        .product-grid .product-card {
-            border: 1px solid #e5eaf0;
-            border-radius: 4px;
-            box-shadow: none;
-        }
-
-        .product-grid .product-card:hover {
-            transform: none;
-            box-shadow: 0 4px 12px rgba(37, 52, 72, .08);
-        }
-
-        .product-grid .product-image {
-            height: 105px;
-            object-fit: contain;
-            padding: .45rem;
-        }
-
-        .product-grid .product-card .p-3 {
-            padding: .65rem !important;
-        }
-
-        .product-grid .product-card h6 {
-            font-size: .72rem !important;
-            line-height: 1.25;
-        }
-
-        .product-grid .product-card h5 {
-            font-size: .75rem !important;
-        }
-
-        .product-grid .product-card .btn {
-            font-size: .68rem;
-            padding: .25rem .5rem;
-        }
-
         .pos-cart .cart-items-wrapper {
-            height: 285px !important;
+            height: 380px !important;
         }
 
         .pos-cart .btn-lg {
@@ -976,34 +1044,102 @@
             font-size: .78rem;
         }
 
-        @media (min-width: 992px) {
-            .pos-catalog {
-                flex: 0 0 36%;
-                max-width: 36%;
-            }
-
-            .pos-cart {
-                flex: 0 0 64%;
-                max-width: 64%;
-            }
-
-            .pos-catalog .col-lg-3,
-            .pos-catalog .col-md-4 {
-                flex: 0 0 50%;
-                max-width: 50%;
-            }
-        }
-
         @media (max-width: 991.98px) {
-
-            .pos-catalog,
-            .pos-cart {
-                max-width: 100%;
-            }
-
             .pos-cart {
                 margin-bottom: 1rem;
             }
+        }
+
+        /* ---------- Product dropdown ---------- */
+        .pos-product-picker .select2-container {
+            width: 100% !important;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single {
+            border: 1px solid #dfe5ec;
+            border-radius: 3px;
+            height: 38px;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+        }
+
+        .pos-product-picker .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+
+        .pos-product-picker .select2-container--default.select2-container--focus .select2-selection--single {
+            /* border-color: #2f80ed; */
+        }
+
+        /* search bar = first row of the dropdown */
+        .select2-search--dropdown {
+            padding: 8px;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid #dfe5ec;
+            border-radius: 3px;
+            font-size: .8rem;
+            padding: 6px 8px;
+        }
+
+        /* taller list so more products are visible at once */
+        .select2-container--default .select2-results > .select2-results__options {
+            max-height: 340px;
+        }
+
+        /* dropdown rows (the dropdown itself is rendered in <body>) */
+        .pos-opt {
+            align-items: center;
+            display: flex;
+            gap: .6rem;
+        }
+
+        .pos-opt-in-cart {
+            background: #5897fb;
+            border-left: 3px solid #5897fb;
+            border-radius: 3px;
+            color: #fff;
+            padding: .35rem;
+        }
+
+        .pos-opt-status {
+            background: rgba(255, 255, 255, .2);
+            border-radius: 10px;
+            color: #fff;
+            flex: 0 0 auto;
+            font-size: .68rem;
+            font-weight: 600;
+            margin-left: auto;
+            padding: .2rem .45rem;
+        }
+
+        .pos-opt-thumb {
+            background: #f1f3f6;
+            border-radius: 4px;
+            flex: 0 0 34px;
+            height: 34px;
+            object-fit: cover;
+            width: 34px;
+        }
+
+        .pos-opt-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.2;
+        }
+
+        .pos-opt-name {
+            font-size: .82rem;
+            font-weight: 600;
+        }
+
+        .pos-opt-meta {
+            font-size: .7rem;
+            opacity: .75;
         }
 
         /* Modern Scrollbar for Cart */
@@ -1024,54 +1160,7 @@
             background: #9ca3af;
         }
 
-        /* Product Card Hover Effects */
-        .product-card {
-            border: 1px solid #f3f4f6;
-            border-radius: 16px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #fff;
-            overflow: hidden;
-        }
-
-        .product-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            border-color: #e5e7eb;
-        }
-
-        .product-image {
-            height: 180px;
-            width: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-
-        .product-card:hover .product-image {
-            transform: scale(1.05);
-        }
-
-        .image-container {
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Circular Buttons */
-        .btn-circle {
-            width: 28px;
-            height: 28px;
-            padding: 0;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-
-        .btn-circle:hover {
-            background-color: #f3f4f6;
-        }
-
-        /* Select2 Styling Overrides */
+        /* Select2 Styling Overrides (customer field) */
         .select2-container--default .select2-selection--single {
             border: 1px solid #e5e7eb;
             border-radius: 12px;
