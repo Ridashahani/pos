@@ -7,6 +7,8 @@ use App\Http\Requests\StorePaymentTransactionRequest;
 use App\Http\Requests\UpdatePaymentTransactionRequest;
 use App\Models\PaymentAccount;
 use App\Models\PaymentTransaction;
+use App\Models\PaymentTransfer;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +20,8 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $accounts = PaymentAccount::orderBy('name')->get();
+        $accounts = PaymentAccount::where('status', 'active')->orderBy('name')->get();
+        $this->attachAvailableBalances($accounts);
         $today = now()->toDateString();
         $todayTransactions = PaymentTransaction::whereDate('transaction_date', $today);
 
@@ -33,8 +36,11 @@ class PaymentController extends Controller
             ->search($request->search)
             ->latest('transaction_date')
             ->paginate(6);
+        $transfers = PaymentTransfer::with(['fromAccount', 'toAccount'])
+            ->latest('transfer_date')
+            ->paginate(6, ['*'], 'transfers_page');
 
-        return view('payments.index', compact('accounts', 'transactions', 'summary'));
+        return view('payments.index', compact('accounts', 'transactions', 'transfers', 'summary'));
     }
 
     /**
@@ -43,6 +49,7 @@ class PaymentController extends Controller
     public function create()
     {
         $accounts = PaymentAccount::where('status', 'active')->orderBy('name')->get();
+        $this->attachAvailableBalances($accounts);
 
         return view('payments.create', compact('accounts'));
     }
@@ -93,6 +100,7 @@ class PaymentController extends Controller
             ->orWhere('id', $payment->payment_account_id)
             ->orderBy('name')
             ->get();
+        $this->attachAvailableBalances($accounts);
 
         return view('payments.edit', compact('payment', 'accounts'));
     }
@@ -138,10 +146,17 @@ class PaymentController extends Controller
             $excludeTransactionId = $lockedPayment->payment_account_id == $account->id
                 ? $lockedPayment->id
                 : null;
+            $previousAccountId = $lockedPayment->payment_account_id;
+            $previousTransactionDate = $lockedPayment->transaction_date->toDateString();
 
             $this->ensureSufficientBalance($account, $data['amount'], $excludeTransactionId);
             $data['transaction_date'] = now();
             $lockedPayment->update($data);
+
+            $oldAccount = $accounts->get($previousAccountId);
+            if ($oldAccount !== null && $previousTransactionDate !== now()->toDateString()) {
+                $oldAccount->refreshDailyClosingForDate($previousTransactionDate);
+            }
 
             foreach ($accounts as $affectedAccount) {
                 $this->refreshAccountBalance($affectedAccount);
@@ -163,8 +178,12 @@ class PaymentController extends Controller
             $account = PaymentAccount::whereKey($lockedPayment->payment_account_id)
                 ->lockForUpdate()
                 ->firstOrFail();
+            $transactionDate = $lockedPayment->transaction_date->toDateString();
 
             $lockedPayment->delete();
+            if ($transactionDate !== now()->toDateString()) {
+                $account->refreshDailyClosingForDate($transactionDate);
+            }
             $this->refreshAccountBalance($account);
         });
 
@@ -176,14 +195,7 @@ class PaymentController extends Controller
         string|int|float $amount,
         ?int $excludeTransactionId = null
     ): void {
-        $transactions = $account->transactions();
-
-        if ($excludeTransactionId !== null) {
-            $transactions->where('id', '!=', $excludeTransactionId);
-        }
-
-        $availableBalance = $this->toMinorUnits($account->opening_balance)
-            - $this->toMinorUnits($transactions->sum('amount'));
+        $availableBalance = $account->calculatedBalanceInMinorUnits($excludeTransactionId);
 
         if ($this->toMinorUnits($amount) > $availableBalance) {
             throw ValidationException::withMessages([
@@ -197,18 +209,24 @@ class PaymentController extends Controller
 
     private function refreshAccountBalance(PaymentAccount $account): void
     {
-        $used = $this->toMinorUnits($account->transactions()->sum('amount'));
-        $balance = $this->toMinorUnits($account->opening_balance) - $used;
-        $account->update([
-            'balance' => sprintf('%s%d.%02d', $balance < 0 ? '-' : '', intdiv(abs($balance), 100), abs($balance) % 100),
-        ]);
+        $account->refreshBalance();
+    }
+
+    private function attachAvailableBalances(Collection $accounts): void
+    {
+        $today = now()->toDateString();
+
+        $accounts->each(function (PaymentAccount $account) use ($today): void {
+            $account->setAttribute(
+                'available_balance',
+                $account->calculatedBalanceInMinorUnits(null, $today) / 100
+            );
+        });
     }
 
     private function toMinorUnits(string|int|float $amount): int
     {
-        [$whole, $fraction] = array_pad(explode('.', (string) $amount, 2), 2, '');
-
-        return ((int) $whole * 100) + (int) str_pad($fraction, 2, '0');
+        return PaymentAccount::toMinorUnits($amount);
     }
 
     private function generateTransactionId(PaymentAccount $account): string

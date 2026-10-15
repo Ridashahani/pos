@@ -538,7 +538,7 @@ class StockController extends Controller
                     }
                 }
                 // edit mein purani batch bhi dikhao chahe uska maal 0 ho
-                if ($transfer?->stock_in_id) {
+                if ($transfer?->stock_in_id !== null) {
                     $q->orWhere('id', $transfer->stock_in_id);
                 }
             })

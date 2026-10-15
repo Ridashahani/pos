@@ -20,6 +20,63 @@ class StockControllerTest extends TestCase
 {
     use DatabaseTransactions;
 
+    public function test_stock_transfer_edit_route_loads_existing_batch_even_when_it_has_zero_remaining_quantity(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'stock-transfer-role']);
+        $accessPermission = Permission::firstOrCreate(
+            ['name' => 'access.stocks'],
+            ['group_name' => 'stocks']
+        );
+        $editPermission = Permission::firstOrCreate(
+            ['name' => 'edit.stocks'],
+            ['group_name' => 'stocks']
+        );
+        $role->givePermissionTo([$accessPermission, $editPermission]);
+
+        $branch = Branch::create([
+            'name' => 'Transfer Edit Branch',
+            'address' => '123 Test Street',
+        ]);
+        $user = User::factory()->create();
+        $user->assignRole($role);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+
+        $category = Category::factory()->create();
+        $product = Product::create([
+            'name' => 'Transfer Product',
+            'slug' => 'transfer-product',
+            'code' => 'TRANSFER-001',
+            'category_id' => $category->id,
+            'stock' => 5,
+            'selling_price' => 100,
+            'cost_price' => 60,
+        ]);
+
+        $stockIn = StockIn::create([
+            'product_id' => $product->id,
+            'branch_id' => $branch->id,
+            'batch_no' => 'BATCH-EDIT-001',
+            'quantity' => 5,
+            'remaining_quantity' => 0,
+            'cost_price' => 60,
+        ]);
+
+        $transfer = \App\Models\StockTransfer::create([
+            'reference' => 'TRF-001',
+            'product_id' => $product->id,
+            'stock_in_id' => $stockIn->id,
+            'quantity' => 2,
+            'from_branch_id' => $branch->id,
+            'to_branch_id' => $branch->id,
+            'status' => 'Pending',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('stock.transfer.edit', $transfer))
+            ->assertOk();
+    }
+
     public function test_replenished_product_is_removed_from_out_of_stock_list_until_stock_runs_out_again(): void
     {
         $permissions = collect(['access.stocks', 'delete.stocks'])

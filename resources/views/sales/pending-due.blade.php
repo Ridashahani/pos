@@ -120,12 +120,6 @@
                                                         title="Details" href="{{ route('sale.saleDetails', $sale->id) }}">
                                                         <x-heroicon-o-eye class="w-5 h-5 mr-0" />
                                                     </a>
-                                                    <!-- Pay Due Button -->
-                                                    <button type="button" class="btn btn-primary bg-primary mr-2 border-0"
-                                                        data-toggle="modal" data-target="#pay-due-modal"
-                                                        id="{{ $sale->id }}" onclick="payDue(this.id)">
-                                                        <x-heroicon-o-banknotes class="w-5 h-5 mr-0" />
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -145,61 +139,4 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal: Pay Due Amount -->
-    <div class="modal fade" id="pay-due-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Pay Due Amount</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <form action="{{ route('sale.updateDue') }}" method="POST">
-                    @csrf
-                    @method('post')
-                    <div class="modal-body">
-                        <input type="hidden" name="sale_id" id="sale_id">
-                        <div class="form-group">
-                            <label for="due_amount">Pay Amount</label>
-                            <input type="number" class="form-control" name="due_amount" id="due_amount" required
-                                step="0.01">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Pay</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function payDue(id) {
-            $.ajax({
-                type: 'GET',
-                url: '/sale/due/' + id,
-                dataType: 'json',
-                success: function(data) {
-                    $('#due_amount').val(data.due_amount);
-                    $('#sale_id').val(data.id);
-                },
-                error: function() {
-                    // Fallback to legacy endpoint if needed
-                    $.ajax({
-                        type: 'GET',
-                        url: '/sale/due/' + id,
-                        dataType: 'json',
-                        success: function(data) {
-                            $('#due_amount').val(data.due_amount);
-                            $('#sale_id').val(data.id);
-                        }
-                    });
-                }
-            });
-        }
-    </script>
 @endsection
