@@ -50,8 +50,8 @@ class EnsureActiveBranch
         }
 
         // Check if current route is excluded by name or path
-        $routeName = $request->route() ? $request->route()->getName() : null;
-        if ($routeName && in_array($routeName, $this->excludedRouteNames)) {
+        $routeName = $request->route()?->getName();
+        if ($routeName && in_array($routeName, $this->excludedRouteNames, true)) {
             return $next($request);
         }
 
@@ -59,13 +59,11 @@ class EnsureActiveBranch
             return $next($request);
         }
 
-        // Validate active_branch_id against user's assigned branches (user_branch table)
-        if ($user->active_branch_id) {
-            $assignedBranchIds = $user->branches()->pluck('branches.id')->toArray();
-            if (!in_array($user->active_branch_id, $assignedBranchIds)) {
-                $user->active_branch_id = null;
-                $user->save();
-            }
+        // Validate active_branch_id against the user's assigned branches.
+        // One indexed EXISTS query instead of loading every assigned branch id.
+        if ($user->active_branch_id
+            && !$user->branches()->where('branches.id', $user->active_branch_id)->exists()) {
+            $user->forceFill(['active_branch_id' => null])->save();
         }
 
         // If user has no active branch, block access and redirect to branch selection popup

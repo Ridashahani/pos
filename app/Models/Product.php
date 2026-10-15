@@ -62,12 +62,20 @@ class Product extends Model
         return round($price * (1 + ($taxRate / 100)), 2);
     }
 
+    /** Per-request memo: the same image is resolved many times (dropdown rows + cart rows). */
+    private static array $imageUrlCache = [];
+
     public static function imageUrl(?string $image = null): string
     {
-        $defaultUrl = asset('assets/images/product/default.webp');
+        $key = $image ?? '';
 
+        return self::$imageUrlCache[$key] ??= self::resolveImageUrl($image);
+    }
+
+    private static function resolveImageUrl(?string $image): string
+    {
         if (empty($image)) {
-            return $defaultUrl;
+            return asset('assets/images/product/default.webp');
         }
 
         if (preg_match('#^https?://#i', $image)) {
@@ -75,18 +83,28 @@ class Product extends Model
         }
 
         $fileName = basename($image);
-        $storedPath = storage_path('app/public/products/' . $fileName);
 
-        if (file_exists($storedPath)) {
+        if (file_exists(storage_path('app/public/products/' . $fileName))) {
             return asset('storage/products/' . $fileName);
         }
 
-        $assetPath = public_path('assets/images/product/' . $fileName);
-        if (file_exists($assetPath)) {
+        if (file_exists(public_path('assets/images/product/' . $fileName))) {
             return asset('assets/images/product/' . $fileName);
         }
 
-        return $defaultUrl;
+        return asset('assets/images/product/default.webp');
+    }
+
+    /**
+     * In stock and not expired: the products a cashier is allowed to sell.
+     */
+    public function scopeSellable($query)
+    {
+        return $query->where('stock', '>', 0)
+            ->where(function ($q) {
+                $q->whereNull('expire_date')
+                    ->orWhere('expire_date', '>=', now()->toDateString());
+            });
     }
 
     public function category(){
