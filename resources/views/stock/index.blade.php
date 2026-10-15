@@ -217,6 +217,9 @@
                                             <th>Unit Sold Price</th>
                                             <th>Net Sold Price</th>
                                             <th>Destination</th>
+                                            @if ($type === 'sold-items' && ($show_branch ?? false))
+                                                <th>Branch</th>
+                                            @endif
                                             @if ($type === 'sold-items')
                                                 <th>Status</th>
                                             @endif
@@ -263,6 +266,9 @@
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['unit_price'], 2) }}</td>
                                                 <td>{{ $row['currency'] ?? 'PKR' }} {{ number_format($row['net_sold_price'], 2) }}</td>
                                                 <td>{{ $row['destination'] }}</td>
+                                                @if ($type === 'sold-items' && ($show_branch ?? false))
+                                                    <td>{{ $row['branch'] }}</td>
+                                                @endif
                                                 @if ($type === 'sold-items')
                                                     <td><span class="badge {{ $row['status'] === 'returned' ? 'bg-warning' : 'bg-success' }}">{{ ucfirst($row['status']) }}</span></td>
                                                 @endif
