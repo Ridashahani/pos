@@ -246,7 +246,7 @@ class SaleController extends Controller
 
     public function invoiceDownload(int $sale_id)
     {
-        $sale = Sale::with('customer')->findOrFail($sale_id);
+        $sale = Sale::with('customer', 'user', 'branch')->findOrFail($sale_id);
         $saleDetails = SaleDetails::with('product')
             ->where('sale_id', $sale_id)
             ->orderBy('id', 'DESC')
@@ -255,13 +255,12 @@ class SaleController extends Controller
         return view('pos.print-invoice', [
             'sale' => $sale,
             'saleDetails' => $saleDetails,
-
         ]);
     }
 
     public function printReceipt(int $sale_id)
     {
-        $sale = Sale::with('customer')->findOrFail($sale_id);
+        $sale = Sale::with('customer', 'user', 'branch')->findOrFail($sale_id);
         $saleDetails = SaleDetails::with('product')
             ->where('sale_id', $sale_id)
             ->orderBy('id', 'DESC')
