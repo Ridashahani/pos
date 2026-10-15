@@ -22,8 +22,9 @@
                 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                     <div>
                         <h3 class="font-weight-bold">Dashboard Overview</h3>
-                        <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
-                            store today.</p>
+                        <!-- <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
+                            store today.
+                        </p> -->
                     </div>
                     <div class="mt-3 mt-md-0">
                         <a href="{{ route('pos.index') }}" class="btn btn-primary">

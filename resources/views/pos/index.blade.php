@@ -219,6 +219,15 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        const posCartProductIds = new Set();
+
+        function refreshPosCartProductIds() {
+            posCartProductIds.clear();
+            document.querySelectorAll('#cart-sidebar-container tr[data-item-id]').forEach(row => {
+                posCartProductIds.add(row.dataset.itemId);
+            });
+        }
+
         // DOMContentLoaded (not "load"): "load" waits for every image on the page,
         // which delayed the dropdown from becoming usable.
         document.addEventListener('DOMContentLoaded', function() {
@@ -253,6 +262,7 @@
             $products.select2({
                 placeholder: 'Search and select a product...',
                 width: '100%',
+                closeOnSelect: false,
                 minimumResultsForSearch: 0,     // always show the search bar
                 ajax: {
                     url: "{{ route('pos.products.search') }}",
@@ -269,6 +279,10 @@
                 templateResult: function(option) {
                     if (option.loading || !option.id) return option.text;
                     const $row = $('<span class="pos-opt"></span>');
+                    const inCart = posCartProductIds.has(String(option.id));
+                    if (inCart) {
+                        $row.addClass('pos-opt-in-cart');
+                    }
                     $row.append($('<img class="pos-opt-thumb" alt="" loading="lazy" decoding="async">')
                         .attr('src', option.image));
                     const $text = $('<span class="pos-opt-text"></span>');
@@ -280,6 +294,9 @@
                     ].filter(Boolean).join('  |  ');
                     $text.append($('<small class="pos-opt-meta"></small>').text(meta));
                     $row.append($text);
+                    // if (inCart) {
+                    //     $row.append($('<span class="pos-opt-status">In cart</span>'));
+                    // }
                     return $row;
                 },
                 templateSelection: function(option) {
@@ -289,19 +306,24 @@
 
             // Select2 4.1.0-rc.0 + jQuery 3.6+ does not focus the search box on open,
             // so focus it ourselves and the cashier can type straight away.
-            $(document).on('select2:open', function() {
+            $(document).on('select2:open', function(event) {
+                if (event.target === $products[0]) refreshPosCartProductIds();
                 setTimeout(function() {
                     const field = document.querySelector('.select2-search--dropdown .select2-search__field');
                     if (field) field.focus();
                 }, 0);
             });
 
-            // Picking a product adds it to the cart. Only the id is sent: the server
-            // reads name / price / image from the database.
+            // Clicking a product toggles whether it is in the cart. Only the id is sent:
+            // the server reads name / price / image from the database.
             $products.on('select2:select', function(e) {
-                // Reset the picker right away so the same product can be picked again.
                 setTimeout(window.syncProductSelect, 0);
-                window.posAddProduct({ id: e.params.data.id });
+                const id = String(e.params.data.id);
+                if (posCartProductIds.has(id)) {
+                    window.posRemoveItem(id);
+                } else {
+                    window.posAddProduct({ id });
+                }
             });
         });
 
@@ -476,6 +498,7 @@
 
                 container.innerHTML = data.cart_html;
                 badge.innerText = data.cart_count + ' items';
+                refreshPosCartProductIds();
 
                 const newWrap = container.querySelector('.cart-items-wrapper');
                 if (newWrap) newWrap.scrollTop = top;
@@ -783,6 +806,7 @@
                     // Reset UI
                     if (data.cart_html) {
                         document.getElementById('cart-sidebar-container').innerHTML = data.cart_html;
+                        refreshPosCartProductIds();
                     }
 
                     // Update Cart Count Badge
@@ -1071,6 +1095,25 @@
             align-items: center;
             display: flex;
             gap: .6rem;
+        }
+
+        .pos-opt-in-cart {
+            background: #5897fb;
+            border-left: 3px solid #5897fb;
+            border-radius: 3px;
+            color: #fff;
+            padding: .35rem;
+        }
+
+        .pos-opt-status {
+            background: rgba(255, 255, 255, .2);
+            border-radius: 10px;
+            color: #fff;
+            flex: 0 0 auto;
+            font-size: .68rem;
+            font-weight: 600;
+            margin-left: auto;
+            padding: .2rem .45rem;
         }
 
         .pos-opt-thumb {

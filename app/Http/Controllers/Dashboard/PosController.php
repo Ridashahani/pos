@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use Carbon\Carbon;
-use App\Models\Branch;
-use App\Models\Product;
-use App\Models\Customer;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Redirect;
+use App\Models\Branch;
+use App\Models\Customer;
+use App\Models\Product;
 use Gloudemans\Shoppingcart\CartItem;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 
 class PosController extends Controller
 {
     private const PRODUCTS_PER_PAGE = 30;
+
+    /** Only the columns the cart needs: never load the whole product row. */
+    private const CART_PRODUCT_COLUMNS = [
+        'id', 'name', 'code', 'image', 'selling_price', 'gst_tax', 'currency', 'stock',
+    ];
 
     /**
      * Cart lines in the order they were added.
@@ -24,7 +28,7 @@ class PosController extends Controller
      */
     private function cartContent()
     {
-        return Cart::content()->sortBy(fn($item) => $item->options->added_at ?? 0);
+        return Cart::content()->sortBy(fn ($item) => $item->options->added_at ?? 0);
     }
 
     /**
@@ -33,18 +37,18 @@ class PosController extends Controller
      */
     private function cartJson(?string $message = null, int $status = 200)
     {
+        $content = $this->cartContent();
+
         return response()->json([
             'success'    => $status < 400,
             'message'    => $message,
-            'cart_html'  => view('pos.cart-sidebar', ['productItem' => $this->cartContent()])->render(),
-            'cart_count' => Cart::count(),
+            'cart_html'  => view('pos.cart-sidebar', ['productItem' => $content])->render(),
+            'cart_count' => $content->sum('qty'),   // same as Cart::count(), no extra session read
         ], $status);
     }
 
     /**
      * Lightweight response for qty / tax / discount edits.
-     * The browser already shows the right numbers (it calculates locally), so all it
-     * needs back is the row's new id: no view rendering, tiny payload.
      */
     private function lineJson(CartItem $item)
     {
@@ -82,29 +86,28 @@ class PosController extends Controller
 
     /**
      * Display the POS interface.
-     *
-     * Products are NOT loaded here any more: the dropdown fetches them on demand
-     * from searchProducts(), so the page stays light however big the catalogue is.
+     * Products are fetched on demand by searchProducts(), so the page stays light.
      */
     public function index(Request $request)
     {
         $user = $request->user();
-        $isAdmin = $user->roles()->whereRaw('LOWER(name) = ?', ['admin'])->exists();
-        $branches = $isAdmin
-            ? Branch::where('status', 'Active')->orderBy('name')->get()
-            : $user->branches()->where('branches.status', 'Active')->orderBy('branches.name')->get();
+
+        // isAdmin() reuses the roles relation already loaded by the middleware / navbar,
+        // instead of firing another query.
+        $branches = $user->isAdmin()
+            ? Branch::where('status', 'Active')->orderBy('name')->get(['id', 'name'])
+            : $user->branches()->where('branches.status', 'Active')->orderBy('branches.name')->get(['branches.id', 'branches.name']);
 
         return view('pos.index', [
-            'branches' => $branches,
+            'branches'         => $branches,
             'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
-            'productItem' => $this->cartContent(),
+            'productItem'      => $this->cartContent(),
         ]);
     }
 
     /**
      * Product search for the Select2 dropdown (AJAX, paginated, 30 per page).
-     * Same sellable rules as before: in stock and not expired.
-     * Exact code matches come first, then names starting with the term, then the rest.
+     * Exact code matches first, then names starting with the term, then the rest.
      */
     public function searchProducts(Request $request)
     {
@@ -115,12 +118,8 @@ class PosController extends Controller
         $term = trim($data['term'] ?? '');
 
         $query = Product::query()
-            ->without('category')
-            ->where('stock', '>', 0)
-            ->where(function ($q) {
-                $q->whereNull('expire_date')
-                    ->orWhere('expire_date', '>=', Carbon::today());
-            });
+            ->withoutEagerLoads()
+            ->sellable();
 
         if ($term !== '') {
             $escaped = addcslashes($term, '\\%_');
@@ -139,7 +138,7 @@ class PosController extends Controller
             ->simplePaginate(self::PRODUCTS_PER_PAGE, ['id', 'name', 'code', 'selling_price', 'stock', 'image']);
 
         return response()->json([
-            'results' => $products->getCollection()->map(fn($p) => [
+            'results' => $products->getCollection()->map(fn ($p) => [
                 'id'    => $p->id,
                 'text'  => $p->name . ($p->code ? " ({$p->code})" : ''),
                 'name'  => $p->name,
@@ -159,7 +158,7 @@ class PosController extends Controller
     {
         if ($request->boolean('is_manual')) {
             $data = $request->validate([
-                'name'     => 'required|string',
+                'name'     => 'required|string|max:255',
                 'price'    => 'required|numeric|min:0',
                 'tax'      => 'nullable|numeric|min:0',      // tax AMOUNT (converted to a rate below)
                 'discount' => 'nullable|numeric|min:0',
@@ -194,12 +193,16 @@ class PosController extends Controller
                 'id' => 'required|integer',
             ]);
 
-            $product = Product::findOrFail($data['id']);
-            $stock   = max(0, (int) $product->stock);
+            // withoutEagerLoads(): Product has `$with = ['category']`, which would
+            // add a second query that the cart never uses.
+            $product = Product::withoutEagerLoads()
+                ->select(self::CART_PRODUCT_COLUMNS)
+                ->findOrFail($data['id']);
+            $stock = max(0, (int) $product->stock);
 
             // Adding the same product again increments the existing line.
             $existing = Cart::search(
-                fn($cartItem) => $cartItem->id == $product->id && empty($cartItem->options->manual)
+                fn ($cartItem) => $cartItem->id == $product->id && empty($cartItem->options->manual)
             )->first();
 
             if ($existing) {
@@ -255,16 +258,19 @@ class PosController extends Controller
             'qty' => 'required|integer|min:0',
         ]);
 
-        if (!Cart::content()->has($rowId)) {
+        $item = Cart::content()->get($rowId);
+
+        if (!$item) {
             return $this->missingCartItemResponse($request);
         }
 
-        $item = Cart::get($rowId);
         $qty = (int) $data['qty'];
         $options = $item->options->toArray();
 
         if (empty($options['manual'])) {
-            $stock = max(0, (int) Product::findOrFail($item->id)->stock);
+            // One-column query, no model hydration, no category eager load.
+            // A deleted product returns null -> stock 0 -> the line is removed.
+            $stock = max(0, (int) Product::withoutEagerLoads()->whereKey($item->id)->value('stock'));
             $qty = min($qty, $stock);
             $options['stock'] = $stock;
         }
@@ -291,11 +297,12 @@ class PosController extends Controller
             'discount' => 'required|numeric|min:0',
         ]);
 
-        if (!Cart::content()->has($rowId)) {
+        $item = Cart::content()->get($rowId);
+
+        if (!$item) {
             return $this->missingCartItemResponse($request);
         }
 
-        $item = Cart::get($rowId);
         $options = $item->options->toArray();
         $options['discount'] = (float) $data['discount'];
 
@@ -310,11 +317,12 @@ class PosController extends Controller
             'tax_rate' => 'required|numeric|min:0|max:100',
         ]);
 
-        if (!Cart::content()->has($rowId)) {
+        $item = Cart::content()->get($rowId);
+
+        if (!$item) {
             return $this->missingCartItemResponse($request);
         }
 
-        $item = Cart::get($rowId);
         $options = $item->options->toArray();
         $options['tax_rate'] = (float) $data['tax_rate'];
 
@@ -357,7 +365,7 @@ class PosController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Customer created successfully!',
-            'customer' => $customer
+            'customer' => $customer,
         ]);
     }
 
@@ -366,22 +374,22 @@ class PosController extends Controller
      */
     public function searchCustomers(Request $request)
     {
-        $term = $request->term;
-        $query = Customer::query();
+        $term = trim((string) $request->query('term', ''));
+        $query = Customer::query()->select(['id', 'name', 'phone']);
 
-        if ($term) {
-            $query->where(function ($q) use ($term) {
-                $q->where('name', 'LIKE', "%{$term}%")
-                    ->orWhere('phone', 'LIKE', "%{$term}%");
+        if ($term !== '') {
+            $escaped = addcslashes($term, '\\%_');
+
+            $query->where(function ($q) use ($escaped) {
+                $q->where('name', 'LIKE', "%{$escaped}%")
+                    ->orWhere('phone', 'LIKE', "%{$escaped}%");
             });
         }
 
-        $customers = $query->latest()->limit(20)->get()->map(function ($customer) {
-            return [
-                'id' => $customer->id,
-                'text' => $customer->name . ' (' . ($customer->phone ?? 'N/A') . ')'
-            ];
-        });
+        $customers = $query->latest()->limit(20)->get()->map(fn ($customer) => [
+            'id'   => $customer->id,
+            'text' => $customer->name . ' (' . ($customer->phone ?? 'N/A') . ')',
+        ]);
 
         return response()->json(['results' => $customers]);
     }
