@@ -36,7 +36,7 @@ class PaymentAccountController extends Controller
                     'accounts_count' => $typeAccounts->count(),
                     'previous_balance' => $typeAccounts->sum('previous_balance'),
                     'opening_balance' => $typeAccounts->sum('today_opening_balance'),
-                    'today_balance' => $typeAccounts->sum('available_balance'),
+                    'current_balance' => $typeAccounts->sum('available_balance'),
                     'transactions_count' => $typeAccounts->sum('transactions_count'),
                     'total_transaction_amount' => $totalUsed,
                     'total_transferred_out' => $transferredOut,
@@ -72,7 +72,7 @@ class PaymentAccountController extends Controller
     public function store(StorePaymentAccountRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['opening_balance'] = 0;
+        $data['current_balance'] = 0;
         PaymentAccount::create($data);
 
         return redirect()->route('payment-accounts.index')
@@ -95,11 +95,11 @@ class PaymentAccountController extends Controller
 
                 $account->update([
                     'previous_balance' => PaymentAccount::formatMinorUnits($previousBalance),
-                    'opening_balance' => $openingBalance,
+                    'current_balance' => $openingBalance,
                     'balance_date' => $today,
                 ]);
             } else {
-                $account->update(['opening_balance' => $openingBalance]);
+                $account->update(['current_balance' => $openingBalance]);
             }
 
             $account->refreshBalance();

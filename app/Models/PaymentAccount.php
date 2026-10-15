@@ -15,14 +15,14 @@ class PaymentAccount extends Model
         'type',
         'account_number',
         'holder_name',
-        'opening_balance',
+        'current_balance',
         'previous_balance',
         'balance_date',
         'status',
     ];
 
     protected $casts = [
-        'opening_balance' => 'decimal:2',
+        'current_balance' => 'decimal:2',
         'previous_balance' => 'decimal:2',
         'balance_date' => 'date',
     ];
@@ -51,7 +51,7 @@ class PaymentAccount extends Model
     {
         if ($this->balance_date?->toDateString() === $date) {
             return self::toMinorUnits($this->previous_balance)
-                + self::toMinorUnits($this->opening_balance);
+                + self::toMinorUnits($this->current_balance);
         }
 
         $dailyBalance = $this->dailyBalances()->whereDate('balance_date', $date)->first();
@@ -63,7 +63,7 @@ class PaymentAccount extends Model
     public function openingBalanceSuggestionForDate(string $date): int
     {
         if ($this->balance_date?->toDateString() === $date) {
-            return self::toMinorUnits($this->opening_balance);
+            return self::toMinorUnits($this->current_balance);
         }
 
         $dailyBalance = $this->dailyBalances()->whereDate('balance_date', $date)->first();
@@ -97,7 +97,7 @@ class PaymentAccount extends Model
 
         if ($balanceDate !== null && $date >= $balanceDate) {
             return $this->calculateFromOpeningBalance(
-                self::toMinorUnits($this->previous_balance) + self::toMinorUnits($this->opening_balance),
+                self::toMinorUnits($this->previous_balance) + self::toMinorUnits($this->current_balance),
                 $balanceDate,
                 $date,
                 $excludeTransactionId
@@ -119,7 +119,7 @@ class PaymentAccount extends Model
                 + self::toMinorUnits($dailyBalance->opening_balance);
             $movementStart = $dailyBalance->balance_date->toDateString();
         } else {
-            $openingBalance = self::toMinorUnits($this->opening_balance);
+            $openingBalance = self::toMinorUnits($this->current_balance);
             $movementStart = null;
         }
 
