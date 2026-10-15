@@ -22,9 +22,6 @@
                 <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
                     <div>
                         <h3 class="font-weight-bold">Dashboard Overview</h3>
-                        <!-- <p class="mb-0 text-muted">Welcome back, {{ auth()->user()->name }}! Here's what's happening in your
-                            store today.
-                        </p> -->
                     </div>
                     <div class="mt-3 mt-md-0">
                         <a href="{{ route('pos.index') }}" class="btn btn-primary">
@@ -51,8 +48,8 @@
             @endphp
 
             @foreach ($summary as $item)
-                <div class="col-12 col-sm-6 col-xl-3 mb-3">
-                    <div class="card card-block card-stretch card-height">
+                <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                    <div class="card w-100 h-100 mb-0">
                         <div class="card-body">
                             <div class="d-flex align-items-center card-total-sale">
                                 <div class="icon iq-icon-box-2 bg-{{ $item['color'] }}-light">
@@ -63,16 +60,17 @@
                                     <h4>PKR {{ number_format($item['value'], 2) }}</h4>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
             @endforeach
 
             <!-- Metric Cards -->
-            <div class="col-12 col-sm-6 col-xl-3 mb-3">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center  card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-info-light">
                                 <x-heroicon-o-banknotes class="w-6 h-6 text-info" />
                             </div>
@@ -81,17 +79,15 @@
                                 <h4>PKR {{ number_format($total_paid, 2) }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-info iq-progress progress-1" data-percent="85" style="width: 85%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-xl-3 mb-3">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center  card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-danger-light">
                                 <x-heroicon-o-credit-card class="w-6 h-6 text-danger" />
                             </div>
@@ -100,17 +96,15 @@
                                 <h4>PKR {{ number_format($total_due, 2) }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-danger iq-progress progress-1" data-percent="40" style="width: 40%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-xl-3 mb-3">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center  card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-success-light">
                                 <x-heroicon-o-check-circle class="w-6 h-6 text-success" />
                             </div>
@@ -119,17 +113,15 @@
                                 <h4>{{ $complete_sales }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-4">
-                            <span class="bg-success iq-progress progress-1" data-percent="75" style="width: 75%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div class="col-12 col-sm-6 col-xl-3 mb-3">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-sm-6 col-xl-3 mb-3 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-body">
-                        <div class="d-flex align-items-center  card-total-sale">
+                        <div class="d-flex align-items-center card-total-sale">
                             <div class="icon iq-icon-box-2 bg-warning-light">
                                 <x-heroicon-o-clock class="w-6 h-6 text-warning" />
                             </div>
@@ -138,9 +130,7 @@
                                 <h4>{{ $pending_sales }}</h4>
                             </div>
                         </div>
-                        <div class="iq-progress-bar mt-2">
-                            <span class="bg-warning iq-progress progress-1" data-percent="25" style="width: 25%;"></span>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -160,8 +150,8 @@
             </div>
 
             <!-- Bottom Section: Recent Sales & Top Products -->
-            <div class="col-12 col-xl-7 mb-4">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-xl-7 mb-4 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
                             <h4 class="card-title">Recent Sales</h4>
@@ -214,8 +204,8 @@
                 </div>
             </div>
 
-            <div class="col-12 col-xl-5 mb-4">
-                <div class="card card-block card-stretch card-height">
+            <div class="col-12 col-xl-5 mb-4 d-flex">
+                <div class="card w-100 h-100 mb-0">
                     <div class="card-header d-flex justify-content-between">
                         <div class="header-title">
                             <h4 class="card-title">Top Selling Products</h4>
@@ -348,5 +338,60 @@
     .card-total-sale h4 {
         font-size: clamp(.85rem, 0.5rem + .8vw, 1.1rem);
         word-break: break-word;
+    }
+
+    .card-total-sale p {
+        font-size: clamp(.75rem, .6rem + .4vw, .95rem);
+        margin-bottom: .25rem !important;
+    }
+
+    .card-title {
+        font-size: clamp(.95rem, .8rem + .5vw, 1.15rem);
+    }
+
+    .table td,
+    .table th {
+        font-size: clamp(.75rem, .65rem + .3vw, .9rem);
+        white-space: nowrap;
+    }
+
+    /* Flex children ko shrink hone do, taake side scroll na aaye */
+    .row>[class*="col-"] {
+        min-width: 0;
+    }
+
+    .card,
+    .card-body,
+    .table-responsive {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .content-page,
+    .container-fluid {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    @media (max-width: 575.98px) {
+        .card-total-sale .icon {
+            width: 44px;
+            height: 44px;
+            margin-right: .5rem;
+        }
+
+        .card-body {
+            padding: .85rem;
+        }
+
+        .container-fluid {
+            padding-left: .75rem;
+            padding-right: .75rem;
+        }
     }
 </style>
