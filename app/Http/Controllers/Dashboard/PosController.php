@@ -96,11 +96,17 @@ class PosController extends Controller
         // instead of firing another query.
         $branches = $user->isAdmin()
             ? Branch::where('status', 'Active')->orderBy('name')->get(['id', 'name'])
-            : $user->branches()->where('branches.status', 'Active')->orderBy('branches.name')->get(['branches.id', 'branches.name']);
+            : $user->branches()
+                ->where('branches.id', $user->active_branch_id)
+                ->where('branches.status', 'Active')
+                ->orderBy('branches.name')
+                ->get(['branches.id', 'branches.name']);
 
         return view('pos.index', [
             'branches'         => $branches,
-            'selectedBranchId' => old('branch_id', $branches->count() === 1 ? $branches->first()->id : null),
+            'selectedBranchId' => $user->isAdmin()
+                ? old('branch_id', $branches->count() === 1 ? $branches->first()->id : null)
+                : $user->active_branch_id,
             'productItem'      => $this->cartContent(),
         ]);
     }
@@ -114,11 +120,23 @@ class PosController extends Controller
         $data = $request->validate([
             'term' => ['nullable', 'string', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'branch_id' => ['required', 'integer', 'exists:branches,id'],
         ]);
+        $user = $request->user();
+        $branchId = (int) $data['branch_id'];
+        if ($user->isAdmin()) {
+            $branchAllowed = $user->allowedBranches()->contains(fn ($branch) => (int) $branch->id === $branchId);
+        } else {
+            $branchAllowed = (int) $user->active_branch_id === $branchId;
+        }
+        if (! $branchAllowed) {
+            abort(403);
+        }
         $term = trim($data['term'] ?? '');
 
         $query = Product::query()
             ->withoutEagerLoads()
+            ->where('branch_id', $branchId)
             ->sellable();
 
         if ($term !== '') {

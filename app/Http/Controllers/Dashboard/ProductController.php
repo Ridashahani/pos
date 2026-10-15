@@ -58,7 +58,13 @@ class ProductController extends Controller
             abort(400, 'The per-page parameter must be an integer between 1 and 100.');
         }
 
-        $products = QueryBuilder::for(Product::class)
+        $user = request()->user();
+        $productQuery = Product::query();
+        if (! $user->isAdmin()) {
+            $productQuery->where('products.branch_id', $user->active_branch_id);
+        }
+
+        $products = QueryBuilder::for($productQuery)
     ->defaultSort('-created_at')   // latest first by default
     ->allowedSorts([
         'name',

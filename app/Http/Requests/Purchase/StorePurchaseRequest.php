@@ -28,7 +28,11 @@ class StorePurchaseRequest extends FormRequest
             'payment_status' => 'required|in:paid,partial,due',
             'paid_amount' => 'nullable|numeric|min:0',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => [
+                'required',
+                \Illuminate\Validation\Rule::exists('products', 'id')
+                    ->where('branch_id', $this->input('branch_id')),
+            ],
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
             'items.*.variations' => 'nullable|array',

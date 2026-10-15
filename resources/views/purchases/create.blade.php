@@ -334,7 +334,7 @@
                                 <select id="branch" name="branch_id" class="form-control" required>
                                     <option value="">Select Branch</option>
                                     @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                    <option value="{{ $branch->id }}" @selected((string) $selectedBranchId === (string) $branch->id)>{{ $branch->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -438,6 +438,7 @@
                 <div class="pp-product-list" id="product-list">
                     @forelse ($products as $product)
                     <div class="pp-product" data-id="{{ $product->id }}" data-name="{{ $product->name }}"
+                        data-branch-id="{{ $product->branch_id }}"
                         data-price="{{ $product->cost_price }}">
                         <img src="{{ \App\Models\Product::imageUrl($product->image) }}"
                             alt="{{ $product->name }}">
@@ -496,6 +497,7 @@
 
         const productList = document.getElementById('product-list');
         const productSearch = document.getElementById('product-search');
+        const branchSelect = document.getElementById('branch');
         const noMatch = document.getElementById('no-match');
         const selectedName = document.getElementById('selected-product-name');
         const addBtn = document.getElementById('add-item-btn');
@@ -516,19 +518,28 @@
         } [c]));
 
         // ---- Product search & select ----
-        productSearch.addEventListener('input', function() {
-            const q = this.value.trim().toLowerCase();
+        function filterProducts() {
+            const q = productSearch.value.trim().toLowerCase();
+            const branchId = branchSelect.value;
             let visible = 0;
             productList.querySelectorAll('.pp-product').forEach(el => {
-                const show = el.dataset.name.toLowerCase().includes(q);
+                const show = branchId !== '' && el.dataset.branchId === branchId && el.dataset.name.toLowerCase().includes(q);
                 el.style.display = show ? '' : 'none';
                 if (show) visible++;
             });
             noMatch.style.display = visible ? 'none' : '';
+        }
+        productSearch.addEventListener('input', filterProducts);
+        branchSelect.addEventListener('change', function() {
+            productList.querySelectorAll('.pp-product').forEach(card => card.classList.remove('active'));
+            selectedProduct = null;
+            selectedName.textContent = ' None ';
+            filterProducts();
         });
         productSearch.addEventListener('keydown', e => {
             if (e.key === 'Enter') e.preventDefault();
         });
+        filterProducts();
 
         productList.addEventListener('click', function(e) {
             const card = e.target.closest('.pp-product');
