@@ -13,6 +13,7 @@ class StockTransfer extends Model
         'reference',
         'product_id',
         'stock_in_id',
+        'destination_stock_in_id',
         'quantity',
         'from_branch_id',
         'to_branch_id',
@@ -27,6 +28,16 @@ class StockTransfer extends Model
     public function stockIn()
     {
         return $this->belongsTo(StockIn::class);
+    }
+
+    public function destinationStockIn()
+    {
+        return $this->belongsTo(StockIn::class, 'destination_stock_in_id');
+    }
+
+    public function allocations()
+    {
+        return $this->hasMany(StockTransferAllocation::class);
     }
 
     public function fromBranch()
