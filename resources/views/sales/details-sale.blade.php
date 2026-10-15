@@ -105,24 +105,70 @@
 
                         <!-- Actions for Pending Sales -->
                         @if ($sale->status == 'pending')
-                            <div class="row mt-4">
-                                <div class="col-lg-12 d-flex justify-content-end">
-                                    <form action="{{ route('sale.updateStatus') }}" method="POST" class="d-inline">
-                                        @method('put')
-                                        @csrf
-                                        <input type="hidden" name="id" value="{{ $sale->id }}">
 
-                                        <a class="btn btn-cancel mr-2" href="{{ route('sale.pendingSales') }}">
-                                            <x-heroicon-o-x-mark class="w-5 h-5 mr-1 inline" /> Cancel
-                                        </a>
-
-                                        <button type="submit" class="btn btn-success"
-                                            onclick="return confirm('Are you sure you want to complete this sale? This reduces stock.')">
-                                            <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Complete Sale
-                                        </button>
-                                    </form>
+                            @if ($sale->due_amount > 0)
+                                {{-- Due Amount Warning Banner --}}
+                                <div class="row mt-4">
+                                    <div class="col-lg-12">
+                                        <div class="card border-0 mb-0"
+                                            style="background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%); border-left: 4px solid #ffc107 !important; border-radius: 8px;">
+                                            <div class="card-body py-3 px-4">
+                                                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="mr-3"
+                                                            style="width:42px; height:42px; background:#ffc107; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                                            <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-white" />
+                                                        </div>
+                                                        <div>
+                                                            <h6 class="mb-0 font-weight-bold text-dark">Due Payment Pending</h6>
+                                                            <p class="mb-0 text-muted" style="font-size:0.875rem;">
+                                                                PKR <strong
+                                                                    class="text-danger">{{ number_format($sale->due_amount, 2) }}</strong>
+                                                                is still outstanding. Pay the due amount to unlock sale completion.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center mt-2 mt-sm-0">
+                                                        <a class="btn btn-outline-secondary btn-sm mr-2"
+                                                            href="{{ route('sale.pendingSales') }}">
+                                                            <x-heroicon-o-x-mark class="w-4 h-4 mr-1 inline" /> Cancel
+                                                        </a>
+                                                        <button type="button"
+                                                            class="btn btn-primary btn-sm mr-2"
+                                                            data-toggle="modal" data-target="#pay-due-modal-detail">
+                                                            <x-heroicon-o-banknotes class="w-4 h-4 mr-1 inline" /> Pay Due Amount
+                                                        </button>
+                                                        <button type="button" class="btn btn-success btn-sm" disabled
+                                                            title="Clear the due amount first."
+                                                            style="opacity:0.5; cursor:not-allowed;">
+                                                            <x-heroicon-o-lock-closed class="w-4 h-4 mr-1 inline" /> Complete Sale
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            @else
+                                {{-- No due — allow completion --}}
+                                <div class="row mt-4">
+                                    <div class="col-lg-12 d-flex justify-content-end">
+                                        <form action="{{ route('sale.updateStatus') }}" method="POST" class="d-inline">
+                                            @method('put')
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $sale->id }}">
+                                            <a class="btn btn-outline-secondary btn-sm mr-2"
+                                                href="{{ route('sale.pendingSales') }}">
+                                                <x-heroicon-o-x-mark class="w-4 h-4 mr-1 inline" /> Cancel
+                                            </a>
+                                            <button type="submit" class="btn btn-success"
+                                                onclick="return confirm('Are you sure you want to complete this sale? This reduces stock.')">
+                                                <x-heroicon-o-check-circle class="w-5 h-5 mr-1 inline" /> Complete Sale
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endif
                         @else
                             <div class="row mt-3">
                                 <div class="col-lg-12">
@@ -206,4 +252,53 @@
             </div>
         </div>
     </div>
+
+{{-- Pay Due Modal --}}
+@if ($sale->status == 'pending' && $sale->due_amount > 0)
+<div class="modal fade" id="pay-due-modal-detail" tabindex="-1" role="dialog" aria-labelledby="payDueModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="payDueModalLabel">
+                    <x-heroicon-o-banknotes class="w-5 h-5 mr-1 inline" /> Pay Due Amount
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('sale.updateDue') }}" method="POST">
+                @csrf
+                @method('post')
+                <input type="hidden" name="sale_id" value="{{ $sale->id }}">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between mb-3 p-3 rounded" style="background:#f8f9fa;">
+                        <span class="text-muted">Total Due:</span>
+                        <strong class="text-danger">PKR {{ number_format($sale->due_amount, 2) }}</strong>
+                    </div>
+                    <div class="form-group">
+                        <label for="due_amount_detail">Amount to Pay <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">PKR</span>
+                            </div>
+                            <input type="number" class="form-control" name="due_amount"
+                                id="due_amount_detail" step="0.01" min="0.01"
+                                max="{{ $sale->due_amount }}"
+                                value="{{ $sale->due_amount }}" required>
+                        </div>
+                        <small class="text-muted">Enter amount being paid now (max: PKR {{ number_format($sale->due_amount, 2) }})</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <x-heroicon-o-check-circle class="w-4 h-4 mr-1 inline" /> Confirm Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection

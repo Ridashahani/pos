@@ -16,7 +16,9 @@
         <div class="card card-block card-stretch">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h4 class="card-title mb-0">Stock-In Record</h4>
-                <span class="text-muted small">{{ $purchaseItem->purchase?->purchase_no ?: 'Manual stock' }}</span>
+                <span class="text-muted small">
+                    {{ $incomingTransfer ? 'Transfer ' . $incomingTransfer->reference : ($purchaseItem->purchase?->purchase_no ?: 'Manual stock') }}
+                </span>
             </div>
             <div class="card-body">
                 <div class="row align-items-center mb-4">
@@ -61,17 +63,21 @@
                             <table class="table table-bordered mb-0">
                                 <tbody>
                                     <tr><th scope="row" class="w-50">Batch Reference</th><td>{{ $purchaseItem->batch_no ?: 'Not provided' }}</td></tr>
+                                    @if ($incomingTransfer)
+                                        <tr><th scope="row">Transfer Reference</th><td>{{ $incomingTransfer->reference }}</td></tr>
+                                        <tr><th scope="row">Transferred From</th><td>{{ $incomingTransfer->fromBranch?->name ?: 'Not provided' }}</td></tr>
+                                    @endif
                                     <tr><th scope="row">Purchase Number</th><td>{{ $purchaseItem->purchase?->purchase_no ?: 'Manual stock' }}</td></tr>
                                     <tr><th scope="row">Purchase Date</th><td>{{ $purchaseItem->purchase?->purchase_date?->format('d M Y') ?: 'Not provided' }}</td></tr>
                                     <tr><th scope="row">Supplier</th><td>{{ $purchaseItem->purchase?->supplier?->name ?: 'Not provided' }}</td></tr>
                                     <tr><th scope="row">Branch</th><td>{{ $purchaseItem->branch?->name ?: 'Not provided' }}</td></tr>
                                     <tr><th scope="row">Variation</th><td>{{ $variationLabel }}</td></tr>
-                                    <tr><th scope="row">Purchased Quantity</th><td>{{ number_format($purchaseItem->quantity) }}</td></tr>
+                                    <tr><th scope="row">Purchased Quantity</th><td>{{ number_format($stockSummary['quantity']) }}</td></tr>
                                     <tr>
                                         <th scope="row">Available Quantity</th>
                                         <td>
-                                            <span class="badge {{ $purchaseItem->remaining_quantity > 0 ? 'bg-success' : 'bg-danger' }}">
-                                                {{ number_format($purchaseItem->remaining_quantity) }}
+                                            <span class="badge {{ $stockSummary['remaining_quantity'] > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                {{ number_format($stockSummary['remaining_quantity']) }}
                                             </span>
                                         </td>
                                     </tr>
