@@ -24,7 +24,7 @@ class UpdatePaymentAccountRequest extends FormRequest
                 Rule::unique('payment_accounts', 'account_number')->ignore($this->route('payment_account')),
             ],
             'holder_name' => 'nullable|string|max:255',
-            'opening_balance' => 'required|numeric|decimal:0,2|min:0',
+            'current_balance' => 'required|numeric|decimal:0,2|min:0',
             'status' => 'required|in:active,inactive',
         ];
     }
