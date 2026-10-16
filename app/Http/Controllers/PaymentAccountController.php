@@ -6,6 +6,8 @@ use App\Http\Requests\StorePaymentAccountRequest;
 use App\Http\Requests\StorePaymentAccountDailyBalanceRequest;
 use App\Http\Requests\UpdatePaymentAccountRequest;
 use App\Models\PaymentAccount;
+use App\Models\Purchase;
+use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -44,6 +46,8 @@ class PaymentAccountController extends Controller
                 ]];
             }
         );
+        $salesReceived = Sale::sum('paid_amount');
+        $purchasesPaid = Purchase::sum('paid_amount');
         $accounts = PaymentAccount::withCount('transactions')
             ->orderBy('name')
             ->paginate(10);
@@ -61,7 +65,13 @@ class PaymentAccountController extends Controller
             $account->setAttribute('opening_balance_addition', $account->openingBalanceSuggestionForDate($today) / 100);
         });
 
-        return view('payment-accounts.index', compact('accounts', 'accountSummaries', 'accountTypeStats'));
+        return view('payment-accounts.index', compact(
+            'accounts',
+            'accountSummaries',
+            'accountTypeStats',
+            'salesReceived',
+            'purchasesPaid'
+        ));
     }
 
     public function create(): View

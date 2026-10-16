@@ -136,10 +136,43 @@
         @endforeach
     </div>
 
+    <h5 class="payment-account-section-title mb-2">Sales &amp; Purchase Payments <small class="text-muted">(actual payments, not profit)</small></h5>
+    <div class="payment-flow-stats-grid">
+        <div class="card payment-type-stats-card payment-flow-stats-card-sale mb-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>Sales Received</strong>
+                    <small>Customer payments</small>
+                </div>
+                <div class="payment-type-stats-metrics">
+                    <span>Total received <strong>Rs {{ number_format((float) $salesReceived, 2) }}</strong></span>
+                </div>
+            </div>
+        </div>
+        <div class="card payment-type-stats-card payment-flow-stats-card-purchase mb-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong>Purchase Paid</strong>
+                    <small>Supplier payments</small>
+                </div>
+                <div class="payment-type-stats-metrics">
+                    <span>Total paid <strong>Rs {{ number_format((float) $purchasesPaid, 2) }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         .payment-type-stats-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .payment-flow-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 1rem;
         }
@@ -209,6 +242,18 @@
             border-top: 2px solid #741722;
         }
 
+        .payment-flow-stats-card-sale {
+            color: #fff;
+            background-image: linear-gradient(120deg, #064326 0%, #0c8045 48%, #25a765 100%);
+            border-top: 2px solid #064628;
+        }
+
+        .payment-flow-stats-card-purchase {
+            color: #fff;
+            background-image: linear-gradient(120deg, #741722 0%, #b62435 48%, #e04b57 100%);
+            border-top: 2px solid #741722;
+        }
+
         .payment-account-summary-card:not(.payment-account-summary-card-bank):not(.payment-account-summary-card-easypaisa):not(.payment-account-summary-card-jazzcash) {
             color: #fff;
             background-image: linear-gradient(120deg, #352258 0%, #69449e 48%, #9470c8 100%);
@@ -217,6 +262,10 @@
 
         @media (max-width: 575.98px) {
             .payment-type-stats-grid {
+                gap: 8px;
+            }
+
+            .payment-flow-stats-grid {
                 gap: 8px;
             }
 
