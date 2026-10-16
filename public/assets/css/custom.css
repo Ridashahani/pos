@@ -88,7 +88,7 @@ svg.h-6 {
     background: linear-gradient(135deg, #f5f8fc 0%, #e8f7fa 100%);
 }
 
-.login-content>.container {
+.login-content > .container {
     max-width: 1180px;
 }
 
@@ -117,16 +117,52 @@ svg.h-6 {
     align-items: stretch;
 }
 
-.login-content .auth-card .auth-content>.col-lg-7 {
+.login-content .auth-card .auth-content > .col-lg-7 {
     padding: 46px 48px;
     background: #f4f9fc;
 }
 
 @media (min-width: 768px) {
-    .login-content .auth-card.register-card .auth-content>.col-lg-7 {
+    .login-content .auth-card.register-card .auth-content > .col-lg-7 {
         padding-top: 38px;
         padding-bottom: 38px;
     }
+}
+
+/* Minimized sidebar */
+body.sidebar-main .iq-sidebar-logo {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center !important;
+    align-items: center;
+    padding: 10px 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+body.sidebar-main .iq-sidebar-logo .pos-brand {
+    display: flex !important;
+    justify-content: center;
+    width: 100%;
+    margin: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+}
+body.sidebar-main .iq-sidebar-logo .pos-brand-img {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: 28px !important;
+    width: 28px !important;
+    max-width: 28px !important;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+body.sidebar-main .iq-sidebar-logo .pos-brand-text {
+    display: none !important;
+}
+body.sidebar-main .iq-sidebar-logo .iq-menu-bt-sidebar {
+    margin: 8px 0 0 0 !important;
 }
 
 .login-content .auth-card .content-right {
@@ -176,8 +212,8 @@ svg.h-6 {
     background: transparent;
 }
 
-.login-content .auth-card .floating-input:focus~label,
-.login-content .auth-card .floating-input:not(:placeholder-shown)~label {
+.login-content .auth-card .floating-input:focus ~ label,
+.login-content .auth-card .floating-input:not(:placeholder-shown) ~ label {
     top: 0;
     left: 12px;
     transform: translateY(-50%);
@@ -191,7 +227,7 @@ svg.h-6 {
     z-index: 1;
 }
 
-.login-content .auth-card .floating-label>label {
+.login-content .auth-card .floating-label > label {
     top: 50%;
     transform: translateY(-50%);
     padding: 0 4px;
@@ -212,7 +248,7 @@ svg.h-6 {
     height: 24px;
 }
 
-.login-content .auth-card .floating-label+.mb-4 {
+.login-content .auth-card .floating-label + .mb-4 {
     margin-top: -12px !important;
     margin-bottom: 14px !important;
 }
@@ -244,7 +280,7 @@ svg.h-6 {
         min-height: calc(100vh - 40px);
     }
 
-    .login-content .auth-card .auth-content>.col-lg-7 {
+    .login-content .auth-card .auth-content > .col-lg-7 {
         padding: 32px 24px;
     }
 
