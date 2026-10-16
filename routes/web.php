@@ -86,7 +86,7 @@ $registerCrudRoutes = function (string $uri, string $controller, string $permiss
         $methods = array_values(array_intersect($methods, $only ?: array_merge(...array_values($actions))));
         if ($methods) {
             Route::middleware("permission:{$action}.{$permission}")
-                ->group(fn () => Route::resource($uri, $controller)->only($methods));
+                ->group(fn() => Route::resource($uri, $controller)->only($methods));
         }
     }
 };
@@ -128,7 +128,7 @@ Route::middleware(['permission:access.pos'])->group(function () {
     Route::post('/pos/customer', [PosController::class, 'storeCustomer'])->name('pos.storeCustomer');
     Route::get('/pos/customers-ajax', [PosController::class, 'searchCustomers'])->name('pos.customers.search');
     Route::get('pos/products/search', [PosController::class, 'searchProducts'])
-    ->name('pos.products.search');
+        ->name('pos.products.search');
 
     Route::post('/pos/invoice/print', [PosController::class, 'printInvoice'])->name('pos.printInvoice');
     // Create Sale
@@ -146,6 +146,8 @@ Route::middleware('permission:access.sales')->group(function () {
     Route::get('/sale/due/{id}', [SaleController::class, 'saleDueAjax'])->name('sale.saleDueAjax');
     Route::get('/purchases/returns', [PurchaseReturnController::class, 'index'])->name('purchases.returns');
     Route::get('/purchases/returns/{purchaseReturn}', [PurchaseReturnController::class, 'show'])->name('purchases.returns.show');
+    Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
+    Route::post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
 });
 Route::middleware('permission:create.sales')->group(function () {
     Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
