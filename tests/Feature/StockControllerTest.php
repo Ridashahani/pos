@@ -10,6 +10,7 @@ use App\Models\StockIn;
 use App\Models\StockTransfer;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Variation;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
@@ -19,6 +20,59 @@ use Tests\TestCase;
 class StockControllerTest extends TestCase
 {
     use DatabaseTransactions;
+
+    public function test_stock_in_details_shows_product_variation_key_and_value_when_batch_details_are_missing(): void
+    {
+        $permission = Permission::firstOrCreate(
+            ['name' => 'access.stocks'],
+            ['group_name' => 'stocks']
+        );
+        $role = Role::firstOrCreate(['name' => 'stock-variation-test-role']);
+        $role->syncPermissions([$permission]);
+
+        $branch = Branch::create([
+            'name' => 'Stock Variation Branch',
+            'address' => '123 Test Street',
+        ]);
+        $user = User::factory()->create();
+        $user->assignRole($role);
+        $user->branches()->attach($branch->id);
+        $user->update(['active_branch_id' => $branch->id]);
+
+        $variationName = 'Stock Color ' . $user->id;
+        $variation = Variation::create([
+            'name' => $variationName,
+            'types' => ['Red', 'Blue'],
+        ]);
+        $category = Category::factory()->create();
+        $product = Product::create([
+            'name' => 'Variation Product',
+            'slug' => 'variation-product',
+            'code' => 'VARIATION-001',
+            'category_id' => $category->id,
+            'variation' => $variationName,
+            'variation_id' => $variation->id,
+            'variation_ids' => [$variation->id],
+            'variation_types' => ['Red'],
+            'stock' => 2,
+            'selling_price' => 100,
+        ]);
+        $stockIn = StockIn::create([
+            'product_id' => $product->id,
+            'variation_id' => $variation->id,
+            'variation_details' => [],
+            'branch_id' => $branch->id,
+            'batch_no' => 'BATCH-VARIATION-001',
+            'quantity' => 2,
+            'remaining_quantity' => 2,
+            'cost_price' => 60,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('stock.in.details', $stockIn))
+            ->assertOk()
+            ->assertSee($variationName . ': Red');
+    }
 
     public function test_stock_transfer_edit_route_loads_existing_batch_even_when_it_has_zero_remaining_quantity(): void
     {

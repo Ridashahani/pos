@@ -51,12 +51,36 @@ class StockController extends Controller
     // Variation ko "Size: L, Color: Red" bana do
     private function variationLabel(StockIn $stockIn): string
     {
-        $text = collect($stockIn->variation_details ?? [])
+        $details = collect($stockIn->variation_details ?? [])
             ->map(fn ($v) => trim(($v['name'] ?? '') . ': ' . ($v['value'] ?? ''), ': '))
             ->filter()
             ->implode(', ');
 
-        return $text ?: ($stockIn->variation?->name ?? '-');
+        if ($details !== '') {
+            return $details;
+        }
+
+        $product = $stockIn->product;
+        $variationIds = $product?->variation_ids ?: ($product?->variation_id ? [$product->variation_id] : []);
+        $variationName = $stockIn->variation?->name;
+        if (! $variationName && count($variationIds) === 1) {
+            $variationName = trim((string) ($product?->variation ?? '')) ?: null;
+        }
+        $variationValues = collect($product?->variation_types ?? [])
+            ->map(fn ($value) => trim((string) $value))
+            ->filter()
+            ->values();
+        if ($variationValues->isEmpty() && filled($product?->variation_type)) {
+            $variationValues = collect([trim((string) $product->variation_type)]);
+        }
+
+        $matchesProductKey = count($variationIds) === 1
+            && (! $stockIn->variation_id || (int) $variationIds[0] === (int) $stockIn->variation_id);
+        if ($variationName && $matchesProductKey && $variationValues->isNotEmpty()) {
+            return $variationName . ': ' . $variationValues->implode(', ');
+        }
+
+        return $variationName ?: '-';
     }
 
     private function outOfStockGroupKey(StockIn $stockIn): string
@@ -482,7 +506,7 @@ class StockController extends Controller
                 : $query->where('from_branch_id', $branchId);
         };
 
-        $query = StockTransfer::with(['product', 'fromBranch', 'toBranch', 'stockIn.variation']);
+        $query = StockTransfer::with(['product', 'fromBranch', 'toBranch', 'stockIn.variation', 'stockIn.product']);
         $applyBranchFilter($query);
 
         $transfers = $this->searchByProduct($query, $request)
