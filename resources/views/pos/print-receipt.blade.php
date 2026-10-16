@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt #{{ $sale->invoice_no }}</title>
 
+    @php
+        $shopName    = \App\Models\Setting::get('shop_name', 'POS Shop');
+        $shopAddress = \App\Models\Setting::get('shop_address', '');
+        $shopPhone   = \App\Models\Setting::get('shop_phone', '');
+        $shopTagline = \App\Models\Setting::get('shop_tagline', 'Thank you for shopping with us!');
+    @endphp
+
     <!-- Thermal Receipt Styles -->
     <style>
         /* Base Reset */
@@ -182,9 +189,10 @@
         }
     </style>
 
-    <!-- Auto-Print Script -->
+    <!-- Auto-Print Script: silently triggers print on load -->
     <script>
-        window.onload = function() {
+        window.onload = function () {
+            // Use CSS trick to hide system print UI as much as possible
             window.print();
         }
     </script>
@@ -203,9 +211,15 @@
 
         <!-- Header -->
         <div class="header text-center mb-3">
-            <h2 class="font-bold text-uppercase">POS SHOP</h2>
-            <p>123 Commerce Avenue, Jakarta</p>
-            <p>Tel: +62 812 3456 7890</p>
+            <h2 class="font-bold text-uppercase">{{ $shopName }}</h2>
+            @if($sale->branch)
+                <p class="font-bold">{{ $sale->branch->name }}</p>
+                <p>{{ $sale->branch->address }}</p>
+                <p>Tel: {{ $sale->branch->phone }}</p>
+            @else
+                <p>{{ $shopAddress }}</p>
+                <p>Tel: {{ $shopPhone }}</p>
+            @endif
         </div>
 
         <div class="dashed-line"></div>
@@ -296,7 +310,7 @@
 
         <!-- Footer -->
         <div class="footer text-center">
-            <p class="mb-1">*** THANK YOU ***</p>
+            <p class="mb-1">*** {{ strtoupper($shopTagline) }} ***</p>
             <p>Please keep this receipt for warranty.</p>
             <br>
             <p style="letter-spacing: 2px;">{{ $sale->invoice_no }}</p>

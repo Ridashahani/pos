@@ -1,5 +1,9 @@
 <div class="iq-sidebar sidebar-default ">
     <div class="iq-sidebar-logo d-flex align-items-center justify-content-between">
+        <a href="{{ route('dashboard') }}" class="pos-brand">
+            <img src="{{ asset('assets/images/logo.png') }}" alt="logo" class="pos-brand-img">
+            <span class="pos-brand-text">POSDash</span>
+        </a>
         <div class="iq-menu-bt-sidebar ml-0">
             <x-heroicon-o-bars-3 class="wrapper-menu w-8 h-8" />
         </div>
@@ -65,7 +69,7 @@
                                 </li>
                             @endcan
 
-                              @can('access.products')
+                            @can('access.products')
                                 <li class="{{ Request::is('variations*') ? 'active' : '' }}">
                                     <a href="{{ route('variations.index') }}">
                                         <x-heroicon-o-squares-2x2 class="w-4 h-4" /><span>Variations</span>
@@ -133,7 +137,7 @@
                                     </a>
                                 </li>
                             @endcan
-                           
+
                             @can('access.sales')
                                 <li class="{{ Request::is('purchases/returns') ? 'active' : '' }}">
                                     <a href="{{ route('purchases.returns') }}">

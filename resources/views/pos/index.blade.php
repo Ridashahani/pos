@@ -271,7 +271,8 @@
                     data: function(params) {
                         return {
                             term: params.term || '',
-                            page: params.page || 1
+                            page: params.page || 1,
+                            branch_id: $('#branch_id').val()
                         };
                     }
                     // the endpoint already returns { results: [...], pagination: { more } }

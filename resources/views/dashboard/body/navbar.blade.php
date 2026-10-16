@@ -5,10 +5,7 @@
                 <div class="iq-menu-bt-sidebar">
                     <x-heroicon-o-bars-3 class="wrapper-menu w-8 h-8" />
                 </div>
-                <a href="{{ route('dashboard') }}" class="header-logo">
-                    <img src="{{ asset('assets/images/logo.png') }}" class="img-fluid rounded-normal" alt="logo">
-                    <h5 class="logo-title ml-3">POSDash</h5>
-                </a>
+                <a href="{{ route('dashboard') }}" class="header-logo d-lg-none">
             </div>
             {{-- Search Bar --}}
             <!-- <div class="iq-search-bar device-search">
@@ -54,20 +51,23 @@
                                         class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
                                         style="border-radius:20px; font-weight:600; padding:2px 10px; height:30px; font-size:12px;"
                                         title="Click to switch active branch">
-                                        <svg class="mr-1" style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="mr-1" style="width:13px;height:13px;" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                         </svg>
                                         <span>{{ auth()->user()->activeBranch->name }}</span>
-                                        <span class="badge badge-primary text-white ml-2" style="font-size:9px;">Switch</span>
+                                        <span class="badge badge-primary text-white ml-2"
+                                            style="font-size:9px;">Switch</span>
                                     </a>
                                 @else
                                     {{-- Single branch: just show the name, no switch --}}
                                     <span class="d-inline-flex align-items-center px-2"
                                         style="border-radius:20px; font-weight:600; font-size:12px; color:#3b82f6; background:rgba(59,130,246,.08); height:30px;">
-                                        <svg class="mr-1" style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="mr-1" style="width:13px;height:13px;" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                         </svg>
                                         {{ auth()->user()->activeBranch->name }}
                                     </span>

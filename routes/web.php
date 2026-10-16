@@ -149,6 +149,10 @@ Route::middleware('permission:access.sales')->group(function () {
     Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
     Route::post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
 });
+Route::middleware('permission:create.sales')->group(function () {
+    Route::get('/purchases/{purchase}/return', [PurchaseReturnController::class, 'create'])->name('purchases.return.create');
+    Route::post('/purchases/{purchase}/return', [PurchaseReturnController::class, 'store'])->name('purchases.return.store');
+});
 $registerCrudRoutes('/purchases', PurchaseController::class, 'sales');
 Route::middleware('permission:edit.sales')->group(function () {
     Route::put('/sales/update/status', [SaleController::class, 'updateStatus'])->name('sale.updateStatus');

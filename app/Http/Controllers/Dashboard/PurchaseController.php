@@ -53,9 +53,10 @@ class PurchaseController extends Controller
         $user = auth()->user();
 
         return view('purchases.create', [
-            'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
+            'products' => Product::select(['id', 'name', 'cost_price', 'image', 'branch_id'])->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => $user->allowedBranches(),
+            'selectedBranchId' => $user->isAdmin() ? null : $user->active_branch_id,
         ]);
     }
 
@@ -103,7 +104,7 @@ class PurchaseController extends Controller
 
         return view('purchases.edit', [
             'purchase' => $purchase,
-            'products' => Product::select(['id', 'name', 'cost_price', 'image'])->orderBy('name')->get(),
+            'products' => Product::select(['id', 'name', 'cost_price', 'image', 'branch_id'])->orderBy('name')->get(),
             'suppliers' => Supplier::orderBy('name')->get(),
             'branches' => $user->allowedBranches(),
         ]);

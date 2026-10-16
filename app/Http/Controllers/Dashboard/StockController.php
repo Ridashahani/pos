@@ -80,8 +80,24 @@ class StockController extends Controller
 
     private function stockInGroupKey(StockIn $stockIn): string
     {
+        $details = collect($stockIn->variation_details ?? [])
+            ->map(fn ($variation) => [
+                trim((string) ($variation['name'] ?? '')),
+                trim((string) ($variation['value'] ?? '')),
+            ])
+            ->filter(fn ($variation) => $variation[0] !== '' || $variation[1] !== '')
+            ->sortBy(fn ($variation) => mb_strtolower($variation[0]) . "\0" . mb_strtolower($variation[1]))
+            ->values()
+            ->all();
+
+        if ($details === [] && $stockIn->variation_id === null) {
+            $details = [$stockIn->variation?->name ?? ''];
+        }
+
         return serialize([
-            $this->outOfStockGroupKey($stockIn),
+            $this->transferProductCode($stockIn->product),
+            $stockIn->variation_id,
+            $details,
             (int) $stockIn->branch_id,
         ]);
     }
@@ -93,8 +109,22 @@ class StockController extends Controller
     // Woh batches jin mein maal bacha hai
     public function in(Request $request)
     {
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        $branchId = $user->active_branch_id;
+        $applyBranchFilter = function ($query) use ($isAdmin, $branchId) {
+            if ($isAdmin) {
+                return $query;
+            }
+
+            return $branchId === null
+                ? $query->whereRaw('1 = 0')
+                : $query->where('branch_id', $branchId);
+        };
+
         $query = StockIn::with(['product.category', 'purchase.supplier', 'branch', 'variation'])
             ->where('remaining_quantity', '>', 0);
+        $applyBranchFilter($query);
 
         $groups = $this->searchByProduct($query, $request)
             ->latest('updated_at')
@@ -150,8 +180,9 @@ class StockController extends Controller
             ->all();
 
         return $this->page('Stock-In', 'stock-in', $stockIns, $rows, [
-            'total_units' => StockIn::where('remaining_quantity', '>', 0)->sum('remaining_quantity'),
-            'this_month'  => StockIn::where('remaining_quantity', '>', 0)
+            'total_units' => $applyBranchFilter(StockIn::where('remaining_quantity', '>', 0))
+                ->sum('remaining_quantity'),
+            'this_month'  => $applyBranchFilter(StockIn::where('remaining_quantity', '>', 0))
                 ->whereYear('created_at', now()->year)
                 ->whereMonth('created_at', now()->month)
                 ->count(),
@@ -211,27 +242,48 @@ class StockController extends Controller
 
     public function soldItems(Request $request)
     {
-        $query = SoldItem::with(['product', 'sale']);
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        $branchId = $user->active_branch_id;
+        $query = SoldItem::with(['product', 'sale', 'stockIn.branch']);
+
+        if (! $isAdmin) {
+            if ($branchId === null) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereHas('stockIn', fn ($stockIn) => $stockIn->where('branch_id', $branchId));
+            }
+        }
 
         $soldItems = $this->searchByProduct($query, $request)
             ->latest()->paginate(10)->withQueryString();
 
-        $rows = $soldItems->getCollection()->map(fn (SoldItem $i) => [
-            'date'              => $i->created_at->format('d M Y'),
-            'sold_item_id'      => $i->id,
-            'sale_id'           => $i->sale_id,
-            'reference'         => $i->sale->invoice_no,
-            'product'           => $i->product->name,
-            'quantity'          => $i->quantity,
-            'unit_buying_price' => $i->cost_price,
-            'unit_price'        => $i->sale_price,
-            'net_sold_price'    => ($i->sale_price * $i->quantity) - $i->discount,
-            'currency'          => $i->product->currency ?: 'PKR',
-            'destination'       => 'POS Counter',
-            'status'            => $i->status,
-        ])->all();
+        $rows = $soldItems->getCollection()->map(function (SoldItem $i) use ($isAdmin) {
+            $row = [
+                'date'              => $i->created_at->format('d M Y'),
+                'sold_item_id'      => $i->id,
+                'sale_id'           => $i->sale_id,
+                'reference'         => $i->sale->invoice_no,
+                'product'           => $i->product->name,
+                'quantity'          => $i->quantity,
+                'unit_buying_price' => $i->cost_price,
+                'unit_price'        => $i->sale_price,
+                'net_sold_price'    => ($i->sale_price * $i->quantity) - $i->discount,
+                'currency'          => $i->product->currency ?: 'PKR',
+                'destination'       => 'POS Counter',
+                'status'            => $i->status,
+            ];
 
-        return $this->page('Sold Items', 'sold-items', $soldItems, $rows);
+            if ($isAdmin) {
+                $row['branch'] = $i->stockIn?->branch?->name ?? '-';
+            }
+
+            return $row;
+        })->all();
+
+        return $this->page('Sold Items', 'sold-items', $soldItems, $rows, [
+            'show_branch' => $isAdmin,
+        ]);
     }
 
     // NOTE: asal code ki tarah yeh stock wapis add nahi karta
@@ -256,14 +308,34 @@ class StockController extends Controller
 
     public function outOfStock(Request $request)
     {
-        $query = StockIn::with(['product', 'purchase'])
-            ->where('remaining_quantity', '<=', 0)
-            ->whereHas('product', fn ($product) => $product->where('stock', '<=', 0));
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        $branchId = $user->active_branch_id;
+        $query = StockIn::with(['product', 'purchase', 'branch']);
 
-        $outOfStockRecords = $this->searchByProduct($query, $request)
-            ->with('branch')
+        if (! $isAdmin) {
+            if ($branchId === null) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('branch_id', $branchId);
+            }
+        }
+
+        $candidateProductIds = $this->searchByProduct(
+            (clone $query)->where('remaining_quantity', '<=', 0),
+            $request
+        )
+            ->distinct()
+            ->pluck('product_id');
+
+        $outOfStockRecords = (clone $query)
+            ->whereIn('product_id', $candidateProductIds)
             ->latest()
-            ->get();
+            ->get()
+            ->groupBy(fn (StockIn $stockIn) => $this->stockInGroupKey($stockIn))
+            ->filter(fn ($records) => $records->sum('remaining_quantity') <= 0)
+            ->flatten(1)
+            ->values();
 
         $groups = $outOfStockRecords
             ->groupBy(fn (StockIn $stockIn) => $this->outOfStockGroupKey($stockIn))
@@ -397,7 +469,21 @@ class StockController extends Controller
 
     public function transfer(Request $request)
     {
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        $branchId = $user->active_branch_id;
+        $applyBranchFilter = function ($query) use ($isAdmin, $branchId) {
+            if ($isAdmin) {
+                return $query;
+            }
+
+            return $branchId === null
+                ? $query->whereRaw('1 = 0')
+                : $query->where('from_branch_id', $branchId);
+        };
+
         $query = StockTransfer::with(['product', 'fromBranch', 'toBranch', 'stockIn.variation']);
+        $applyBranchFilter($query);
 
         $transfers = $this->searchByProduct($query, $request)
             ->latest()->paginate(10)->withQueryString();
@@ -418,8 +504,10 @@ class StockController extends Controller
 
         return $this->page('Stock-Transfer', 'stock-transfer', $transfers, $rows, [
             'branches'    => Branch::where('status', 'Active')->orderBy('name')->get()->values(),
-            'total_units' => StockTransfer::sum('quantity'),
-            'pending'     => StockTransfer::whereIn('status', ['Pending', 'In Transit'])->count(),
+            'total_units' => $applyBranchFilter(StockTransfer::query())->sum('quantity'),
+            'pending'     => $applyBranchFilter(
+                StockTransfer::whereIn('status', ['Pending', 'In Transit'])
+            )->count(),
         ]);
     }
 
@@ -436,9 +524,19 @@ class StockController extends Controller
 
     private function transferForm(?StockTransfer $transfer = null)
     {
+        $user = auth()->user();
+        $isAdmin = $user->isAdmin();
+        $branchId = $user->active_branch_id;
         $stockIns = StockIn::with(['product', 'branch', 'variation'])
-            ->where(function ($q) use ($transfer) {
+            ->where(function ($q) use ($transfer, $branchId, $isAdmin) {
                 $q->where('remaining_quantity', '>', 0);
+                if (! $isAdmin) {
+                    if ($branchId === null) {
+                        $q->whereRaw('1 = 0');
+                    } else {
+                        $q->where('branch_id', $branchId);
+                    }
+                }
                 // edit mein purani batch bhi dikhao chahe uska maal 0 ho
                 if ($transfer?->stock_in_id !== null) {
                     $q->orWhere('id', $transfer->stock_in_id);
@@ -512,113 +610,129 @@ class StockController extends Controller
         ]);
     }
 
+    private function transferProductCode(Product $product): string
+    {
+        $code = trim((string) $product->code);
+        if ($code === '') {
+            $code = 'PRODUCT-' . Str::upper(substr(hash('sha256', mb_strtolower(trim($product->name))), 0, 20));
+        }
+
+        return preg_replace('/__BRANCH_\d+$/i', '', $code) ?: $code;
+    }
+
+    private function transferBranchProductCode(Product $product, int $branchId): string
+    {
+        $baseCode = $this->transferProductCode($product);
+        $suffix = '__BRANCH_' . $branchId;
+
+        if (strlen($baseCode) + strlen($suffix) > 255) {
+            $baseCode = substr($baseCode, 0, 180) . '_' . substr(hash('sha256', $baseCode), 0, 20);
+        }
+
+        return $baseCode . $suffix;
+    }
+
+    private function transferBranchProductSlug(Product $product, int $branchId): string
+    {
+        $baseSlug = preg_replace('/-branch-\d+$/i', '', (string) $product->slug);
+
+        return substr($baseSlug, 0, 220) . '-branch-' . $branchId;
+    }
+
+    private function assertTransferSourceBranch(int $sourceBranchId): void
+    {
+        $user = auth()->user();
+        if (! $user->isAdmin() && (int) $user->active_branch_id !== $sourceBranchId) {
+            throw ValidationException::withMessages([
+                'stock_in_id' => 'You can only transfer stock from your active branch.',
+            ]);
+        }
+    }
+
     // Transfer lagao: checks -> maal kam -> transfer save (naya ya purana)
     // Yeh function sirf DB::transaction ke andar bulana hai
     private function applyTransfer(array $data, ?StockTransfer $transfer = null): void
     {
-        // Pehle product, phir batch lock (hamesha yehi tarteeb)
+        // Lock the branch product before its source stock-in batch.
         $productId = StockIn::whereKey($data['stock_in_id'])->value('product_id');
         $product   = Product::whereKey($productId)->lockForUpdate()->firstOrFail();
         $stockIn   = StockIn::whereKey($data['stock_in_id'])->lockForUpdate()->firstOrFail();
+        $sourceBranchId = (int) $stockIn->branch_id;
 
-        if ((int) $stockIn->branch_id === (int) $data['to_branch_id']) {
+        $this->assertTransferSourceBranch($sourceBranchId);
+
+        if ($product->branch_id !== null && (int) $product->branch_id !== $sourceBranchId) {
+            throw ValidationException::withMessages([
+                'stock_in_id' => 'The selected stock-in batch does not belong to its product branch.',
+            ]);
+        }
+
+        if ($sourceBranchId === (int) $data['to_branch_id']) {
             throw ValidationException::withMessages([
                 'to_branch_id' => 'The destination branch must be different from the stock-in branch.',
             ]);
         }
 
-        if ($data['quantity'] > $stockIn->remaining_quantity || $data['quantity'] > $product->stock) {
-            $available = min($stockIn->remaining_quantity, $product->stock);
+        $quantity = (int) $data['quantity'];
+        if ($quantity <= 0 || $quantity > (int) $stockIn->remaining_quantity || $quantity > (int) $product->stock) {
+            $available = min((int) $stockIn->remaining_quantity, (int) $product->stock);
             throw ValidationException::withMessages([
                 'quantity' => "Stock is not available in this branch in the requested quantity. Available: {$available}.",
             ]);
         }
 
-        $stockIn->decrement('remaining_quantity', $data['quantity']);
-
-        $variationKey = $this->outOfStockGroupKey($stockIn);
-        $matchingTransfer = StockTransfer::with('stockIn.variation')
-            ->where('product_id', $stockIn->product_id)
-            ->where('from_branch_id', $stockIn->branch_id)
-            ->where('to_branch_id', $data['to_branch_id'])
-            ->when($transfer, fn ($query) => $query->where('id', '!=', $transfer->id))
-            ->orderBy('id')
+        $baseCode = $this->transferProductCode($product);
+        $destinationCode = $this->transferBranchProductCode($product, (int) $data['to_branch_id']);
+        $destinationProduct = Product::where('branch_id', $data['to_branch_id'])
+            ->whereIn('code', [$baseCode, $destinationCode])
             ->lockForUpdate()
-            ->get()
-            ->first(fn (StockTransfer $candidate) => $candidate->stockIn
-                && $this->outOfStockGroupKey($candidate->stockIn) === $variationKey);
+            ->first();
 
-        $legacyTransferQuantity = 0;
-        if ($matchingTransfer) {
-            if ($transfer && $transfer->id !== $matchingTransfer->id) {
-                $transfer->delete();
-            }
-            $transfer = $matchingTransfer;
-            if (! $transfer->destination_stock_in_id) {
-                $legacyTransferQuantity = (int) $transfer->quantity;
-            }
-            $transfer->quantity += $data['quantity'];
-            $transfer->status = 'Completed';
-        } elseif (! $transfer) {
-            $transfer = new StockTransfer([
-                'reference' => 'TRF-' . Str::upper(Str::random(6)),
-                'product_id' => $stockIn->product_id,
-                'stock_in_id' => $stockIn->id,
-                'quantity' => $data['quantity'],
-                'from_branch_id' => $stockIn->branch_id,
-                'to_branch_id' => $data['to_branch_id'],
-                'status' => 'Completed',
-            ]);
-        } else {
-            $transfer->fill([
-                'product_id' => $stockIn->product_id,
-                'stock_in_id' => $stockIn->id,
-                'quantity' => $data['quantity'],
-                'from_branch_id' => $stockIn->branch_id,
-                'to_branch_id' => $data['to_branch_id'],
-                'status' => 'Completed',
-            ]);
+        if (! $destinationProduct && preg_match('/__BRANCH_\d+$/i', (string) $product->code)) {
+            $destinationProduct = Product::where('branch_id', $data['to_branch_id'])
+                ->where('name', $product->name)
+                ->where('category_id', $product->category_id)
+                ->lockForUpdate()
+                ->first();
         }
+
+        if (! $destinationProduct) {
+            $destinationProduct = $product->replicate();
+            $destinationProduct->branch_id = $data['to_branch_id'];
+            $destinationProduct->stock = 0;
+            $destinationProduct->code = $destinationCode;
+            $destinationProduct->slug = $this->transferBranchProductSlug($product, (int) $data['to_branch_id']);
+            $destinationProduct->save();
+        }
+
+        $transfer = $transfer ?: new StockTransfer();
+        $transfer->fill([
+            'reference' => $transfer->reference ?: 'TRF-' . Str::upper(Str::random(6)),
+            'product_id' => $product->id,
+            'stock_in_id' => $stockIn->id,
+            'destination_stock_in_id' => null,
+            'quantity' => $quantity,
+            'from_branch_id' => $sourceBranchId,
+            'to_branch_id' => $data['to_branch_id'],
+            'status' => 'Completed',
+        ]);
         $transfer->save();
 
-        $destinationStockIn = StockIn::with('variation')
-            ->where('product_id', $stockIn->product_id)
-            ->where('branch_id', $data['to_branch_id'])
-            ->orderBy('id')
-            ->lockForUpdate()
-            ->get()
-            ->first(fn (StockIn $candidate) => $this->outOfStockGroupKey($candidate) === $variationKey);
+        $stockIn->decrement('remaining_quantity', $quantity);
+        $product->decrement('stock', $quantity);
+        $destinationProduct->increment('stock', $quantity);
 
-        $deleteDestinationStockIn = false;
-        if ($destinationStockIn) {
-            $quantityToAdd = $data['quantity'] + $legacyTransferQuantity;
-            $destinationStockIn->increment('quantity', $quantityToAdd);
-            $destinationStockIn->increment('remaining_quantity', $quantityToAdd);
-        } else {
-            $destinationStockIn = StockIn::create([
-                'purchase_id'        => $stockIn->purchase_id,
-                'product_id'         => $stockIn->product_id,
-                'variation_id'       => $stockIn->variation_id,
-                'variation_details'  => $stockIn->variation_details,
-                'branch_id'          => $data['to_branch_id'],
-                'batch_no'           => $transfer->reference,
-                'quantity'           => $data['quantity'] + $legacyTransferQuantity,
-                'remaining_quantity' => $data['quantity'] + $legacyTransferQuantity,
-                'cost_price'         => $stockIn->cost_price,
-            ]);
-        }
-
-        if ($legacyTransferQuantity > 0 && $transfer->stock_in_id) {
-            $product->increment('stock', $legacyTransferQuantity);
-            DB::table('stock_transfer_allocations')->insert([
-                'stock_transfer_id' => $transfer->id,
-                'source_stock_in_id' => $transfer->stock_in_id,
-                'destination_stock_in_id' => $destinationStockIn->id,
-                'quantity' => $legacyTransferQuantity,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+        $destinationStockIn = StockIn::create([
+            'purchase_id'        => $stockIn->purchase_id,
+            'product_id'         => $destinationProduct->id,
+            'variation_id'       => $stockIn->variation_id,
+            'variation_details'  => $stockIn->variation_details,
+            'branch_id'          => $data['to_branch_id'],
+            'batch_no'           => $transfer->reference,
+            'quantity'           => $quantity,
+            'remaining_quantity' => $quantity,
+            'cost_price'         => $stockIn->cost_price,
+        ]);
 
         $transfer->destination_stock_in_id = $destinationStockIn->id;
         $transfer->save();
@@ -627,7 +741,7 @@ class StockController extends Controller
             'stock_transfer_id' => $transfer->id,
             'source_stock_in_id' => $stockIn->id,
             'destination_stock_in_id' => $destinationStockIn->id,
-            'quantity' => $data['quantity'],
+            'quantity' => $quantity,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -636,7 +750,13 @@ class StockController extends Controller
     // Transfer ka maal wapis batch aur product mein daalo
     private function restoreTransferInventory(StockTransfer $transfer): void
     {
-        $product = Product::whereKey($transfer->product_id)->lockForUpdate()->firstOrFail();
+        $sourceProduct = Product::whereKey($transfer->product_id)->lockForUpdate()->firstOrFail();
+        $sourceStockIn = $transfer->stock_in_id
+            ? StockIn::whereKey($transfer->stock_in_id)->first()
+            : null;
+        $this->assertTransferSourceBranch($sourceStockIn
+            ? (int) $sourceStockIn->branch_id
+            : (int) $transfer->from_branch_id);
 
         $allocations = DB::table('stock_transfer_allocations')
             ->where('stock_transfer_id', $transfer->id)
@@ -672,21 +792,28 @@ class StockController extends Controller
             $transfer->save();
             $destinationStockIn->decrement('quantity', $transfer->quantity);
             $destinationStockIn->decrement('remaining_quantity', $transfer->quantity);
-            $deleteDestinationStockIn = (int) $destinationStockIn->fresh()->quantity === 0;
+
+            $destinationProduct = Product::whereKey($destinationStockIn->product_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($destinationProduct->id !== $sourceProduct->id) {
+                if ((int) $destinationProduct->stock < (int) $transfer->quantity) {
+                    throw ValidationException::withMessages([
+                        'transfer' => 'This transfer cannot be changed or deleted because the destination product stock has already been used.',
+                    ]);
+                }
+                $destinationProduct->decrement('stock', $transfer->quantity);
+                $sourceProduct->increment('stock', $transfer->quantity);
+            }
         } elseif ($transfer->status !== 'Completed') {
-            // Older transfers reduced total product stock and have no destination batch.
-            $product->increment('stock', $transfer->quantity);
+            // Older pending transfers did not create a destination product or batch.
+            $sourceProduct->increment('stock', $transfer->quantity);
         }
 
         DB::table('stock_transfer_allocations')
             ->where('stock_transfer_id', $transfer->id)
             ->delete();
-
-        if ($deleteDestinationStockIn && ! DB::table('stock_transfer_allocations')
-            ->where('destination_stock_in_id', $destinationStockIn->id)
-            ->exists()) {
-            $destinationStockIn->delete();
-        }
 
         $transfer->destination_stock_in_id = null;
         $transfer->quantity = 0;
