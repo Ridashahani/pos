@@ -58,38 +58,24 @@
 
             <!-- Section: Filters -->
             <div class="col-lg-12">
-                <form action="{{ route('categories.index') }}" method="get">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between">
-                        <!-- Row Per Page Checkbox -->
-                        <div class="form-group mb-0 mr-2 mt-n3 row-selector-container">
-                            <div class="d-flex align-items-center">
-                                <label for="row" class="mb-0 mr-2" style="min-width: 50px;">Row:</label>
-                                <select class="form-control" name="row">
-                                    <option value="10" @if (request('row') == '10') selected="selected" @endif>10</option>
-                                    <option value="25" @if (request('row') == '25') selected="selected" @endif>25</option>
-                                    <option value="50" @if (request('row') == '50') selected="selected" @endif>50</option>
-                                    <option value="100" @if (request('row') == '100') selected="selected" @endif>100</option>
-                                </select>
-                            </div>
+                <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                    <form action="{{ route('categories.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                        <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                            <input type="search" name="search" class="form-control" placeholder="Search by category name..." value="{{ request('search') }}">
                         </div>
-
-                        <!-- Search Box -->
-                        <div class="form-group row">
-                            <label class="control-label col-sm-3 align-self-center" for="search">Search:</label>
-                            <div class="col-sm-8">
-                                <div class="input-group">
-                                    <input type="text" id="search" class="form-control" name="search"
-                                        placeholder="Search category" value="{{ request('search') }}">
-                                    <div class="input-group-append">
-                                        <button type="submit" class="input-group-text bg-primary">
-                                            <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                        </button>
+                        @if (request('search'))
+                        <a href="{{ route('categories.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                            <x-heroicon-o-x-mark class="w-4 h-4" />
+                        </a>
+                        @endif
+                    </form>
+                    @if (isset($categories) && method_exists($categories, 'total'))
+                    <span class="badge badge-light border px-3 py-2">{{ $categories->total() }} records</span>
+                    @endif
+                </div>
             </div>
 
             <!-- Section: Table -->

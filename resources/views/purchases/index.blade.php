@@ -125,46 +125,24 @@
                 <div @class(['card'])>
                     <div @class(['card-body'])>
 
-                        {{-- Search --}}
-                        <form action="{{ route('purchases.index') }}" method="GET"
-                            class="d-flex flex-wrap align-items-center gap-3 mb-4">
-
-                            <div class="d-flex align-items-center gap-2  ml-2">
-
-                                <select name="search_by" class="form-control" style="width: 170px;">
-
-                                    <option value="purchase_no" @selected(request('search_by', 'purchase_no') == 'purchase_no')>
-                                        Purchase No
-                                    </option>
-
-                                    <option value="product" @selected(request('search_by') == 'product')>
-                                        Product Name
-                                    </option>
-
-                                    <option value="supplier" @selected(request('search_by') == 'supplier')>
-                                        Supplier
-                                    </option>
-
-                                    <option value="branch" @selected(request('search_by') == 'branch')>
-                                        Branch
-                                    </option>
-                                </select>
-
-                                <input type="text" name="search" value="{{ request('search') }}"
-                                    class="form-control  ml-2 d-flex" placeholder="Search for..." style="width: 350px; ">
-                            </div>
-
-                            <button type="submit" class="btn btn-outline-primary d-flex align-items-center ml-2">
-                                <x-heroicon-o-magnifying-glass class="w-4 h-4 mr-1" />
-                                Search
-                            </button>
-
-                            <a href="{{ route('purchases.index') }}"
-                                class="btn btn-outline-secondary d-flex align-items-center  ml-2">
-                                <x-heroicon-o-arrow-path class="w-4 h-4 mr-1" />
-                                Reset
-                            </a>
-                        </form>
+                        <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                            <form action="{{ route('purchases.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                                <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                                    <input type="search" name="search" class="form-control" placeholder="Search by purchase no, product, supplier, branch..." value="{{ request('search') }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                                    <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                                </button>
+                                @if (request('search'))
+                                <a href="{{ route('purchases.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                                    <x-heroicon-o-x-mark class="w-4 h-4" />
+                                </a>
+                                @endif
+                            </form>
+                            @if (isset($purchases) && method_exists($purchases, 'total'))
+                            <span class="badge badge-light border px-3 py-2">{{ $purchases->total() }} records</span>
+                            @endif
+                        </div>
 
 
                         {{-- Table --}}

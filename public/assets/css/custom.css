@@ -130,6 +130,84 @@ svg.h-6 {
 }
 
 /* Minimized sidebar */
+.iq-sidebar-logo .pos-brand,
+.iq-top-navbar .navbar-collapsed-logo {
+    align-items: center;
+    text-decoration: none;
+}
+
+.iq-sidebar-logo .pos-brand-img,
+.iq-top-navbar .navbar-collapsed-logo .pos-brand-img {
+    display: block;
+    width: auto;
+    height: 25px;
+    object-fit: contain;
+}
+
+.iq-sidebar-logo .pos-brand-text,
+.iq-top-navbar .navbar-collapsed-logo .pos-brand-text {
+    margin-left: 10px;
+    color: #22b8d6;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+/* ===== Top navbar (works in both normal & minimized sidebar) ===== */
+.iq-top-navbar .iq-navbar-custom {
+    display: flex;
+    align-items: center;
+    min-height: 73px;
+    padding-right: 20px;
+}
+
+.iq-top-navbar .iq-navbar-custom > nav {
+    width: 100%;
+    min-height: 73px;
+    align-items: center;
+}
+
+.iq-top-navbar .navbar-list li.caption-content {
+    display: flex;
+    align-items: center;
+    height: 73px;
+}
+
+.iq-top-navbar .navbar-list li.caption-content > a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 8px;
+    line-height: normal;
+}
+
+.iq-top-navbar .navbar-list li.caption-content > a img {
+    width: 44px;
+    height: 49px;
+    object-fit: cover;
+}
+
+/* ===== Profile dropdown buttons ===== */
+.iq-top-navbar .caption-content .iq-sub-dropdown form {
+    margin: 0;
+    display: flex;
+}
+
+.iq-top-navbar .caption-content .iq-sub-dropdown .p-3 > .d-flex .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
 body.sidebar-main .iq-sidebar-logo {
     display: flex !important;
     flex-direction: column;
@@ -140,7 +218,7 @@ body.sidebar-main .iq-sidebar-logo {
     overflow: visible !important;
 }
 body.sidebar-main .iq-sidebar-logo .pos-brand {
-    display: flex !important;
+    display: none !important;
     justify-content: center;
     width: 100%;
     margin: 0 !important;
@@ -163,6 +241,71 @@ body.sidebar-main .iq-sidebar-logo .pos-brand-text {
 }
 body.sidebar-main .iq-sidebar-logo .iq-menu-bt-sidebar {
     margin: 8px 0 0 0 !important;
+}
+.iq-top-navbar .navbar-collapsed-logo {
+    display: none;
+    margin-left: 12px;
+}
+
+body.sidebar-main .iq-top-navbar .navbar-collapsed-logo {
+    display: inline-flex !important;
+    align-items: center;
+}
+
+body.sidebar-main .iq-top-navbar .iq-navbar-custom {
+    display: flex;
+    align-items: center;
+    min-height: 73px;
+}
+
+body.sidebar-main .iq-top-navbar .iq-navbar-custom > nav {
+    width: 100%;
+    min-height: 73px;
+    align-items: center;
+}
+
+body.sidebar-main .iq-top-navbar .navbar-list li.caption-content {
+    display: flex;
+    align-items: center;
+    height: 73px;
+}
+
+body.sidebar-main .iq-top-navbar .navbar-list li.caption-content > a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    line-height: normal;
+}
+
+body.sidebar-main .iq-top-navbar .caption-content .iq-sub-dropdown form {
+    margin: 0;
+}
+
+body.sidebar-main
+    .iq-top-navbar
+    .caption-content
+    .iq-sub-dropdown
+    .p-3
+    > .d-flex
+    .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+    line-height: 1.5;
+}
+
+body.sidebar-main .iq-top-navbar .navbar-collapsed-logo .pos-brand-text {
+    display: inline !important;
+}
+
+@media (min-width: 992px) {
+    .iq-top-navbar .navbar-toggler {
+        display: none !important;
+    }
 }
 
 .login-content .auth-card .content-right {
@@ -291,4 +434,8 @@ body.sidebar-main .iq-sidebar-logo .iq-menu-bt-sidebar {
     .login-content .auth-card h2 {
         font-size: 28px;
     }
+}
+.module-toolbar .form-control,
+.module-toolbar .btn {
+    height: 42px;
 }

@@ -2,10 +2,10 @@
     <div class="iq-navbar-custom">
         <nav class="navbar navbar-expand-lg navbar-light p-0">
             <div class="iq-navbar-logo d-flex align-items-center justify-content-between">
-                <div class="iq-menu-bt-sidebar">
-                    <x-heroicon-o-bars-3 class="wrapper-menu w-8 h-8" />
-                </div>
-                <a href="{{ route('dashboard') }}" class="header-logo d-lg-none">
+                <a href="{{ route('dashboard') }}" class="pos-brand navbar-collapsed-logo">
+                    <img src="{{ asset('assets/images/logo.png') }}" alt="logo" class="pos-brand-img">
+                    <span class="pos-brand-text">POSDash</span>
+                </a>
             </div>
             {{-- Search Bar --}}
             <!-- <div class="iq-search-bar device-search">
@@ -99,10 +99,12 @@
                                             <p class="mb-0">Since
                                                 {{ date('d M, Y', strtotime(auth()->user()->created_at)) }}</p>
                                             <div class="d-flex align-items-center justify-content-center mt-3">
-                                                <a href="{{ route('profile') }}" class="btn border mr-2">Profile</a>
-                                                <form action="{{ route('logout') }}" method="POST">
+                                                <a href="{{ route('profile') }}"
+                                                    class="btn border mr-2 mb-0">Profile</a>
+                                                <form action="{{ route('logout') }}" method="POST"
+                                                    class="m-0 d-flex">
                                                     @csrf
-                                                    <button type="submit" class="btn border">Sign Out</button>
+                                                    <button type="submit" class="btn border mb-0">Sign Out</button>
                                                 </form>
                                             </div>
                                         </div>

@@ -23,17 +23,24 @@
             </div>
         </div>
         <div class="col-lg-12">
-            <form action="{{ route('subcategories.index') }}" method="get" class="d-flex justify-content-between mb-3">
-                <select class="form-control" name="row" style="max-width: 100px;">
-                    @foreach ([10, 25, 50, 100] as $pageSize)
-                        <option value="{{ $pageSize }}" @selected(request('row', 10) == $pageSize)>{{ $pageSize }}</option>
-                    @endforeach
-                </select>
-                <div class="input-group ml-3" style="max-width: 360px;">
-                    <input type="text" class="form-control" name="search" placeholder="Search subcategory" value="{{ request('search') }}">
-                    <div class="input-group-append"><button type="submit" class="input-group-text bg-primary"><x-heroicon-o-magnifying-glass class="w-5 h-5" /></button></div>
-                </div>
-            </form>
+            <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                <form action="{{ route('subcategories.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                    <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                        <input type="search" name="search" class="form-control" placeholder="Search by subcategory name..." value="{{ request('search') }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                        <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                    </button>
+                    @if (request('search'))
+                    <a href="{{ route('subcategories.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                        <x-heroicon-o-x-mark class="w-4 h-4" />
+                    </a>
+                    @endif
+                </form>
+                @if (isset($subcategories) && method_exists($subcategories, 'total'))
+                <span class="badge badge-light border px-3 py-2">{{ $subcategories->total() }} records</span>
+                @endif
+            </div>
             <div class="table-responsive rounded mb-3">
                 <table class="table mb-0">
                     <thead class="bg-white text-uppercase"><tr><th>No.</th><th><x-sort-link name="name" label="Name" /></th><th>Category</th><th><x-sort-link name="slug" label="Slug" /></th><th>Description</th><th>Action</th></tr></thead>

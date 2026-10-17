@@ -27,30 +27,24 @@
         </div>
 
         <div class="col-lg-12">
-            <form action="{{ route('users.index') }}" method="get">
-                <div class="d-flex flex-wrap align-items-center justify-content-between">
-
-                    <div class="form-group row">
-                        <div class="col-sm-12">
-                            <div class="input-group">
-                                <input type="text" id="search" class="form-control" name="search"
-                                    placeholder="Search user" value="{{ request('search') }}">
-                                <div class="input-group-append ml-2">
-                                    @if (request()->filled('search'))
-                                    <a href="{{ route('users.index') }}" class="input-group-text bg-secondary text-white mr-2 ml-2"
-                                        aria-label="Clear search" title="Clear">
-                                        <x-heroicon-o-x-mark class="w-5 h-5" />
-                                    </a>
-                                    @endif
-                                    <button type="submit" class="input-group-text bg-primary">
-                                        <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+            <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                <form action="{{ route('users.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                    <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                        <input type="search" name="search" class="form-control" placeholder="Search by name, username, email..." value="{{ request('search') }}">
                     </div>
-                </div>
-            </form>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                        <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                    </button>
+                    @if (request('search'))
+                    <a href="{{ route('users.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                        <x-heroicon-o-x-mark class="w-4 h-4" />
+                    </a>
+                    @endif
+                </form>
+                @if (isset($users) && method_exists($users, 'total'))
+                <span class="badge badge-light border px-3 py-2">{{ $users->total() }} records</span>
+                @endif
+            </div>
         </div>
 
         <div class="col-lg-12">

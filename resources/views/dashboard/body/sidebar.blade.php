@@ -17,7 +17,6 @@
                         <span class="ml-4">Dashboards</span>
                     </a>
                 </li>
-
                 @can('access.pos')
                     <li class="{{ Request::is('pos*') ? 'active' : '' }}">
                         <a href="{{ route('pos.index') }}" class="svg-icon">
