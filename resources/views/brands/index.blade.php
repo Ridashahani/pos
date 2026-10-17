@@ -18,20 +18,30 @@
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
                     <h4 class="mb-0">Brands List</h4>
-                    <div class="d-flex flex-nowrap align-items-center" style="width: 410px; max-width: 100%;">
-                        <form id="brand-search-form" action="{{ route('brands.index') }}" method="GET"
-                            class="mr-2" style="min-width: 0; flex: 1 1 240px;">
-                            <input id="brand-search" name="search" type="search" class="form-control"
-                                value="{{ request('search') }}" placeholder="Search brands..."
-                                aria-label="Search brands by name">
-                        </form>
-                        @can('create.categories')
-                            <a href="{{ route('brands.create') }}" class="btn btn-primary add-list d-flex align-items-center"
-                                style="white-space: nowrap; flex-shrink: 0;">
-                                <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add New Brand
-                            </a>
-                        @endcan
-                    </div>
+                    @can('create.categories')
+                        <a href="{{ route('brands.create') }}" class="btn btn-primary add-list d-flex align-items-center">
+                            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Add New Brand
+                        </a>
+                    @endcan
+                </div>
+
+                <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                    <form id="brand-search-form" action="{{ route('brands.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                        <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                            <input id="brand-search" type="search" name="search" class="form-control" placeholder="Search brands..." value="{{ request('search') }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                        </button>
+                        @if (request('search'))
+                        <a href="{{ route('brands.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                            <x-heroicon-o-x-mark class="w-4 h-4" />
+                        </a>
+                        @endif
+                    </form>
+                    @if (isset($brands) && method_exists($brands, 'total'))
+                    <span class="badge badge-light border px-3 py-2">{{ $brands->total() }} records</span>
+                    @endif
                 </div>
 
                 <div class="table-responsive rounded mb-3">

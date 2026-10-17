@@ -3,8 +3,30 @@
 @section('container')
 <div class="container-fluid variation-page">
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <form action="{{ route('variations.index') }}" method="get" class="w-50"><input name="search" value="{{ request('search') }}" class="form-control" placeholder="Search"></form><a href="{{ route('variations.create') }}" class="btn btn-primary">Create Variation</a>
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <h4 class="mb-0">Variations</h4>
+        <a href="{{ route('variations.create') }}" class="btn btn-primary d-flex align-items-center">
+            <x-heroicon-o-plus class="w-5 h-5 mr-1" /> Create Variation
+        </a>
+    </div>
+
+    <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+        <form action="{{ route('variations.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+            <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                <input type="search" name="search" class="form-control" placeholder="Search variations..." value="{{ request('search') }}">
+            </div>
+            <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+            </button>
+            @if (request('search'))
+            <a href="{{ route('variations.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                <x-heroicon-o-x-mark class="w-4 h-4" />
+            </a>
+            @endif
+        </form>
+        @if (isset($variations) && method_exists($variations, 'total'))
+        <span class="badge badge-light border px-3 py-2">{{ $variations->total() }} records</span>
+        @endif
     </div>
     <div class="card">
         <div class="table-responsive">

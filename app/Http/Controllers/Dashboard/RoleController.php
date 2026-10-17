@@ -96,7 +96,13 @@ class RoleController extends Controller
     // Role Controller
     public function roleIndex()
     {
-        $roles = QueryBuilder::for(Role::class)->paginate();
+        $query = Role::query();
+
+        if (request()->filled('search')) {
+            $query->where('name', 'like', '%' . request('search') . '%');
+        }
+
+        $roles = $query->paginate(15)->withQueryString();
 
         return view('roles.role-index', [
             'roles' => $roles,

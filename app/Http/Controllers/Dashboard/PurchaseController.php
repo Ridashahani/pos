@@ -24,17 +24,15 @@ class PurchaseController extends Controller
 
         $purchases = Purchase::with(['supplier', 'branch', 'items.product'])
             ->when($branchFilter, fn($q) => $q->where('branch_id', $branchFilter))
-            ->when($request->filled('search') && $request->filled('search_by'), function ($q) use ($request) {
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
-                $searchBy = $request->search_by;
 
-                match ($searchBy) {
-                    'purchase_no' => $q->where('purchase_no', 'like', "%{$search}%"),
-                    'product' => $q->whereHas('items.product', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
-                    'supplier' => $q->whereHas('supplier', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
-                    'branch' => $q->whereHas('branch', fn($q2) => $q2->where('name', 'like', "%{$search}%")),
-                    default => null,
-                };
+                $q->where(function ($q2) use ($search) {
+                    $q2->where('purchase_no', 'like', "%{$search}%")
+                        ->orWhereHas('items.product', fn($q3) => $q3->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('supplier', fn($q3) => $q3->where('name', 'like', "%{$search}%"))
+                        ->orWhereHas('branch', fn($q3) => $q3->where('name', 'like', "%{$search}%"));
+                });
             })
             ->latest()
             ->paginate(15)

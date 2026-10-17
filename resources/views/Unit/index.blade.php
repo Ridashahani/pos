@@ -24,29 +24,24 @@
         </div>
 
         <div class="col-lg-12">
-            <form action="{{ route('units.index') }}" method="get" class="mb-3">
-                <div class="d-flex flex-wrap align-items-center justify-content-between">
-
-                    <div class="form-group mb-2">
-                        <div class="input-group ">
-                            <input type="text" class="form-control" name="search" placeholder="Search units"
-                                value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                @if (request()->filled('search'))
-                                <a href="{{ route('units.index') }}" class="input-group-text bg-secondary text-white mr-2 ml-2"
-                                    aria-label="Clear search" title="Clear">
-                                    <x-heroicon-o-x-mark class="w-5 h-5" />
-                                </a>
-                                @endif
-
-                                <button type="submit" class="input-group-text bg-primary" aria-label="Search">
-                                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
+            <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                <form action="{{ route('units.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                    <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                        <input type="search" name="search" class="form-control" placeholder="Search units..." value="{{ request('search') }}">
                     </div>
-                </div>
-            </form>
+                    <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                        <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                    </button>
+                    @if (request('search'))
+                    <a href="{{ route('units.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                        <x-heroicon-o-x-mark class="w-4 h-4" />
+                    </a>
+                    @endif
+                </form>
+                @if (isset($units) && method_exists($units, 'total'))
+                <span class="badge badge-light border px-3 py-2">{{ $units->total() }} records</span>
+                @endif
+            </div>
         </div>
         <div class="col-lg-12">
             <div class="table-responsive rounded mb-3">

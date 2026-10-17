@@ -33,6 +33,27 @@
                 </div>
             </div>
 
+            <div class="col-lg-12">
+                <div class="module-toolbar d-flex flex-wrap align-items-center mb-3">
+                    <form action="{{ route('pay-salary.index') }}" method="GET" class="d-flex flex-wrap align-items-center">
+                        <div class="mr-2 mb-2 mb-md-0" style="min-width: 250px;">
+                            <input type="search" name="search" class="form-control" placeholder="Search employee..." value="{{ request('search') }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary mr-2 mb-2 mb-md-0">
+                            <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                        </button>
+                        @if (request('search'))
+                        <a href="{{ route('pay-salary.index') }}" class="btn btn-light mr-2 mb-2 mb-md-0">
+                            <x-heroicon-o-x-mark class="w-4 h-4" />
+                        </a>
+                        @endif
+                    </form>
+                    @if (isset($advanceSalaries) && method_exists($advanceSalaries, 'total'))
+                    <span class="badge badge-light border px-3 py-2">{{ $advanceSalaries->total() }} records</span>
+                    @endif
+                </div>
+            </div>
+
             {{-- Main Table --}}
             <div class="col-lg-12">
                 <div class="table-responsive rounded mb-3">

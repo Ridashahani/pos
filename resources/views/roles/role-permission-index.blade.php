@@ -133,7 +133,14 @@
                     <div class="rl-header d-flex flex-wrap align-items-center justify-content-between mb-3">
                         <h4 class="mb-0">Role List</h4>
                         <div class="d-flex align-items-center gap-2">
-                            <input type="text" id="rlSearch" class="rl-search" placeholder="Search...">
+                            <div class="module-toolbar d-flex align-items-center">
+                                <div class="mr-2" style="min-width: 250px;">
+                                    <input type="search" id="rlSearch" class="form-control" placeholder="Search roles...">
+                                </div>
+                                <button type="button" class="btn btn-primary" id="rlSearchBtn">
+                                    <x-heroicon-o-magnifying-glass class="w-4 h-4" />
+                                </button>
+                            </div>
                             @can('create.roles')
                                 <a href="{{ route('rolePermission.create') }}" class="btn btn-primary ml-2">
                                     <x-heroicon-o-plus class="w-5 h-5 mr-1 inline" /> Assign Permissions
@@ -213,13 +220,24 @@
     </div>
 
     <script>
-        document.getElementById('rlSearch').addEventListener('keyup', function() {
-            var q = this.value.toLowerCase();
+        function filterRoles() {
+            var input = document.getElementById('rlSearch');
+            var q = (input ? input.value : '').toLowerCase();
             document.querySelectorAll('#rlTable tbody tr').forEach(function(row) {
                 var roleName = row.querySelector('.rl-role-name');
                 if (!roleName) return;
                 row.style.display = roleName.textContent.toLowerCase().includes(q) ? '' : 'none';
             });
-        });
+        }
+        var rlInput = document.getElementById('rlSearch');
+        if (rlInput) {
+            rlInput.addEventListener('keyup', filterRoles);
+            rlInput.addEventListener('input', filterRoles);
+            rlInput.addEventListener('search', filterRoles);
+        }
+        var rlBtn = document.getElementById('rlSearchBtn');
+        if (rlBtn) {
+            rlBtn.addEventListener('click', filterRoles);
+        }
     </script>
 @endsection
