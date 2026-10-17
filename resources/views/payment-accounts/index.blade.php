@@ -141,22 +141,22 @@
         <div class="card payment-type-stats-card payment-flow-stats-card-sale mb-0">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <strong>Sales Received</strong>
-                    <small>Customer payments</small>
+                    <strong class="text-dark">Sales Received</strong>
+                    <small class="text-dark">Customer payments</small>
                 </div>
                 <div class="payment-type-stats-metrics">
-                    <span>Total received <strong>Rs {{ number_format((float) $salesReceived, 2) }}</strong></span>
+                    <span class="text-dark">Total received <strong class="text-dark">Rs {{ number_format((float) $salesReceived, 2) }}</strong></span>
                 </div>
             </div>
         </div>
         <div class="card payment-type-stats-card payment-flow-stats-card-purchase mb-0">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <strong>Purchase Paid</strong>
-                    <small>Supplier payments</small>
+                    <strong class="text-dark">Purchase Paid</strong>
+                    <small class="text-dark">Supplier payments</small>
                 </div>
                 <div class="payment-type-stats-metrics">
-                    <span>Total paid <strong>Rs {{ number_format((float) $purchasesPaid, 2) }}</strong></span>
+                    <span class="text-dark">Total paid <strong class="text-dark">Rs {{ number_format((float) $purchasesPaid, 2) }}</strong></span>
                 </div>
             </div>
         </div>
@@ -242,16 +242,33 @@
             border-top: 2px solid #741722;
         }
 
+        .payment-type-stats-grid .payment-type-stats-card .card-body {
+            padding: 6px 12px;
+        }
+
+        .payment-type-stats-grid .payment-type-stats-metrics {
+            gap: 3px;
+        }
+
         .payment-flow-stats-card-sale {
-            color: #fff;
-            background-image: linear-gradient(120deg, #064326 0%, #0c8045 48%, #25a765 100%);
-            border-top: 2px solid #064628;
+            min-height: 150px;
+            color: #24543a;
+            background: #e8f5ec;
+            border-top: 3px solid #8bc9a0;
         }
 
         .payment-flow-stats-card-purchase {
-            color: #fff;
-            background-image: linear-gradient(120deg, #741722 0%, #b62435 48%, #e04b57 100%);
-            border-top: 2px solid #741722;
+            min-height: 150px;
+            color: #684b2d;
+            background: #fff3e3;
+            border-top: 3px solid #e8bd83;
+        }
+
+        .payment-flow-stats-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
         }
 
         .payment-account-summary-card:not(.payment-account-summary-card-bank):not(.payment-account-summary-card-easypaisa):not(.payment-account-summary-card-jazzcash) {
